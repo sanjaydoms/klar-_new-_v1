@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { readFareRules } from '@/features/flights/utils/fareRules';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
@@ -114,18 +115,20 @@ const DomesticFareRulesPage: React.FC = () => {
   useEffect(() => {
     const loadFareRuleData = () => {
       try {
-        const fareRuleDataStr = sessionStorage.getItem('fareRuleData');
-        if (fareRuleDataStr) {
-          const data = JSON.parse(fareRuleDataStr);
-          setFareRuleData(data);
-        }
+        // The fare this screen is about: the leg's own selection first, since
+        // 'selectedFareData' is only written on the fallback path.
+        const segment = sessionStorage.getItem('selectedSegment');
+        const selectedFareStr =
+          (segment === 'ONWARD' && sessionStorage.getItem('selectedDepartureFare')) ||
+          (segment === 'RETURN' && sessionStorage.getItem('selectedReturnFare')) ||
+          sessionStorage.getItem('selectedFareData');
+        const selectedFare = selectedFareStr ? JSON.parse(selectedFareStr) : null;
 
-        const selectedFareDataStr = sessionStorage.getItem('selectedFareData');
-        if (selectedFareDataStr) {
-          const fareData = JSON.parse(selectedFareDataStr);
-          if (fareData.priceSummary?.AdultFare?.total) {
-            setTotalAmount(`₹${fareData.priceSummary.AdultFare.total.toLocaleString('en-IN')}`);
-          }
+        // Rules belonging to a different fare are not this fare's terms.
+        setFareRuleData(readFareRules(selectedFare?.fareId));
+
+        if (selectedFare?.priceSummary?.AdultFare?.total) {
+          setTotalAmount(`₹${selectedFare.priceSummary.AdultFare.total.toLocaleString('en-IN')}`);
         }
       } catch (error) {
         console.error('Error loading data:', error);

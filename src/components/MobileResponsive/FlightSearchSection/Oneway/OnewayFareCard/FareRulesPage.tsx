@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { readFareRules } from '@/features/flights/utils/fareRules';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { getReviewDetails } from '@/api/flightService.api';
@@ -143,18 +144,16 @@ const MobileFareRulesPage: React.FC<FareRulesPageProps> = ({
           }
         }
 
-        const fareRuleDataStr = sessionStorage.getItem('fareRuleData');
-        if (fareRuleDataStr) {
-          const data = JSON.parse(fareRuleDataStr);
-          setFareRuleData(data);
-        }
-
         const selectedFareDataStr = sessionStorage.getItem('selectedFareData');
-        if (selectedFareDataStr) {
-          const fareData = JSON.parse(selectedFareDataStr);
-          if (fareData.totalAmount) {
-            setTotalAmount(fareData.totalAmount);
-          }
+        const selectedFare = selectedFareDataStr ? JSON.parse(selectedFareDataStr) : null;
+
+        // Only rules fetched for THIS fare. Anything else is a leftover from a
+        // previous selection, and the page's "as per airline policy" wording
+        // is the honest answer instead.
+        setFareRuleData(readFareRules(selectedFare?.fareId));
+
+        if (selectedFare?.totalAmount) {
+          setTotalAmount(selectedFare.totalAmount);
         }
       } catch (error) {
         console.error('Error loading data:', error);

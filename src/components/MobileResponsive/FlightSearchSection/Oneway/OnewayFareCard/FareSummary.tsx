@@ -1,5 +1,10 @@
 import { getFareRule } from '@/api/flightService.api';
 import React, { useState } from 'react';
+import {
+  clearFareRules,
+  isFareRuleResponseUsable,
+  storeFareRules,
+} from '@/features/flights/utils/fareRules';
 
 interface FareSummaryProps {
   totalFare: string;
@@ -43,13 +48,22 @@ const FareSummary: React.FC<FareSummaryProps> = ({
     }
 
     setLoading(true);
+    // Drop the previous fare's rules FIRST. Both failure paths below still
+    // navigate, and the rules page used to render whatever was left in
+    // storage — another fare's cancellation charges, presented as this one's.
+    clearFareRules();
     try {
       const response = await getFareRule({
         flowType: 'SEARCH',
         id: fareId,
       });
 
-      sessionStorage.setItem('fareRuleData', JSON.stringify(response));
+      // TripJack answers 200 with status.success false; that is not a rule set.
+      if (isFareRuleResponseUsable(response)) {
+        storeFareRules(fareId, response);
+      } else {
+        console.warn('Fare rule response carried no rules', response?.status);
+      }
 
       if (onContinue) {
         onContinue();

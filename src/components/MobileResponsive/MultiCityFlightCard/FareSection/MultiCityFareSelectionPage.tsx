@@ -7,6 +7,11 @@ import {
   cabinBaggageOf,
   refundableLabelFromType,
 } from '@/features/flights/utils/flightDisplay';
+import {
+  clearFareRules,
+  isFareRuleResponseUsable,
+  storeFareRules,
+} from '@/features/flights/utils/fareRules';
 
 interface FareData {
   fareId: string;
@@ -165,15 +170,18 @@ const MultiCityFareSelectionPage: React.FC = () => {
   const handleFareSelect = async (fareId: string, fareData: FareData) => {
     setIsFareLoading(true);
     setFareError(null); // Clear any previous error
+    clearFareRules();
     try {
       const response = await getFareRule({
         flowType: 'SEARCH',
         id: fareData.fareId,
       });
 
-      if (response?.status?.success) {
+      if (isFareRuleResponseUsable(response)) {
+        // Stored against the fare it belongs to; 'multiCityFareRules' is kept
+        // for the rules page's own lookup.
         sessionStorage.setItem('multiCityFareRules', JSON.stringify(response));
-        sessionStorage.setItem('fareRuleData', JSON.stringify(response));
+        storeFareRules(fareData.fareId, response);
         sessionStorage.setItem('multiCityFareId', fareData.fareId);
 
         setSelectedFareId(fareId);

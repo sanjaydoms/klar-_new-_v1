@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { readFareRules } from '@/features/flights/utils/fareRules';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
@@ -121,13 +122,11 @@ const MultiCityFareRulesPage: React.FC = () => {
         const index = state?.routeIndex ?? 0;
         setRouteIndex(index);
 
-        let fareRuleDataStr = sessionStorage.getItem('multiCityFareRules');
-        if (!fareRuleDataStr) {
-          fareRuleDataStr = sessionStorage.getItem('fareRuleData');
-        }
+        // Guarded read: rules only count when they were fetched for the fare
+        // this screen is about. 'multiCityFareRules' remains the raw copy.
+        const data = readFareRules(sessionStorage.getItem('multiCityFareId') || undefined);
 
-        if (fareRuleDataStr) {
-          const data = JSON.parse(fareRuleDataStr);
+        if (data) {
           setFareRuleData(data);
           if (data?.fareRule) {
             const keys = Object.keys(data.fareRule);
