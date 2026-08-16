@@ -194,6 +194,26 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
     markFieldAsTouched(`segment_${multiCitySegments.findIndex((s) => s.id === id)}_${field}`);
   };
 
+  /**
+   * Swap origin and destination.
+   *
+   * The circle between the two fields was decorative markup — a `div` holding
+   * an SVG, with no handler — but it is drawn as a control and sits where every
+   * OTA puts the swap button, so it was being clicked and doing nothing. The
+   * airport names are separate state from the city strings and are displayed
+   * under each field, so they have to move with them or the card ends up
+   * showing Mumbai above "Indira Gandhi International Airport".
+   */
+  const handleSwapLocations = () => {
+    if (isSearching) return;
+    setFrom(to);
+    setTo(from);
+    setFromAirportName(toAirportName);
+    setToAirportName(fromAirportName);
+    markFieldAsTouched('from');
+    markFieldAsTouched('to');
+  };
+
   const handleFlightSearch = async () => {
     // Prevent multiple submissions
     if (isSearching) return;
@@ -423,18 +443,26 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
             </div>
             {renderFieldError('from')}
 
-            {/* Arrow pointing from From to To */}
+            {/* Swap From and To */}
             <div className="hidden md:block absolute -right-3 top-1/2 transform -translate-y-1/2 z-10">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-[0_4px_14px_-4px_rgba(224,36,47,0.6)] ring-1 ring-black/5">
+              <button
+                type="button"
+                onClick={handleSwapLocations}
+                disabled={isSearching}
+                aria-label="Swap origin and destination"
+                title="Swap origin and destination"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-[0_4px_14px_-4px_rgba(224,36,47,0.6)] ring-1 ring-black/5 transition hover:bg-red-50 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-red)] disabled:cursor-not-allowed disabled:opacity-50"
+              >
                 <svg
                   className="h-4 w-4 text-[var(--color-brand-red)]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16h13m0 0l-4-4m4 4l-4 4M17 8H4m0 0l4-4M4 8l4 4" />
                 </svg>
-              </div>
+              </button>
             </div>
           </div>
 
