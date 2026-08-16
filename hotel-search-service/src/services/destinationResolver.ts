@@ -18,6 +18,19 @@ import { env } from "../config/env";
  */
 const tjHidL1 = new LruCache<string[]>(200, env.tjHidCacheTtl * 1000);
 
+/**
+ * Geocoding key. Was hardcoded as an `||` fallback at three call sites, which
+ * put a live key in the repository; it has been revoked, so there is nothing to
+ * fall back to. Absent means geocoding returns null and callers degrade — the
+ * behaviour they already have when OpenCage errors.
+ */
+const OPENCAGE_API_KEY = process.env.OPENCAGE_API_KEY ?? "";
+if (!OPENCAGE_API_KEY) {
+  console.warn(
+    "[destinationResolver] OPENCAGE_API_KEY is not set; geocoding is disabled.",
+  );
+}
+
 function tjHidCacheKey(lat: number, lng: number, radiusKm: number): string {
   // ~11m of precision — far finer than any radius we search with, so rounding
   // never merges two genuinely different centres.
@@ -40,7 +53,7 @@ interface GeoPoint {
  */
 async function geocodeQuery(query: string): Promise<GeoPoint | null> {
   const axios = require("axios");
-  const apiKey = process.env.OPENCAGE_API_KEY || "REDACTED";
+  const apiKey = OPENCAGE_API_KEY;
 
   try {
     const response = await axios.get(
@@ -177,7 +190,7 @@ export async function resolveGeoCenter(
     // OSM reverse geocode (zoom=10 = city level) → resolve city name → get official center + radius
     try {
       const axios = require("axios");
-      const apiKey = process.env.OPENCAGE_API_KEY || "REDACTED";
+      const apiKey = OPENCAGE_API_KEY;
       const response = await axios.get(
         `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${apiKey}&no_annotations=1`,
         { timeout: 6000 },
@@ -269,7 +282,7 @@ export async function resolveRadiusFromCoords(
 
   const promise = (async () => {
     const axios = require("axios");
-    const apiKey = process.env.OPENCAGE_API_KEY || "REDACTED";
+    const apiKey = OPENCAGE_API_KEY;
 
     try {
       const res = await axios.get(
