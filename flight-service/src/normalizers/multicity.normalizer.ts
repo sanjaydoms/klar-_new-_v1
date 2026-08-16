@@ -266,6 +266,7 @@ export class MultiCityNormalizer extends BaseFlightNormalizer {
             from: {
                 city: first?.da?.city,
                 airportCode: first?.da?.code,
+                terminal: first?.da?.terminal,
                 time: this.getTime(first?.dt),
                 date: fromDate.date,
                 day: fromDate.day
@@ -273,6 +274,7 @@ export class MultiCityNormalizer extends BaseFlightNormalizer {
             to: {
                 city: last?.aa?.city,
                 airportCode: last?.aa?.code,
+                terminal: last?.aa?.terminal,
                 time: this.getTime(last?.at),
                 date: toDate.date,
                 day: toDate.day
@@ -282,6 +284,7 @@ export class MultiCityNormalizer extends BaseFlightNormalizer {
                 segments.reduce((sum: number, seg: any) => sum + (seg.duration || 0), 0)
             ),
             price: cheapestFare?.fd?.ADULT?.fC?.TF ?? 0,
+            aircraftTypes: BaseFlightNormalizer.getAircraftTypes(segments),
             ...this.getFareMeta(cheapestFare)
         };
     }
@@ -372,6 +375,7 @@ export class MultiCityNormalizer extends BaseFlightNormalizer {
                     from: {
                         city: first?.da?.city,
                         airportCode: first?.da?.code,
+                        terminal: first?.da?.terminal,
                         time: this.getTime(first?.dt),
                         date: fromDate.date,
                         day: fromDate.day
@@ -379,6 +383,7 @@ export class MultiCityNormalizer extends BaseFlightNormalizer {
                     to: {
                         city: last?.aa?.city,
                         airportCode: last?.aa?.code,
+                        terminal: last?.aa?.terminal,
                         time: this.getTime(last?.at),
                         date: toDate.date,
                         day: toDate.day
@@ -391,6 +396,7 @@ export class MultiCityNormalizer extends BaseFlightNormalizer {
                         )
                     ),
                     price: cheapestFare?.fd?.ADULT?.fC?.TF ?? 0,
+                    aircraftTypes: BaseFlightNormalizer.getAircraftTypes(segments),
                     // The other card builders expose these; this one didn't, so
                     // multi-city legs priced correctly but showed no markup
                     // breakdown. originalTF is set by MarkupInterceptor.

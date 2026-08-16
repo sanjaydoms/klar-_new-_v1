@@ -7,5 +7,8 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true
-  }
+  },
+  // local-dev holds runnable checks, not shipped source — keep them out of the
+  // build (rootDir is ./src) while ts-node can still run them directly.
+  "exclude": ["local-dev", "node_modules", "dist"]
 }

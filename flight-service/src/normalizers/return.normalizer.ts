@@ -185,6 +185,7 @@ export class ReturnNormalizer {
             from: {
                 city: first.da.city,
                 airportCode: first.da.code,
+                terminal: first.da.terminal,
                 time: BaseFlightNormalizer.getTime(first.dt),
                 date: fromDate.date,
                 day: fromDate.day
@@ -192,6 +193,7 @@ export class ReturnNormalizer {
             to: {
                 city: last.aa.city,
                 airportCode: last.aa.code,
+                terminal: last.aa.terminal,
                 time: BaseFlightNormalizer.getTime(last.at),
                 date: toDate.date,
                 day: toDate.day
@@ -204,6 +206,7 @@ export class ReturnNormalizer {
             ),
             stops: segments.length - 1,
             stopDetails: stopsInfo,
+            aircraftTypes: BaseFlightNormalizer.getAircraftTypes(segments),
             price: cheapest.fd.ADULT.fC.TF,
 
             // Domestic return legs are priced and selected independently, so each
@@ -328,6 +331,7 @@ export class ReturnNormalizer {
             from: {
                 city: first.da.city,
                 airportCode: first.da.code,
+                terminal: first.da.terminal,
                 time: BaseFlightNormalizer.getTime(first.dt),
                 date: fromDate.date,
                 day: fromDate.day
@@ -335,6 +339,7 @@ export class ReturnNormalizer {
             to: {
                 city: last.aa.city,
                 airportCode: last.aa.code,
+                terminal: last.aa.terminal,
                 time: BaseFlightNormalizer.getTime(last.at),
                 date: toDate.date,
                 day: toDate.day
@@ -346,7 +351,8 @@ export class ReturnNormalizer {
                 )
             ),
             stops: segments.length - 1,
-            stopDetails: stopsInfo
+            stopDetails: stopsInfo,
+            aircraftTypes: BaseFlightNormalizer.getAircraftTypes(segments)
         };
 
         if (cheapest?.fd?.ADULT?.fC?.originalTF && envConfig.PLATFORM_MARKUP.ENABLED) {
@@ -404,7 +410,8 @@ export class ReturnNormalizer {
                 )
             ),
             stops: segments.length - 1,
-            stopDetails: stopsInfo
+            stopDetails: stopsInfo,
+            aircraftTypes: BaseFlightNormalizer.getAircraftTypes(segments)
         };
 
         if (cheapest?.fd?.ADULT?.fC?.originalTF && envConfig.PLATFORM_MARKUP.ENABLED) {

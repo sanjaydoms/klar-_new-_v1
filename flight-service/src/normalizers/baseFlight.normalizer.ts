@@ -97,6 +97,20 @@ export class BaseFlightNormalizer {
     }
 
     /**
+     * Aircraft type per SEGMENT (TripJack `fD.eT`, e.g. "320", "738").
+     *
+     * An array, not a single value, because a connection is flown by a
+     * different aircraft on each leg — a scalar here would quietly claim one
+     * aircraft flies the whole journey. Empty when the supplier omits it, so
+     * the caller renders nothing rather than "Unknown".
+     */
+    static getAircraftTypes(segments: any[]): string[] {
+        return (segments || [])
+            .map((seg: any) => seg?.fD?.eT)
+            .filter((eT: any) => typeof eT === "string" && eT.trim() !== "");
+    }
+
+    /**
      * Fare attributes the search card needs but the normalizers were dropping:
      * the fare type (PUBLISHED / SPECIAL_RETURN / TJ_FLEX), refundability, seats
      * left, and the sri/msri pair that Special Return legs must be matched on.
