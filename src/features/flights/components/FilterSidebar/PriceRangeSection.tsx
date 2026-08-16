@@ -21,8 +21,15 @@ export const PriceRangeSection = ({
   onMaxPriceChange,
   dataBounds,
 }: PriceRangeSectionProps) => {
-  const MIN = 0;
-  const MAX = 1000000;
+  /*
+   * The track spans the fares actually on screen. It was hardcoded 0 to
+   * 10,00,000 while a domestic search tops out near 90,000, so both handles
+   * sat inside the first tenth of the track and dragging did almost nothing.
+   * dataBounds is the real range from the current result set.
+   */
+  const MIN = Math.max(0, Math.floor(dataBounds?.min ?? 0));
+  const rawMax = Math.ceil(dataBounds?.max ?? 100000);
+  const MAX = rawMax > MIN ? rawMax : MIN + 1000;
   const [localMin, setLocalMin] = useState(minPrice);
   const [localMax, setLocalMax] = useState(maxPrice);
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -81,8 +88,10 @@ export const PriceRangeSection = ({
     });
   };
 
-  const getMinPercent = ((localMin - MIN) / (MAX - MIN)) * 100;
-  const getMaxPercent = ((localMax - MIN) / (MAX - MIN)) * 100;
+  const clampPercent = (value: number) =>
+    Math.min(100, Math.max(0, ((value - MIN) / (MAX - MIN)) * 100));
+  const getMinPercent = clampPercent(localMin);
+  const getMaxPercent = clampPercent(localMax);
 
   return (
     <div className="mb-5 sm:mb-6 border-b border-gray-100 pb-3 sm:pb-4">
@@ -225,8 +234,8 @@ export const PriceRangeSection = ({
             </div>
 
             <div className="flex justify-between mt-2 text-[10px] sm:text-xs text-gray-500">
-              <span>₹{(dataBounds?.min ?? localMin).toLocaleString()}</span>
-              <span>₹{(dataBounds?.max ?? localMax).toLocaleString()}</span>
+              <span>₹{MIN.toLocaleString('en-IN')}</span>
+              <span>₹{MAX.toLocaleString('en-IN')}+</span>
             </div>
           </div>
         </div>

@@ -8,6 +8,7 @@ import { groupAndMap } from '@/features/flights/utils/groupFareVariants';
 import { formatAircraft, formatTerminal } from '@/features/flights/utils/flightDisplay';
 import { formatBaggage } from '@/features/flights/components/FlightCardFooter';
 import ResultsAssuranceStrip from '@/features/flights/components/ResultsAssuranceStrip';
+import MobileServiceTabs from '@/components/MobileResponsive/MobileServiceTabs';
 import { ShieldCheck } from 'lucide-react';
 
 
@@ -382,6 +383,7 @@ const OnewayFlightcard: React.FC = () => {
           formatDate={formatDate}
           getTravellerDisplay={getTravellerDisplay}
         />
+        <MobileServiceTabs active="flights" />
       </div>
 
       <div className="flex-1 overflow-y-auto px-3 sm:px-4 pb-24">
