@@ -6,6 +6,7 @@ import FlightFilterSidebar from './Common/filterSidebar';
 import FlightDetailsModal from './modals/FlightDetailsModal';
 import { toFlightDetailsView } from './ReturnFlight/flightDetailsView';
 import { groupAndMap } from '../utils/groupFareVariants';
+import { specialReturnPairingError } from '../utils/specialReturnPairing';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Flight, ReturnFlightProps, PairedFlight } from '../types/types.returnFlight';
 import {
@@ -88,8 +89,9 @@ const SortOptions = ({
               <div key={option.key}>
                 <button
                   onClick={() => handleSortSelect(option.key)}
-                  className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center justify-between transition-colors ${sortBy === option.key ? 'bg-blue-50 text-blue-600' : 'text-gray-700'
-                    }`}
+                  className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center justify-between transition-colors ${
+                    sortBy === option.key ? 'bg-blue-50 text-blue-600' : 'text-gray-700'
+                  }`}
                 >
                   <span>{option.label}</span>
                   {sortBy === option.key && <Check className="h-4 w-4" />}
@@ -102,10 +104,11 @@ const SortOptions = ({
                         onSortOrderChange('asc');
                         setIsOpen(false);
                       }}
-                      className={`flex-1 px-3 py-1 text-xs font-medium rounded-md transition-colors ${sortOrder === 'asc'
+                      className={`flex-1 px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                        sortOrder === 'asc'
                           ? 'bg-[#1A1F4D] text-white'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
+                      }`}
                     >
                       Low→High
                     </button>
@@ -114,10 +117,11 @@ const SortOptions = ({
                         onSortOrderChange('desc');
                         setIsOpen(false);
                       }}
-                      className={`flex-1 px-3 py-1 text-xs font-medium rounded-md transition-colors ${sortOrder === 'desc'
+                      className={`flex-1 px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                        sortOrder === 'desc'
                           ? 'bg-[#1A1F4D] text-white'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
+                      }`}
                     >
                       High→Low
                     </button>
@@ -131,10 +135,11 @@ const SortOptions = ({
                         onSortOrderChange('asc');
                         setIsOpen(false);
                       }}
-                      className={`flex-1 px-3 py-1 text-xs font-medium rounded-md transition-colors ${sortOrder === 'asc'
+                      className={`flex-1 px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                        sortOrder === 'asc'
                           ? 'bg-[#1A1F4D] text-white'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
+                      }`}
                     >
                       A→Z
                     </button>
@@ -143,10 +148,11 @@ const SortOptions = ({
                         onSortOrderChange('desc');
                         setIsOpen(false);
                       }}
-                      className={`flex-1 px-3 py-1 text-xs font-medium rounded-md transition-colors ${sortOrder === 'desc'
+                      className={`flex-1 px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                        sortOrder === 'desc'
                           ? 'bg-[#1A1F4D] text-white'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
+                      }`}
                     >
                       Z→A
                     </button>
@@ -162,20 +168,22 @@ const SortOptions = ({
         <div className="flex items-center gap-1 bg-white border border-gray-300 rounded-md overflow-hidden">
           <button
             onClick={() => onSortOrderChange('asc')}
-            className={`px-2.5 py-1.5 text-sm font-medium transition-colors ${sortOrder === 'asc'
+            className={`px-2.5 py-1.5 text-sm font-medium transition-colors ${
+              sortOrder === 'asc'
                 ? 'bg-[#1A1F4D] text-white'
                 : 'bg-white text-gray-600 hover:bg-gray-50'
-              }`}
+            }`}
             title="Ascending"
           >
             ↑
           </button>
           <button
             onClick={() => onSortOrderChange('desc')}
-            className={`px-2.5 py-1.5 text-sm font-medium transition-colors ${sortOrder === 'desc'
+            className={`px-2.5 py-1.5 text-sm font-medium transition-colors ${
+              sortOrder === 'desc'
                 ? 'bg-[#1A1F4D] text-white'
                 : 'bg-white text-gray-600 hover:bg-gray-50'
-              }`}
+            }`}
             title="Descending"
           >
             ↓
@@ -489,12 +497,17 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
 
           if (!isLoadMore) {
             setSelectedOnwardFlight(null);
+            setDepartureFareRuleData(null);
             setSelectedReturnFlight(null);
+            setReturnFareRuleData(null);
             setSelectedRoundTrip(null);
           }
         } else {
           setFetchError(response?.message || 'No flights found for the selected route');
-          notifyError(response?.message || 'No flights found for the selected route', 'Search Failed');
+          notifyError(
+            response?.message || 'No flights found for the selected route',
+            'Search Failed',
+          );
         }
       } catch (err) {
         console.error('Error fetching flights:', err);
@@ -513,7 +526,9 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
     setSortBy(newSortBy);
     if (lastSearchPayload) {
       setSelectedOnwardFlight(null);
+      setDepartureFareRuleData(null);
       setSelectedReturnFlight(null);
+      setReturnFareRuleData(null);
       setSelectedRoundTrip(null);
       setIsFilterApplied(false);
       fetchFlights(lastSearchPayload, false, null, null);
@@ -525,7 +540,9 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
     setSortOrder(newSortOrder);
     if (lastSearchPayload) {
       setSelectedOnwardFlight(null);
+      setDepartureFareRuleData(null);
       setSelectedReturnFlight(null);
+      setReturnFareRuleData(null);
       setSelectedRoundTrip(null);
       setIsFilterApplied(false);
       fetchFlights(lastSearchPayload, false, null, null);
@@ -607,10 +624,10 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
       parsedParams.returnDate ||
       (departureDate
         ? (() => {
-          const date = new Date(departureDate);
-          date.setDate(date.getDate() + 3);
-          return date.toISOString().split('T')[0];
-        })()
+            const date = new Date(departureDate);
+            date.setDate(date.getDate() + 3);
+            return date.toISOString().split('T')[0];
+          })()
         : '');
 
     const travelerDetails = parsedParams.travelerDetails || { adults: 1, children: 0, infants: 0 };
@@ -664,7 +681,9 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
     }
 
     setSelectedOnwardFlight(null);
+    setDepartureFareRuleData(null);
     setSelectedReturnFlight(null);
+    setReturnFareRuleData(null);
     setSelectedRoundTrip(null);
     setIsFilterApplied(false);
     setLastSearchPayload(searchQuery);
@@ -678,6 +697,14 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
 
   const handleBookNow = async (): Promise<void> => {
     if (flightType === 'domestic' && selectedOnwardFlight && selectedReturnFlight) {
+      // Same rule the backend applies at Review; catching it here saves a
+      // round trip and reports it in the fare's own terms.
+      const mismatch = specialReturnPairingError(departureFareRuleData, returnFareRuleData);
+      if (mismatch) {
+        notifyError(mismatch, 'Special Return fares');
+        return;
+      }
+
       let departurePriceId: string | null = sessionStorage.getItem('selectedDepartureFareId');
       let returnPriceId: string | null = sessionStorage.getItem('selectedReturnFareId');
 
@@ -717,8 +744,14 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
         });
 
         if (reviewResponse.data.mappedData.status.success === false) {
-          console.log('ERROR: Not get review data');
-          notifyError('ERROR: Not get review data');
+          // The backend names the real cause (fare pairing, price change, sold
+          // out). Reporting "Not get review data" instead threw that away.
+          const supplierMessage =
+            reviewResponse.data.mappedData.status.message ||
+            reviewResponse.message ||
+            reviewResponse.data.message;
+          console.log('ERROR: review rejected', supplierMessage);
+          notifyError(supplierMessage || 'Unable to get flight review details. Please try again.');
           setIsBooking(false);
           return;
         }
@@ -777,7 +810,9 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
           else if (reviewResponse?.error) errorMessage = reviewResponse.error;
           notifyError(errorMessage);
           setSelectedOnwardFlight(null);
+          setDepartureFareRuleData(null);
           setSelectedReturnFlight(null);
+          setReturnFareRuleData(null);
         }
       } catch (err: unknown) {
         console.error('Error getting review details:', err);
@@ -801,12 +836,22 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
   const handleSelectRoundTrip = (combo: PairedFlight) => {
     setSelectedRoundTrip(combo);
     setSelectedOnwardFlight(null);
+    setDepartureFareRuleData(null);
     setSelectedReturnFlight(null);
+    setReturnFareRuleData(null);
   };
 
   const shouldShowBookingButton =
     (flightType === 'domestic' && selectedOnwardFlight && selectedReturnFlight) ||
     (flightType === 'international' && selectedRoundTrip);
+
+  // Only domestic returns can be mismatched — an international COMBO is one
+  // fare covering both legs. The confirmed fare objects arrive through
+  // handleFareRuleLoaded and carry fareIdentifier/sri/msri.
+  const pairingError =
+    flightType === 'domestic'
+      ? specialReturnPairingError(departureFareRuleData, returnFareRuleData)
+      : null;
 
   const getTotalPrice = () => {
     if (flightType === 'international' && selectedRoundTrip) {
@@ -820,7 +865,9 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
   const handleCancelSelection = () => {
     if (flightType === 'domestic') {
       setSelectedOnwardFlight(null);
+      setDepartureFareRuleData(null);
       setSelectedReturnFlight(null);
+      setReturnFareRuleData(null);
 
       sessionStorage.removeItem('selectedDepartureFareId');
       sessionStorage.removeItem('selectedReturnFareId');
@@ -957,7 +1004,10 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
                             flights={onwardFlights}
                             selectedFlight={selectedOnwardFlight}
                             onSelectFlight={(flight) => handleSelectFlight(flight, 'onward')}
-                            onDeselectFlight={() => setSelectedOnwardFlight(null)}
+                            onDeselectFlight={() => {
+                              setSelectedOnwardFlight(null);
+                              setDepartureFareRuleData(null);
+                            }}
                             onViewDetails={(flight) => {
                               // Rendered from the search result already in hand —
                               // see flightDetailsView. The endpoint this used to
@@ -981,7 +1031,10 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
                             flights={returnFlights}
                             selectedFlight={selectedReturnFlight}
                             onSelectFlight={(flight) => handleSelectFlight(flight, 'return')}
-                            onDeselectFlight={() => setSelectedReturnFlight(null)}
+                            onDeselectFlight={() => {
+                              setSelectedReturnFlight(null);
+                              setReturnFareRuleData(null);
+                            }}
                             onViewDetails={(flight) => {
                               // Rendered from the search result already in hand —
                               // see flightDetailsView. The endpoint this used to
@@ -1016,6 +1069,14 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
 
       {shouldShowBookingButton && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-4 z-40">
+          {pairingError && (
+            <div
+              role="alert"
+              className="max-w-7xl mx-auto mb-3 rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-2 text-sm text-destructive"
+            >
+              {pairingError}
+            </div>
+          )}
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Price</p>
@@ -1036,7 +1097,7 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
 
               <Button
                 onClick={handleBookNow}
-                disabled={isBooking}
+                disabled={isBooking || !!pairingError}
                 className="h-12 px-8 font-bold shadow-lg"
               >
                 {isBooking ? (
@@ -1070,7 +1131,6 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
           flightType="departure"
         />
       )}
-
     </div>
   );
 }
