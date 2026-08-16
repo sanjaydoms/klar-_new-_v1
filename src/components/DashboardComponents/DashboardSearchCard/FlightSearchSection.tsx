@@ -686,15 +686,15 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
             setValidationErrors([]);
           }}
         />
-        {/* 5 Column Layout - From, To, Departure, Return, Travellers */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-0">
+        {/* From, To, Departure, Return, Travellers, CTA — the design's inset panel */}
+        <div className="grid grid-cols-1 items-center rounded-2xl border border-border/70 bg-white p-2 md:grid-cols-[1fr_1fr_0.85fr_0.85fr_0.85fr_auto]">
           {/* From */}
-          <div className="relative border-r border-gray-300 px-2 py-2">
+          <div className="relative border-border/70 px-4 py-3 md:border-r">
             <div className="mb-1">
               <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">From</span>
             </div>
             <div
-              className={`bg-transparent h-[52px] flex items-center relative w-full ${getFieldError('from') && touchedFields.has('from') ? errorInputClass : ''
+              className={`bg-transparent h-[64px] flex items-center relative w-full ${getFieldError('from') && touchedFields.has('from') ? errorInputClass : ''
                 }`}
             >
               <LocationAutocomplete
@@ -704,9 +704,9 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
                   markFieldAsTouched('from');
                 }}
                 placeholder="Delhi"
-                className="w-full bg-transparent font-display text-base font-medium text-primary focus:outline-none border-0 h-full !px-2 !pl-9 rounded-xl"
+                className="w-full bg-transparent font-display text-lg font-medium text-primary focus:outline-none border-0 h-full !px-3 !pl-10 rounded-xl"
               />
-              <Plane className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <Plane className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4.5 h-4.5 text-gray-400 pointer-events-none" />
             </div>
             <div className="text-xs text-gray-400 mt-1">
               {from ? (
@@ -740,12 +740,12 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
           </div>
 
           {/* To */}
-          <div className="border-r border-gray-300 px-2 py-2">
+          <div className="border-border/70 px-4 py-3 md:border-r">
             <div className="mb-1">
               <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">To</span>
             </div>
             <div
-              className={`bg-transparent h-[52px] flex items-center relative w-full ${getFieldError('to') && touchedFields.has('to') ? errorInputClass : ''
+              className={`bg-transparent h-[64px] flex items-center relative w-full ${getFieldError('to') && touchedFields.has('to') ? errorInputClass : ''
                 }`}
             >
               <LocationAutocomplete
@@ -755,7 +755,7 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
                   markFieldAsTouched('to');
                 }}
                 placeholder="Mumbai"
-                className="w-full bg-transparent font-display text-base font-medium text-primary focus:outline-none border-0 h-full !px-2 !pl-9 rounded-xl"
+                className="w-full bg-transparent font-display text-lg font-medium text-primary focus:outline-none border-0 h-full !px-3 !pl-10 rounded-xl"
               />
               <Plane className="absolute left-2 top-1/2 transform -translate-y-1/2 rotate-90 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
@@ -790,18 +790,20 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
           </div>
 
           {/* Departure Date */}
-          <div className="border-r border-gray-300 px-2 py-2">
+          <div className="border-border/70 px-4 py-3 md:border-r">
             <div className="mb-1">
               <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">Departure</span>
             </div>
             <div
               onClick={openDatePicker}
-              className={`bg-transparent h-[52px] flex items-center relative w-full cursor-pointer ${getFieldError('departureDate') && touchedFields.has('departureDate')
+              className={`bg-transparent h-[64px] flex items-center relative w-full cursor-pointer ${getFieldError('departureDate') && touchedFields.has('departureDate')
                 ? errorInputClass
                 : ''
                 }`}
             >
-              <Calendar className="w-4 h-4 text-gray-400 shrink-0 mr-2" />
+              <span className="mr-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
+                <Calendar className="h-4.5 w-4.5 text-primary" />
+              </span>
               <input
                 type="date"
                 value={departureDate}
@@ -811,7 +813,7 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
                   markFieldAsTouched('departureDate');
                 }}
                 onBlur={() => markFieldAsTouched('departureDate')}
-                className="w-full font-display text-base font-medium text-primary bg-transparent focus:outline-none cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
+                className="w-full font-display text-lg font-medium text-primary bg-transparent focus:outline-none cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
                 placeholder="19 Jul'26"
               />
             </div>
@@ -824,18 +826,20 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
           </div>
 
           {/* Return Date */}
-          <div className="border-r border-gray-300 px-2 py-2">
+          <div className="border-border/70 px-4 py-3 md:border-r">
             <div className="mb-1">
               <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">Return</span>
             </div>
             <div
               onClick={openDatePicker}
-              className={`bg-transparent h-[52px] flex items-center relative w-full cursor-pointer ${getFieldError('returnDate') && touchedFields.has('returnDate')
+              className={`bg-transparent h-[64px] flex items-center relative w-full cursor-pointer ${getFieldError('returnDate') && touchedFields.has('returnDate')
                 ? errorInputClass
                 : ''
                 }`}
             >
-              <Calendar className="w-4 h-4 text-gray-400 shrink-0 mr-2" />
+              <span className="mr-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
+                <Calendar className="h-4.5 w-4.5 text-primary" />
+              </span>
               <input
                 type="date"
                 value={returnDate}
@@ -862,7 +866,7 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
                   setTouchedFields((prev) => new Set(prev).add('returnDate'));
                 }}
                 onBlur={() => markFieldAsTouched('returnDate')}
-                className="w-full font-display text-base font-medium text-primary bg-transparent focus:outline-none cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
+                className="w-full font-display text-lg font-medium text-primary bg-transparent focus:outline-none cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
                 placeholder="Tap to add return"
               />
             </div>
@@ -881,7 +885,7 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
             </div>
             <div className="relative">
               <div
-                className={`bg-transparent h-[52px] flex items-center relative w-full ${getFieldError('travelers') && touchedFields.has('travelers') ? errorInputClass : ''
+                className={`bg-transparent h-[64px] flex items-center relative w-full ${getFieldError('travelers') && touchedFields.has('travelers') ? errorInputClass : ''
                   }`}
               >
                 <button
@@ -963,26 +967,27 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
               )}
             </div>
           </div>
-        </div>
-        {/* Footer - Reduced margin top */}
-        <div className="mt-2 flex justify-end">
-          <Button
-            onClick={handleFlightSearch}
-            disabled={isSearching}
-            className="h-14 gap-2 rounded-xl bg-[var(--color-brand-red)] px-10 text-[15px] font-semibold text-white shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] hover:bg-[var(--color-brand-red)]/90" 
-          >
-            {isSearching ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Searching...
-              </>
-            ) : (
-              <>
-                <Search className="w-4 h-4" />
-                Search Flights
-              </>
-            )}
-          </Button>
+
+          {/* Search sits in the row, per the design */}
+          <div className="px-2 py-2">
+            <Button
+              onClick={handleFlightSearch}
+              disabled={isSearching}
+              className="h-14 w-full gap-2 rounded-xl bg-[var(--color-brand-red)] px-8 text-[15px] font-semibold text-white shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] hover:bg-[var(--color-brand-red)]/90 md:w-auto"
+            >
+              {isSearching ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Searching...
+                </>
+              ) : (
+                <>
+                  <Search className="w-4 h-4" />
+                  Search Flights
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -1002,16 +1007,16 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
       {/* Header labels for multi-city */}
       <div className="hidden md:grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_1fr_auto] gap-4 mb-1 px-1">
         <div>
-          <span className="text-sm font-semibold text-gray-700">From</span>
+          <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">From</span>
         </div>
         <div>
-          <span className="text-sm font-semibold text-gray-700">To</span>
+          <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">To</span>
         </div>
         <div>
-          <span className="text-sm font-semibold text-gray-700">Departure</span>
+          <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">Departure</span>
         </div>
         <div>
-          <span className="text-sm font-semibold text-gray-700">Travellers & Class</span>
+          <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">Travellers & Class</span>
         </div>
         <div></div>
       </div>
@@ -1019,11 +1024,11 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
       <div className="space-y-0">
         {multiCitySegments.map((segment, index) => (
           <div key={segment.id}>
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_1fr_auto] gap-0 items-start relative">
+            <div className="grid grid-cols-1 items-center rounded-2xl border border-border/70 bg-white p-2 md:grid-cols-[1fr_1fr_1fr_1fr_auto]">
               {/* From */}
-              <div className="relative">
+              <div className="relative border-border/70 px-4 py-3 md:border-r">
                 <div
-                  className={`h-[52px] flex items-center relative w-full ${getFieldError(`segment_${index}_from`) &&
+                  className={`h-[64px] flex items-center relative w-full ${getFieldError(`segment_${index}_from`) &&
                     touchedFields.has(`segment_${index}_from`)
                     ? errorInputClass
                     : ''
@@ -1033,9 +1038,9 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
                     value={getDisplayCityName(segment.from)}
                     onChange={(value) => updateMultiCitySegment(segment.id, 'from', value)}
                     placeholder="Departure city"
-                    className="w-full bg-transparent text-base font-semibold text-gray-800 focus:outline-none border-0 h-full !px-4 !pl-11 rounded-xl"
+                    className="w-full bg-transparent font-display text-lg font-medium text-primary focus:outline-none border-0 h-full !px-3 !pl-10 rounded-xl"
                   />
-                  <Plane className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-600 pointer-events-none" />
+                  <Plane className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4.5 h-4.5 text-gray-400 pointer-events-none" />
                 </div>
                 <div className="text-xs text-gray-400 mt-1">
                   {segment.from ? (
@@ -1062,14 +1067,12 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
                 </div>
                 {renderFieldError(`segment_${index}_from`)}
 
-                {/* Vertical Divider between From and To */}
-                <div className="hidden md:block absolute right-0 top-0 h-[52px] w-px bg-gray-300"></div>
               </div>
 
               {/* To */}
-              <div className="relative">
+              <div className="relative border-border/70 px-4 py-3 md:border-r">
                 <div
-                  className={`h-[52px] flex items-center relative w-full ${getFieldError(`segment_${index}_to`) && touchedFields.has(`segment_${index}_to`)
+                  className={`h-[64px] flex items-center relative w-full ${getFieldError(`segment_${index}_to`) && touchedFields.has(`segment_${index}_to`)
                     ? errorInputClass
                     : ''
                     }`}
@@ -1078,7 +1081,7 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
                     value={getDisplayCityName(segment.to)}
                     onChange={(value) => updateMultiCitySegment(segment.id, 'to', value)}
                     placeholder="Destination city"
-                    className="w-full bg-transparent text-base font-semibold text-gray-800 focus:outline-none border-0 h-full !px-4 !pl-11 rounded-xl"
+                    className="w-full bg-transparent font-display text-lg font-medium text-primary focus:outline-none border-0 h-full !px-3 !pl-10 rounded-xl"
                   />
                   <Plane className="absolute left-4 top-1/2 transform -translate-y-1/2 rotate-90 w-5 h-5 text-gray-600 pointer-events-none" />
                 </div>
@@ -1108,14 +1111,13 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
                 {renderFieldError(`segment_${index}_to`)}
 
                 {/* Vertical Divider between To and Date */}
-                <div className="hidden md:block absolute right-0 top-0 h-[52px] w-px bg-gray-300"></div>
               </div>
 
               {/* Date */}
-              <div className="relative">
+              <div className="relative border-border/70 px-4 py-3 md:border-r">
                 <div
                   onClick={openDatePicker}
-                  className={`h-[52px] flex items-center w-full cursor-pointer ${getFieldError(`segment_${index}_date`) &&
+                  className={`h-[64px] flex items-center w-full cursor-pointer ${getFieldError(`segment_${index}_date`) &&
                     touchedFields.has(`segment_${index}_date`)
                     ? errorInputClass
                     : ''
@@ -1134,19 +1136,14 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
                 </div>
                 <div className="text-xs text-gray-400 mt-1">Select date</div>
                 {renderFieldError(`segment_${index}_date`)}
-
-                {/* Vertical Divider between Date and Travellers (only for first row) */}
-                {index === 0 && (
-                  <div className="hidden md:block absolute right-0 top-0 h-[52px] w-px bg-gray-300"></div>
-                )}
               </div>
 
               {/* Traveller & Class - Only shown in first row */}
               {index === 0 ? (
                 <div>
-                  <div className="relative">
+                  <div className="relative border-border/70 px-4 py-3 md:border-r">
                     <div
-                      className={`h-[52px] flex items-center w-full ${getFieldError('travelers') && touchedFields.has('travelers') ? errorInputClass : ''
+                      className={`h-[64px] flex items-center w-full ${getFieldError('travelers') && touchedFields.has('travelers') ? errorInputClass : ''
                         }`}
                     >
                       <button
@@ -1248,7 +1245,7 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
             {/* Horizontal Divider between rows */}
             {index < multiCitySegments.length - 1 && (
               <div className="flex justify-center my-3">
-                <div className="w-full border-t border-gray-300"></div>
+                <div className="w-full border-t border-border/70"></div>
               </div>
             )}
           </div>
@@ -1260,7 +1257,7 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
         <Button
           onClick={handleFlightSearch}
           disabled={isSearching}
-          className="h-12 gap-2 px-8 text-sm font-semibold tracking-[0.08em] uppercase shadow-lg"
+          className="h-14 gap-2 rounded-xl bg-[var(--color-brand-red)] px-8 text-[15px] font-semibold text-white shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] hover:bg-[var(--color-brand-red)]/90"
         >
           {isSearching ? (
             <>

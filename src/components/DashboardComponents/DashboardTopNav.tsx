@@ -134,7 +134,7 @@ export default function DashboardTopNav({ activeTab, onTabChange, user }: Dashbo
   // The blur still has to be here rather than nowhere — once the bar is stuck,
   // whatever scrolls underneath would otherwise pass behind the labels sharply.
   return (
-    <nav className="sticky top-0 z-50 py-3 backdrop-blur-md backdrop-saturate-150">
+    <nav className="sticky top-0 z-50 bg-white/40 py-3 backdrop-blur-md backdrop-saturate-150">
       <div className={LANDING_RAIL}>
         <div className="flex items-center">
           <img src="/logo/KLARBlue.png" alt="Klar Travels" className="h-12 w-auto shrink-0" />
