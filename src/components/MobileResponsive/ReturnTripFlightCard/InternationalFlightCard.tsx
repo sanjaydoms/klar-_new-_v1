@@ -1,11 +1,20 @@
 import React from 'react';
 import { PlaneTakeoff, PlaneLanding, Check } from 'lucide-react';
 import { Flight } from '@/types/returnMobileFlight.type';
+import { formatAircraft, formatTerminal } from '@/features/flights/utils/flightDisplay';
+import { formatBaggage } from '@/features/flights/components/FlightCardFooter';
 
 interface InternationalFlightCardProps {
   onward: Flight;
   return: Flight;
   totalPrice: number;
+  /**
+   * Fare meta for the WHOLE combo — one fare prices both legs, so this is not
+   * per-leg. Absent means the fare stated none; nothing is rendered then.
+   */
+  refundable?: string | undefined;
+  checkInBaggage?: string | undefined;
+  cabinBaggage?: string | undefined;
   isSelected?: boolean;
   onSelect?: (onward: Flight, returnFlight: Flight) => void;
 }
@@ -14,9 +23,13 @@ const InternationalFlightCard: React.FC<InternationalFlightCardProps> = ({
   onward,
   return: returnFlight,
   totalPrice,
+  refundable,
+  checkInBaggage,
+  cabinBaggage,
   isSelected = false,
   onSelect,
 }) => {
+  const baggage = formatBaggage(checkInBaggage, cabinBaggage);
   const getStopDisplay = (flight: Flight) => {
     if (flight.stops === 0) return 'Non-stop';
     if (flight.stopDetails?.displayString) return flight.stopDetails.displayString;
@@ -66,6 +79,14 @@ const InternationalFlightCard: React.FC<InternationalFlightCardProps> = ({
 
         <div className="flex items-center space-x-1 mb-1 sm:mb-1.5">
           <span className="text-[8px] sm:text-[9px] text-gray-600">{flight.flightNumber}</span>
+          {formatAircraft(flight.aircraftTypes) && (
+            <>
+              <span className="text-gray-400 text-[8px] sm:text-[9px]">•</span>
+              <span className="text-[8px] sm:text-[9px] text-gray-500">
+                {formatAircraft(flight.aircraftTypes)}
+              </span>
+            </>
+          )}
           <span className="text-gray-400 text-[8px] sm:text-[9px]">•</span>
           <span className="text-[8px] sm:text-[9px] text-gray-600">{flight.flightKey}</span>
         </div>
@@ -76,7 +97,11 @@ const InternationalFlightCard: React.FC<InternationalFlightCardProps> = ({
             <div className="font-bold text-gray-800 text-xs sm:text-sm">{flight.from.time}</div>
           </div>
           <div className="text-[8px] sm:text-[9px] text-gray-500 font-medium pl-5">
-            {flight.from.airportCode} • {flight.from.city}
+            {flight.from.airportCode}
+            {formatTerminal(flight.from.terminal) && (
+              <span className="text-gray-400"> {formatTerminal(flight.from.terminal)}</span>
+            )}{' '}
+            • {flight.from.city}
           </div>
           <div className="text-[6px] sm:text-[7px] text-gray-400 pl-5">
             {flight.from.day}, {flight.from.date}
@@ -101,7 +126,11 @@ const InternationalFlightCard: React.FC<InternationalFlightCardProps> = ({
             <PlaneLanding size={12} className="text-primary" />
           </div>
           <div className="text-[8px] sm:text-[9px] text-gray-500 font-medium pr-5">
-            {flight.to.airportCode} • {flight.to.city}
+            {flight.to.airportCode}
+            {formatTerminal(flight.to.terminal) && (
+              <span className="text-gray-400"> {formatTerminal(flight.to.terminal)}</span>
+            )}{' '}
+            • {flight.to.city}
           </div>
           <div className="text-[6px] sm:text-[7px] text-gray-400 pr-5">
             {flight.to.day}, {flight.to.date}
@@ -129,6 +158,25 @@ const InternationalFlightCard: React.FC<InternationalFlightCardProps> = ({
         <div className="mb-2 sm:mb-3">{renderFlightSegment(returnFlight, 'Return', false)}</div>
 
         <div className="border-t border-gray-200 my-1 sm:my-2"></div>
+
+        {(refundable || baggage) && (
+          <div className="flex items-center gap-1 flex-wrap mb-1">
+            {refundable && (
+              <span
+                className={`text-[6px] sm:text-[7px] px-1 py-0.5 rounded-full font-medium ${
+                  /non-refundable/i.test(refundable)
+                    ? 'bg-red-100 text-red-700'
+                    : /partially/i.test(refundable)
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-green-100 text-green-700'
+                }`}
+              >
+                {refundable}
+              </span>
+            )}
+            {baggage && <span className="text-[6px] sm:text-[7px] text-gray-500">{baggage}</span>}
+          </div>
+        )}
 
         <div className="flex items-center justify-between">
           <div className="text-[8px] sm:text-[9px] text-gray-500">Total Price</div>

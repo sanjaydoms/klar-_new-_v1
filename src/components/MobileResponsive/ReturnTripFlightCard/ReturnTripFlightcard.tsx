@@ -812,6 +812,9 @@ const ReturnTripFlightcard: React.FC = () => {
                       onward={pair.onward}
                       return={pair.return}
                       totalPrice={pair.totalPrice}
+                      refundable={pair.refundable}
+                      checkInBaggage={pair.checkInBaggage}
+                      cabinBaggage={pair.cabinBaggage}
                       isSelected={
                         selectedInternational?.onward?.flightKey === pair.onward.flightKey
                       }

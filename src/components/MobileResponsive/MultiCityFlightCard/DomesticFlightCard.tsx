@@ -190,9 +190,7 @@ const DomesticFlightCard: React.FC<DomesticFlightCardProps> = ({
         </div>
 
         <div className="mt-3 pt-3 border-t border-gray-100">
-          {baggage && (
-            <div className="text-[10px] text-gray-500 mb-1">🧳 {baggage}</div>
-          )}
+          {baggage && <div className="text-[10px] text-gray-500 mb-1">🧳 {baggage}</div>}
 
           <FareVariantRows fares={fares} activeIndex={fareIndex} onSelectFare={setFareIndex} />
 

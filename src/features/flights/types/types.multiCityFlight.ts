@@ -163,6 +163,7 @@ export interface InternationalFlightLeg {
     time: string;
     date: string;
     day: string;
+    terminal?: string;
   };
   to: {
     city: string;
@@ -170,6 +171,7 @@ export interface InternationalFlightLeg {
     time: string;
     date: string;
     day: string;
+    terminal?: string;
   };
   stops: number;
   duration: string;
@@ -178,6 +180,8 @@ export interface InternationalFlightLeg {
   refundable?: string;
   checkInBaggage?: string;
   cabinBaggage?: string;
+  /** One aircraft code per segment of THIS leg. */
+  aircraftTypes?: string[];
 }
 
 export interface InternationalItinerary {

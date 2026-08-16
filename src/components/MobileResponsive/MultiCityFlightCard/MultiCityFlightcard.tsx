@@ -230,7 +230,7 @@ const MultiCityFlightcard: React.FC = () => {
 
       const fareIds: string[] = [];
 
-      routeStates.forEach(state => {
+      routeStates.forEach((state) => {
         if (state.fareId) {
           fareIds.push(state.fareId);
         }

@@ -45,12 +45,13 @@ const MultiCityRouteTabs: React.FC<MultiCityRouteTabsProps> = ({
           <button
             key={index}
             onClick={() => onTabChange(index)}
-            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 flex items-center gap-1.5 ${isActive
-              ? 'bg-primary text-white shadow-md'
-              : isComplete  // NEW condition
-                ? 'bg-green-100 text-green-700 border border-green-300'
-                : 'bg-white text-gray-600 hover:bg-gray-100 shadow-sm'
-              }`}
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 flex items-center gap-1.5 ${
+              isActive
+                ? 'bg-primary text-white shadow-md'
+                : isComplete // NEW condition
+                  ? 'bg-green-100 text-green-700 border border-green-300'
+                  : 'bg-white text-gray-600 hover:bg-gray-100 shadow-sm'
+            }`}
           >
             <span className="font-semibold">{city.from}</span>
             <span className={isActive ? 'text-white' : 'text-gray-400'}>→</span>

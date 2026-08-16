@@ -1,35 +1,12 @@
 import React, { useState } from 'react';
+import {
+  InternationalFlightLeg,
+  InternationalItinerary,
+} from '@/features/flights/types/types.multiCityFlight';
 import MultiCityRouteTabs from './MultiCityRouteTabs';
 import InternationalFlightCard from '../ReturnTripFlightCard/InternationalFlightCard';
 import MultiCityInternationalFlightCard from './MultiCityInternationalFlightCard';
-
-interface InternationalCityAirport {
-  city: string;
-  airportCode: string;
-  time: string;
-  date: string;
-  day: string;
-}
-
-interface InternationalFlightLeg {
-  legIndex: number;
-  flightKey: string;
-  airline: string;
-  airlineCode: string;
-  flightNumber: string;
-  cabinClass: string;
-  from: InternationalCityAirport;
-  to: InternationalCityAirport;
-  stops: number;
-  duration: string;
-  price: number;
-}
-
-interface InternationalItinerary {
-  itineraryKey: string;
-  totalPrice: number;
-  legs: InternationalFlightLeg[];
-}
+import { agreedValue } from '@/features/flights/components/FlightCardFooter';
 
 interface RouteSelectionState {
   routeIndex: number;
@@ -95,8 +72,10 @@ const InternationalMultiCity: React.FC<InternationalMultiCityProps> = ({
   };
 
   const isItineraryComplete = (itineraryKey: string) => {
-    return currentRouteState?.isComplete === true &&
-      currentRouteState?.selectedFlight?.itineraryKey === itineraryKey;
+    return (
+      currentRouteState?.isComplete === true &&
+      currentRouteState?.selectedFlight?.itineraryKey === itineraryKey
+    );
   };
 
   const isRouteComplete = currentRouteState?.isComplete || false;
@@ -187,32 +166,35 @@ const InternationalMultiCity: React.FC<InternationalMultiCityProps> = ({
                 return null;
               }
 
-              // Map the leg data to match what InternationalFlightCard expects
-              const onward = {
-                airline: onwardLeg.airline,
-                airlineCode: onwardLeg.airlineCode,
-                flightNumber: onwardLeg.flightNumber,
-                from: onwardLeg.from,
-                to: onwardLeg.to,
-                departureTime: onwardLeg.from?.time || '',
-                arrivalTime: onwardLeg.to?.time || '',
-                stops: onwardLeg.stops || 0,
-                duration: onwardLeg.duration || '',
-                price: onwardLeg.price || 0,
-              };
+              // Map the leg data to match what InternationalFlightCard expects.
+              // flightKey, cabinClass, stopDetails and the fare meta used to be
+              // dropped here — the card reads all of them.
+              const toCardFlight = (leg: InternationalFlightLeg, isReturn: boolean) => ({
+                flightKey: leg.flightKey,
+                isReturn,
+                airline: leg.airline,
+                airlineCode: leg.airlineCode,
+                flightNumber: leg.flightNumber,
+                cabinClass: leg.cabinClass,
+                from: leg.from,
+                to: leg.to,
+                stops: leg.stops || 0,
+                stopDetails: {
+                  count: leg.stops || 0,
+                  stopNames: [],
+                  stopCodes: [],
+                  stopCities: [],
+                  displayString: leg.stops
+                    ? `${leg.stops} Stop${leg.stops > 1 ? 's' : ''}`
+                    : 'Non-stop',
+                },
+                duration: leg.duration || '',
+                price: leg.price || 0,
+                aircraftTypes: leg.aircraftTypes,
+              });
 
-              const returnFlight = {
-                airline: returnLeg.airline,
-                airlineCode: returnLeg.airlineCode,
-                flightNumber: returnLeg.flightNumber,
-                from: returnLeg.from,
-                to: returnLeg.to,
-                departureTime: returnLeg.from?.time || '',
-                arrivalTime: returnLeg.to?.time || '',
-                stops: returnLeg.stops || 0,
-                duration: returnLeg.duration || '',
-                price: returnLeg.price || 0,
-              };
+              const onward = toCardFlight(onwardLeg, false);
+              const returnFlight = toCardFlight(returnLeg, true);
 
               return (
                 <InternationalFlightCard
@@ -220,11 +202,15 @@ const InternationalMultiCity: React.FC<InternationalMultiCityProps> = ({
                   onward={onward}
                   return={returnFlight}
                   totalPrice={itinerary.totalPrice}
-                  isExpanded={isExpanded}
+                  // The legs are priced as one combo fare, but each leg states
+                  // its own allowance; say nothing when they disagree.
+                  refundable={agreedValue(itinerary.legs.map((l) => l.refundable))}
+                  checkInBaggage={agreedValue(itinerary.legs.map((l) => l.checkInBaggage))}
+                  cabinBaggage={agreedValue(itinerary.legs.map((l) => l.cabinBaggage))}
+                  // isExpanded/isComplete/isSelecting/onToggleExpand were also
+                  // passed here; this card declares none of them and has no
+                  // expand or completion UI, so they did nothing.
                   isSelected={selected}
-                  isComplete={complete}
-                  isSelecting={isSelecting === itinerary.itineraryKey}
-                  onToggleExpand={toggleItineraryDetails}
                   onSelect={() => onSelectItinerary(itinerary)}
                 />
               );

@@ -72,8 +72,10 @@ const DomesticMultiCity: React.FC<DomesticMultiCityProps> = ({
   };
 
   const isFlightComplete = (flightKey: string) => {
-    return currentRouteState?.isComplete === true &&
-      currentRouteState?.selectedFlight?.flightKey === flightKey;
+    return (
+      currentRouteState?.isComplete === true &&
+      currentRouteState?.selectedFlight?.flightKey === flightKey
+    );
   };
 
   const isRouteComplete = currentRouteState?.isComplete || false;
