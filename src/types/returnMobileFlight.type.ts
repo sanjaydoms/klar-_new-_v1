@@ -11,6 +11,7 @@ export interface Flight {
     time: string;
     date: string;
     day: string;
+    terminal?: string;
   };
   to: {
     city: string;
@@ -18,6 +19,7 @@ export interface Flight {
     time: string;
     date: string;
     day: string;
+    terminal?: string;
   };
   duration: string;
   stops: number;
@@ -31,11 +33,14 @@ export interface Flight {
     displayString: string;
   };
   price?: number;
-}
-
-export interface FlightPair {
-  departure: Flight;
-  return: Flight;
+  /** Fare-group meta from the normalizer; absent means the fare stated none. */
+  fareIdentifier?: string;
+  refundable?: string;
+  checkInBaggage?: string;
+  cabinBaggage?: string;
+  aircraftTypes?: string[];
+  /** Other fare groups of the same physical flight, cheapest first. */
+  variants?: Flight[];
 }
 
 export interface TripDetails {

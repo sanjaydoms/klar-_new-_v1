@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  FlightPair,
+  Flight,
   InternationalFlightPair,
   TripDetails,
   FlightType,
@@ -8,7 +8,8 @@ import {
 } from '@/types/returnMobileFlight.type';
 
 interface TripHeaderProps {
-  flightPairs: FlightPair[];
+  /** First onward flight — the header only reads its route. */
+  firstOnwardFlight: Flight | null;
   internationalPairs: InternationalFlightPair[];
   flightType: FlightType;
   isEditing: boolean;
@@ -31,7 +32,7 @@ interface TripHeaderProps {
 }
 
 const TripHeader: React.FC<TripHeaderProps> = ({
-  flightPairs,
+  firstOnwardFlight,
   internationalPairs,
   flightType,
   isEditing,
@@ -72,8 +73,8 @@ const TripHeader: React.FC<TripHeaderProps> = ({
   };
 
   const getFirstFlight = () => {
-    if (flightType === 'domestic' && flightPairs.length > 0) {
-      return flightPairs[0]?.departure;
+    if (flightType === 'domestic') {
+      return firstOnwardFlight;
     } else if (flightType === 'international' && internationalPairs.length > 0) {
       return internationalPairs[0]?.onward;
     }

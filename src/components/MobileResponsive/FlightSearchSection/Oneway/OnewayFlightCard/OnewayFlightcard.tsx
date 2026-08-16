@@ -1,27 +1,13 @@
 import BottomNav from '@/components/MobileResponsive/DashboardPage/BottomNav';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import FlightCard from './FlightCard';
+import FlightCard, { Flight } from './FlightCard';
 import OnewayFlightHeader from './OnewayFlightHeader';
 import { getOnewayFareDetails } from '@/api/flightService.api';
+import { groupAndMap } from '@/features/flights/utils/groupFareVariants';
+import { formatAircraft, formatTerminal } from '@/features/flights/utils/flightDisplay';
+import { formatBaggage } from '@/features/flights/components/FlightCardFooter';
 
-interface Flight {
-  airline: string;
-  airlineCode: string;
-  flightNumber: string;
-  cabin: string;
-  departure: string;
-  origin: string;
-  duration: string;
-  stops: string;
-  arrival: string;
-  destination: string;
-  baggage: string;
-  price: string;
-  perAdult: string;
-  refundable: boolean;
-  flightKey?: string;
-}
 
 interface ApiFlight {
   flightKey: string;
@@ -35,6 +21,7 @@ interface ApiFlight {
     date: string;
     day: string;
     time: string;
+    terminal?: string;
   };
   to: {
     airportCode: string;
@@ -42,6 +29,7 @@ interface ApiFlight {
     date: string;
     day: string;
     time: string;
+    terminal?: string;
   };
   duration: string;
   stops: number;
@@ -53,7 +41,11 @@ interface ApiFlight {
     displayString: string;
   };
   price: number;
-  refundable?: boolean;
+  refundable?: string;
+  fareIdentifier?: string;
+  checkInBaggage?: string;
+  cabinBaggage?: string;
+  aircraftTypes?: string[];
 }
 
 const OnewayFlightcard: React.FC = () => {
@@ -130,7 +122,7 @@ const OnewayFlightcard: React.FC = () => {
             return;
           }
 
-          const transformedFlights: Flight[] = flightData.map((flight: ApiFlight) => {
+          const transformedFlights: Flight[] = groupAndMap(flightData, (flight: ApiFlight): Flight => {
             const getStopsDisplay = (stops: number, stopDetails?: any): string => {
               if (stops === 0) return 'Non-stop';
               if (stopDetails?.displayString) return stopDetails.displayString;
@@ -152,10 +144,15 @@ const OnewayFlightcard: React.FC = () => {
               stops: getStopsDisplay(flight.stops, flight.stopDetails),
               arrival: flight.to?.time || 'N/A',
               destination: flight.to?.airportCode || flight.to?.city || 'N/A',
-              baggage: '15 KG / 7 KG',
+              originTerminal: formatTerminal(flight.from?.terminal),
+              destinationTerminal: formatTerminal(flight.to?.terminal),
+              aircraft: formatAircraft(flight.aircraftTypes),
+              baggage: formatBaggage(flight.checkInBaggage, flight.cabinBaggage),
               price: formattedPrice,
+              priceValue: flight.price,
+              fareIdentifier: flight.fareIdentifier,
               perAdult: 'PER ADULT',
-              refundable: true,
+              refundable: flight.refundable ?? '',
               flightKey: flight.flightKey,
             };
           });

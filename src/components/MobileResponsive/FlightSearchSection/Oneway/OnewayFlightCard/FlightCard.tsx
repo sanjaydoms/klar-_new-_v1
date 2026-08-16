@@ -1,22 +1,32 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PlaneTakeoff, PlaneLanding, Luggage, Loader } from 'lucide-react';
+import FareVariantRows from '@/features/flights/components/FareVariantRows';
 
-interface Flight {
+/** Defined here and imported by the list, so the two cannot drift apart. */
+export interface Flight {
   airline: string;
   airlineCode: string;
   flightNumber: string;
   cabin: string;
   departure: string;
   origin: string;
+  originTerminal: string;
   duration: string;
   stops: string;
   arrival: string;
   destination: string;
+  destinationTerminal: string;
+  aircraft: string;
+  /** Normalizer label ("Refundable" / "Non-Refundable"), '' when unstated. */
+  refundable: string;
   baggage: string;
   price: string;
+  priceValue: number;
+  fareIdentifier?: string | undefined;
   perAdult: string;
-  refundable: boolean;
-  flightKey?: string;
+  flightKey?: string | undefined;
+  /** Other fare groups of the same physical flight, cheapest first. */
+  variants?: Flight[];
 }
 
 interface FlightCardProps {
@@ -32,6 +42,11 @@ const FlightCard: React.FC<FlightCardProps> = ({
   renderAirlineLogo,
   isSelecting = false,
 }) => {
+  const fares = flight.variants && flight.variants.length > 0 ? flight.variants : [flight];
+  const [fareIndex, setFareIndex] = useState(0);
+  // The chosen fare drives the price shown and the flightKey the fare page loads.
+  const activeFare = fares[Math.min(fareIndex, fares.length - 1)] ?? flight;
+
   return (
     <div className="bg-white rounded-xl border border-[#0A2662] shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
       <div className="p-3 sm:p-5">
@@ -47,17 +62,23 @@ const FlightCard: React.FC<FlightCardProps> = ({
               </span>
               <span className="text-xs text-gray-500">
                 {flight.flightNumber} • {flight.cabin}
+                {flight.aircraft && ` • ${flight.aircraft}`}
               </span>
             </div>
           </div>
 
-          {flight.refundable ? (
-            <span className="text-[10px] sm:text-xs bg-green-100 text-green-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-medium">
-              Refundable
-            </span>
-          ) : (
-            <span className="text-[10px] sm:text-xs bg-red-100 text-red-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-medium">
-              Non-Refundable
+          {/* Absent means the fare stated none — say nothing rather than guess. */}
+          {activeFare.refundable && (
+            <span
+              className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-medium ${
+                /non-refundable/i.test(activeFare.refundable)
+                  ? 'bg-red-100 text-red-700'
+                  : /partially/i.test(activeFare.refundable)
+                    ? 'bg-amber-100 text-amber-700'
+                    : 'bg-green-100 text-green-700'
+              }`}
+            >
+              {activeFare.refundable}
             </span>
           )}
         </div>
@@ -71,6 +92,11 @@ const FlightCard: React.FC<FlightCardProps> = ({
             </div>
             <div className="text-base sm:text-lg font-bold text-gray-700 mt-0.5 ml-5 sm:ml-6">
               {flight.origin}
+              {flight.originTerminal && (
+                <span className="ml-1 text-[10px] font-medium text-gray-500">
+                  {flight.originTerminal}
+                </span>
+              )}
             </div>
           </div>
 
@@ -92,28 +118,41 @@ const FlightCard: React.FC<FlightCardProps> = ({
             </div>
             <div className="text-base sm:text-lg font-bold text-gray-700 mt-0.5 ml-5 sm:ml-6">
               {flight.destination}
+              {flight.destinationTerminal && (
+                <span className="ml-1 text-[10px] font-medium text-gray-500">
+                  {flight.destinationTerminal}
+                </span>
+              )}
             </div>
           </div>
         </div>
+
+        <FareVariantRows
+          fares={fares.map((f) => ({ ...f, price: f.priceValue }))}
+          activeIndex={fareIndex}
+          onSelectFare={setFareIndex}
+        />
 
         <div className="border-t border-gray-200 my-2 sm:my-3"></div>
 
         {/* Price and Action */}
         <div className="flex items-center justify-between">
           <div>
-            <div className="flex items-center space-x-1.5">
-              <Luggage className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600" />
-              <span className="text-xs sm:text-sm text-gray-600">{flight.baggage}</span>
-            </div>
+            {activeFare.baggage && (
+              <div className="flex items-center space-x-1.5">
+                <Luggage className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600" />
+                <span className="text-xs sm:text-sm text-gray-600">{activeFare.baggage}</span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center space-x-2 sm:space-x-4">
             <div className="text-right">
-              <div className="font-bold text-[#EF4444] text-lg sm:text-xl">{flight.price}</div>
+              <div className="font-bold text-[#EF4444] text-lg sm:text-xl">{activeFare.price}</div>
               <div className="text-[10px] sm:text-xs text-gray-400">{flight.perAdult}</div>
             </div>
             <button
-              onClick={() => onSelect(flight)}
+              onClick={() => onSelect(activeFare)}
               disabled={isSelecting}
               className={`bg-primary hover:bg-primary/90 text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-colors ${
                 isSelecting ? 'opacity-70 cursor-not-allowed' : ''

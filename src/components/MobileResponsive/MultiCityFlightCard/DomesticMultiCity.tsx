@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import MultiCityRouteTabs from './MultiCityRouteTabs';
 import DomesticFlightCard, { DomesticFlightSegment } from './DomesticFlightCard';
+import { groupAndMap } from '@/features/flights/utils/groupFareVariants';
 
 interface RouteData {
   legIndex: number;
@@ -77,16 +78,21 @@ const DomesticMultiCity: React.FC<DomesticMultiCityProps> = ({
 
   const isRouteComplete = currentRouteState?.isComplete || false;
 
-  const getFilteredFlights = () => {
-    const route = flightsData.find((r) => r.legIndex === activeTab);
-    if (route && route.flights && Array.isArray(route.flights)) {
-      return route.flights;
-    }
-    if (flightsData[activeTab] && flightsData[activeTab].flights) {
-      return flightsData[activeTab].flights;
-    }
-    return [];
-  };
+  // TripJack returns one entry per fare group, so each leg's list carries
+  // near-duplicate cards until they are folded back together.
+  const groupedByLeg = useMemo(() => {
+    const byLeg = new Map<number, DomesticFlightSegment[]>();
+    flightsData.forEach((route: any, index: number) => {
+      const legIndex = route?.legIndex ?? index;
+      byLeg.set(
+        legIndex,
+        groupAndMap<any, DomesticFlightSegment>(route?.flights ?? [], (f) => f),
+      );
+    });
+    return byLeg;
+  }, [flightsData]);
+
+  const getFilteredFlights = () => groupedByLeg.get(activeTab) ?? [];
 
   const toggleFlightDetails = (flightKey: string) => {
     setExpandedFlight(expandedFlight === flightKey ? null : flightKey);
@@ -94,10 +100,8 @@ const DomesticMultiCity: React.FC<DomesticMultiCityProps> = ({
 
   const currentFlights = getFilteredFlights();
 
-  const flightCounts = cities.map((_, index) => {
-    const route = flightsData.find((r) => r.legIndex === index);
-    return route?.flights?.length || flightsData[index]?.flights?.length || 0;
-  });
+  // Count what the tab will actually show, not the ungrouped fare rows.
+  const flightCounts = cities.map((_, index) => (groupedByLeg.get(index) ?? []).length);
 
   return (
     <>

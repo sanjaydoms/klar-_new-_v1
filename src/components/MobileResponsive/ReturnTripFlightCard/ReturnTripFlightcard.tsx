@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../DashboardPage/BottomNav';
 import FlightCard from './FlightCard';
+import { groupAndMap } from '@/features/flights/utils/groupFareVariants';
 import TripHeader from './TripHeader';
 import {
-  FlightPair,
   FlightType,
   InternationalFlightPair,
   TripDetails,
@@ -24,7 +24,12 @@ import {
 const ReturnTripFlightcard: React.FC = () => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
-  const [flightPairs, setFlightPairs] = useState<FlightPair[]>([]);
+  // Two independent lists. These used to be zipped into "pairs" by index, and
+  // when the two sides differed in length the shorter one was padded by
+  // wrapping with a modulo — so the shorter column repeated its first flights
+  // as if they were extra options.
+  const [onwardFlights, setOnwardFlights] = useState<Flight[]>([]);
+  const [returnFlights, setReturnFlights] = useState<Flight[]>([]);
   const [internationalPairs, setInternationalPairs] = useState<InternationalFlightPair[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [flightType, setFlightType] = useState<FlightType>('domestic');
@@ -64,7 +69,7 @@ const ReturnTripFlightcard: React.FC = () => {
     if (headerRef.current) {
       setHeaderHeight(headerRef.current.offsetHeight);
     }
-  }, [isEditing, flightPairs, internationalPairs]);
+  }, [isEditing, onwardFlights, returnFlights, internationalPairs]);
 
   // Load selected flights from sessionStorage on mount
   useEffect(() => {
@@ -174,23 +179,10 @@ const ReturnTripFlightcard: React.FC = () => {
               const roundTrips = flightsData.roundTrips || flightsData;
               setInternationalPairs(roundTrips);
             } else {
-              const onwardFlights = flightsData.onward || flightsData;
-              const returnFlights = flightsData.return || [];
-              const pairs: FlightPair[] = [];
-
-              const maxLength = Math.max(onwardFlights.length, returnFlights.length);
-
-              for (let i = 0; i < maxLength; i++) {
-                const onwardIndex = i < onwardFlights.length ? i : i % onwardFlights.length;
-                const returnIndex = i < returnFlights.length ? i : i % returnFlights.length;
-
-                pairs.push({
-                  departure: onwardFlights[onwardIndex],
-                  return: returnFlights[returnIndex],
-                });
-              }
-
-              setFlightPairs(pairs);
+              // TripJack returns one entry per fare group, so both lists carry
+              // near-duplicate cards until they are folded back together.
+              setOnwardFlights(groupAndMap<any, Flight>(flightsData.onward || flightsData, (f) => f));
+              setReturnFlights(groupAndMap<any, Flight>(flightsData.return || [], (f) => f));
             }
           }
         }
@@ -685,7 +677,7 @@ const ReturnTripFlightcard: React.FC = () => {
     );
   }
 
-  if (flightType === 'domestic' && flightPairs.length === 0) {
+  if (flightType === 'domestic' && onwardFlights.length === 0 && returnFlights.length === 0) {
     return (
       <div className="block md:hidden lg:hidden min-h-screen bg-gray-100 p-3 sm:p-4 pb-24">
         <div className="max-w-6xl mx-auto">
@@ -730,7 +722,7 @@ const ReturnTripFlightcard: React.FC = () => {
       <div className="max-w-6xl mx-auto">
         <div ref={headerRef} className="sticky top-0 z-50 bg-gray-100" style={{ top: 0 }}>
           <TripHeader
-            flightPairs={flightPairs}
+            firstOnwardFlight={onwardFlights[0] ?? null}
             internationalPairs={internationalPairs}
             flightType={flightType}
             isEditing={isEditing}
@@ -767,19 +759,18 @@ const ReturnTripFlightcard: React.FC = () => {
                 }}
               >
                 <div className="space-y-2 sm:space-y-3 pr-1">
-                  {flightPairs.map((pair, index) => {
-                    const isSelected = selectedDeparture?.flightKey === pair.departure.flightKey;
-                    return (
-                      <div key={`departure-${index}`}>
-                        <FlightCard
-                          flight={pair.departure}
-                          label="Departure"
-                          isSelected={isSelected}
-                          onSelect={handleDomesticFlightSelect}
-                        />
-                      </div>
-                    );
-                  })}
+                  {onwardFlights.map((flight, index) => (
+                    <div key={`departure-${flight.flightKey || index}`}>
+                      <FlightCard
+                        flight={flight}
+                        label="Departure"
+                        isSelected={(flight.variants ?? [flight]).some(
+                          (v) => v.flightKey === selectedDeparture?.flightKey,
+                        )}
+                        onSelect={handleDomesticFlightSelect}
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -791,19 +782,18 @@ const ReturnTripFlightcard: React.FC = () => {
                 }}
               >
                 <div className="space-y-2 sm:space-y-3 pl-1">
-                  {flightPairs.map((pair, index) => {
-                    const isSelected = selectedReturn?.flightKey === pair.return.flightKey;
-                    return (
-                      <div key={`return-${index}`}>
-                        <FlightCard
-                          flight={pair.return}
-                          label="Return"
-                          isSelected={isSelected}
-                          onSelect={handleDomesticFlightSelect}
-                        />
-                      </div>
-                    );
-                  })}
+                  {returnFlights.map((flight, index) => (
+                    <div key={`return-${flight.flightKey || index}`}>
+                      <FlightCard
+                        flight={flight}
+                        label="Return"
+                        isSelected={(flight.variants ?? [flight]).some(
+                          (v) => v.flightKey === selectedReturn?.flightKey,
+                        )}
+                        onSelect={handleDomesticFlightSelect}
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

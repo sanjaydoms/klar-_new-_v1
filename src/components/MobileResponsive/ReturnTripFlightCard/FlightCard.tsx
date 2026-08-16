@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PlaneTakeoff, PlaneLanding, Check } from 'lucide-react';
 import { Flight } from '@/types/returnMobileFlight.type';
+import FareVariantRows from '@/features/flights/components/FareVariantRows';
+import { formatAircraft, formatTerminal } from '@/features/flights/utils/flightDisplay';
+import { formatBaggage } from '@/features/flights/components/FlightCardFooter';
 
 interface FlightCardProps {
   flight: Flight;
@@ -10,6 +13,14 @@ interface FlightCardProps {
 }
 
 const FlightCard: React.FC<FlightCardProps> = ({ flight, label, isSelected = false, onSelect }) => {
+  const fares = flight.variants && flight.variants.length > 0 ? flight.variants : [flight];
+  const [fareIndex, setFareIndex] = useState(0);
+  // The chosen fare is what gets selected and priced, not the cheapest.
+  const activeFare = fares[Math.min(fareIndex, fares.length - 1)] ?? flight;
+  const baggage = formatBaggage(activeFare.checkInBaggage, activeFare.cabinBaggage);
+  const aircraft = formatAircraft(flight.aircraftTypes);
+  const fromTerminal = formatTerminal(flight.from.terminal);
+  const toTerminal = formatTerminal(flight.to.terminal);
   const getStopDisplay = (flight: Flight) => {
     if (flight.stops === 0) return 'Non-stop';
     if (flight.stopDetails?.displayString) return flight.stopDetails.displayString;
@@ -33,7 +44,7 @@ const FlightCard: React.FC<FlightCardProps> = ({ flight, label, isSelected = fal
 
   const handleSelectClick = () => {
     if (onSelect && !isSelected) {
-      onSelect(flight, label);
+      onSelect(activeFare, label);
     }
   };
 
@@ -68,6 +79,12 @@ const FlightCard: React.FC<FlightCardProps> = ({ flight, label, isSelected = fal
 
         <div className="flex items-center space-x-1 mb-1 sm:mb-1.5">
           <span className="text-[8px] sm:text-[9px] text-gray-600">{flight.flightNumber}</span>
+          {aircraft && (
+            <>
+              <span className="text-gray-400 text-[8px] sm:text-[9px]">•</span>
+              <span className="text-[8px] sm:text-[9px] text-gray-500">{aircraft}</span>
+            </>
+          )}
           <span className="text-gray-400 text-[8px] sm:text-[9px]">•</span>
           <span className="text-[8px] sm:text-[9px] text-gray-600">{flight.flightKey}</span>
         </div>
@@ -78,7 +95,9 @@ const FlightCard: React.FC<FlightCardProps> = ({ flight, label, isSelected = fal
             <div className="font-bold text-gray-800 text-xs sm:text-sm">{flight.from.time}</div>
           </div>
           <div className="text-[8px] sm:text-[9px] text-gray-500 font-medium pl-5">
-            {flight.from.airportCode} • {flight.from.city}
+            {flight.from.airportCode}
+            {fromTerminal && <span className="text-gray-400"> {fromTerminal}</span>} •{' '}
+            {flight.from.city}
           </div>
           <div className="text-[6px] sm:text-[7px] text-gray-400 pl-5">
             {flight.from.day}, {flight.from.date}
@@ -103,19 +122,41 @@ const FlightCard: React.FC<FlightCardProps> = ({ flight, label, isSelected = fal
             <PlaneLanding size={12} className="text-primary" />
           </div>
           <div className="text-[8px] sm:text-[9px] text-gray-500 font-medium pr-5">
-            {flight.to.airportCode} • {flight.to.city}
+            {flight.to.airportCode}
+            {toTerminal && <span className="text-gray-400"> {toTerminal}</span>} • {flight.to.city}
           </div>
           <div className="text-[6px] sm:text-[7px] text-gray-400 pr-5">
             {flight.to.day}, {flight.to.date}
           </div>
         </div>
 
+        {(activeFare.refundable || baggage) && (
+          <div className="flex items-center gap-1 flex-wrap mb-0.5">
+            {activeFare.refundable && (
+              <span
+                className={`text-[6px] sm:text-[7px] px-1 py-0.5 rounded-full font-medium ${
+                  /non-refundable/i.test(activeFare.refundable)
+                    ? 'bg-red-100 text-red-700'
+                    : /partially/i.test(activeFare.refundable)
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-green-100 text-green-700'
+                }`}
+              >
+                {activeFare.refundable}
+              </span>
+            )}
+            {baggage && <span className="text-[6px] sm:text-[7px] text-gray-500">{baggage}</span>}
+          </div>
+        )}
+
+        <FareVariantRows fares={fares} activeIndex={fareIndex} onSelectFare={setFareIndex} />
+
         <div className="border-t border-gray-200 my-0.5 sm:my-1"></div>
 
         <div className="flex items-center justify-end">
           <div className="text-right">
             <div className="font-bold text-[#EF4444] text-xs sm:text-sm">
-              {formatPrice(flight.price)}
+              {formatPrice(activeFare.price)}
             </div>
             <div className="text-[6px] sm:text-[7px] text-gray-400">PER ADULT</div>
           </div>

@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
+import FareVariantRows from '@/features/flights/components/FareVariantRows';
+import { formatAircraft, formatTerminal } from '@/features/flights/utils/flightDisplay';
+import { formatBaggage } from '@/features/flights/components/FlightCardFooter';
 
 export interface DomesticFlightSegment {
   flightKey: string;
@@ -12,6 +15,7 @@ export interface DomesticFlightSegment {
     time: string;
     date: string;
     day: string;
+    terminal?: string;
   };
   to: {
     city: string;
@@ -19,10 +23,19 @@ export interface DomesticFlightSegment {
     time: string;
     date: string;
     day: string;
+    terminal?: string;
   };
   stops: number;
   duration: string;
   price: number;
+  /** Fare-group meta from the normalizer; absent means the fare stated none. */
+  fareIdentifier?: string;
+  refundable?: string;
+  checkInBaggage?: string;
+  cabinBaggage?: string;
+  aircraftTypes?: string[];
+  /** Other fare groups of the same physical flight, cheapest first. */
+  variants?: DomesticFlightSegment[];
 }
 
 interface DomesticFlightCardProps {
@@ -46,6 +59,15 @@ const DomesticFlightCard: React.FC<DomesticFlightCardProps> = ({
   onToggleExpand,
   onSelect,
 }) => {
+  const fares = flight.variants && flight.variants.length > 0 ? flight.variants : [flight];
+  const [fareIndex, setFareIndex] = useState(0);
+  // The chosen fare is what gets priced and selected, not the cheapest.
+  const activeFare = fares[Math.min(fareIndex, fares.length - 1)] ?? flight;
+  const baggage = formatBaggage(activeFare.checkInBaggage, activeFare.cabinBaggage);
+  const aircraft = formatAircraft(flight.aircraftTypes);
+  const fromTerminal = formatTerminal(flight.from.terminal);
+  const toTerminal = formatTerminal(flight.to.terminal);
+
   const stopsText =
     flight.stops === 0 ? 'Non-stop' : `${flight.stops} Stop${flight.stops > 1 ? 's' : ''}`;
 
@@ -93,13 +115,29 @@ const DomesticFlightCard: React.FC<DomesticFlightCardProps> = ({
               <div className="font-semibold text-gray-800 text-sm sm:text-base">
                 {flight.airline}
               </div>
-              <div className="text-xs text-gray-500">{flight.flightNumber}</div>
+              <div className="text-xs text-gray-500">
+                {flight.flightNumber}
+                {aircraft && ` • ${aircraft}`}
+              </div>
             </div>
           </div>
           <div className="flex items-center space-x-2">
             <span className="text-[10px] sm:text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full font-medium">
               {flight.cabinClass}
             </span>
+            {activeFare.refundable && (
+              <span
+                className={`text-[10px] sm:text-xs px-2 py-1 rounded-full font-medium ${
+                  /non-refundable/i.test(activeFare.refundable)
+                    ? 'bg-red-50 text-red-700'
+                    : /partially/i.test(activeFare.refundable)
+                      ? 'bg-amber-50 text-amber-700'
+                      : 'bg-green-50 text-green-700'
+                }`}
+              >
+                {activeFare.refundable}
+              </span>
+            )}
             {flight.stops === 0 && (
               <span className="text-[10px] sm:text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full font-medium">
                 Direct
@@ -121,7 +159,10 @@ const DomesticFlightCard: React.FC<DomesticFlightCardProps> = ({
         <div className="flex items-center justify-between py-2">
           <div className="flex-1">
             <div className="font-bold text-gray-800 text-lg sm:text-xl">{flight.from.time}</div>
-            <div className="text-xs text-gray-600 font-medium">{flight.from.airportCode}</div>
+            <div className="text-xs text-gray-600 font-medium">
+              {flight.from.airportCode}
+              {fromTerminal && <span className="ml-1 text-gray-400">{fromTerminal}</span>}
+            </div>
             <div className="text-[10px] text-gray-400">{flight.from.city}</div>
             <div className="text-[10px] text-gray-400">{flight.from.date}</div>
           </div>
@@ -139,13 +180,22 @@ const DomesticFlightCard: React.FC<DomesticFlightCardProps> = ({
 
           <div className="flex-1 text-right">
             <div className="font-bold text-gray-800 text-lg sm:text-xl">{flight.to.time}</div>
-            <div className="text-xs text-gray-600 font-medium">{flight.to.airportCode}</div>
+            <div className="text-xs text-gray-600 font-medium">
+              {flight.to.airportCode}
+              {toTerminal && <span className="ml-1 text-gray-400">{toTerminal}</span>}
+            </div>
             <div className="text-[10px] text-gray-400">{flight.to.city}</div>
             <div className="text-[10px] text-gray-400">{flight.to.date}</div>
           </div>
         </div>
 
         <div className="mt-3 pt-3 border-t border-gray-100">
+          {baggage && (
+            <div className="text-[10px] text-gray-500 mb-1">🧳 {baggage}</div>
+          )}
+
+          <FareVariantRows fares={fares} activeIndex={fareIndex} onSelectFare={setFareIndex} />
+
           <div className="flex items-center justify-between">
             <button
               onClick={() => onToggleExpand(flight.flightKey)}
@@ -157,12 +207,12 @@ const DomesticFlightCard: React.FC<DomesticFlightCardProps> = ({
             <div className="flex items-center space-x-3">
               <div className="text-right">
                 <div className="font-bold text-[#EF4444] text-lg sm:text-xl">
-                  ₹ {flight.price.toLocaleString()}
+                  ₹ {activeFare.price.toLocaleString()}
                 </div>
                 <div className="text-[10px] text-gray-400">PER ADULT</div>
               </div>
               <button
-                onClick={() => onSelect(flight, routeIndex)}
+                onClick={() => onSelect(activeFare, routeIndex)}
                 disabled={isSelecting || isComplete}
                 className={`px-4 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors shadow-md hover:shadow-lg ${
                   isComplete
