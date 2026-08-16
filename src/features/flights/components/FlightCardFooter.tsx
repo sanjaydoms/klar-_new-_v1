@@ -63,13 +63,9 @@ export default function FlightCardFooter({
   if (!tone && !baggage) return null;
 
   return (
-    <div
-      className="mt-2 pb-2 pt-2 px-4 -mx-4 border-t flex items-center justify-between text-xs"
-      style={{
-        borderTop: '1px solid #e5e7eb',
-        background: '#f8fafc',
-      }}
-    >
+    // Plain row on the card's own surface, per the results design — this was a
+    // banded strip (gold, then grey) spanning the card's full width.
+    <div className="flex items-center justify-between pt-3 pb-4 text-xs">
       <div className="flex items-center gap-6">
         {tone && (
           <div className={`flex items-center gap-1 ${tone}`}>

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { FlightData } from '../../types/types.oneWayFlight';
 import OneWayFlightCard from './OnewayFlightcard';
 import { groupFareVariants, durationToMinutes } from '../../utils/groupFareVariants';
+import ResultsAssuranceStrip from '../ResultsAssuranceStrip';
 
 interface OneWayFlightListProps {
   flights?: FlightData[] | any;
@@ -96,6 +97,8 @@ export default function OneWayFlightList({ flights = [] }: OneWayFlightListProps
 
   return (
     <div className="space-y-4">
+      <ResultsAssuranceStrip />
+
       {cheapestOverall && fastestOverall && (
         <div className="flex flex-wrap gap-3">
           <div className="rounded-lg border border-accent/50 bg-card px-4 py-2 shadow-sm">

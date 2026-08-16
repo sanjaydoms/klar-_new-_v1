@@ -7,6 +7,8 @@ import { getOnewayFareDetails } from '@/api/flightService.api';
 import { groupAndMap } from '@/features/flights/utils/groupFareVariants';
 import { formatAircraft, formatTerminal } from '@/features/flights/utils/flightDisplay';
 import { formatBaggage } from '@/features/flights/components/FlightCardFooter';
+import ResultsAssuranceStrip from '@/features/flights/components/ResultsAssuranceStrip';
+import { ShieldCheck } from 'lucide-react';
 
 
 interface ApiFlight {
@@ -129,9 +131,22 @@ const OnewayFlightcard: React.FC = () => {
               return `${stops} Stop${stops > 1 ? 's' : ''}`;
             };
 
+            // Whole rupees, as the design shows them.
             const formattedPrice = flight.price
-              ? `₹ ${flight.price.toLocaleString('en-IN')}`
+              ? `₹ ${Math.round(flight.price).toLocaleString('en-IN')}`
               : '₹ N/A';
+
+            // "Sun, 16 Aug 2026" from the normalizer's "28-Aug-26".
+            const formatCardDate = (value?: string) => {
+              if (!value) return '';
+              const [day, month, year] = value.split('-');
+              if (!day || !month || !year) return value;
+              const parsed = new Date(`${month} ${day}, 20${year}`);
+              const weekday = Number.isNaN(parsed.getTime())
+                ? ''
+                : `${parsed.toLocaleDateString('en-US', { weekday: 'short' })}, `;
+              return `${weekday}${day} ${month} 20${year}`;
+            };
 
             return {
               airline: flight.airline || 'Unknown',
@@ -145,7 +160,11 @@ const OnewayFlightcard: React.FC = () => {
               arrival: flight.to?.time || 'N/A',
               destination: flight.to?.airportCode || flight.to?.city || 'N/A',
               originTerminal: formatTerminal(flight.from?.terminal),
+              originCity: flight.from?.city,
+              departureDate: formatCardDate(flight.from?.date),
               destinationTerminal: formatTerminal(flight.to?.terminal),
+              destinationCity: flight.to?.city,
+              arrivalDate: formatCardDate(flight.to?.date),
               aircraft: formatAircraft(flight.aircraftTypes),
               baggage: formatBaggage(flight.checkInBaggage, flight.cabinBaggage),
               price: formattedPrice,
@@ -367,6 +386,8 @@ const OnewayFlightcard: React.FC = () => {
 
       <div className="flex-1 overflow-y-auto px-3 sm:px-4 pb-24">
         <div className="max-w-3xl mx-auto space-y-3 sm:space-y-4">
+          <ResultsAssuranceStrip />
+
           {flights.map((flight, index) => (
             <FlightCard
               key={index}
@@ -377,6 +398,11 @@ const OnewayFlightcard: React.FC = () => {
             />
           ))}
         </div>
+      </div>
+
+      <div className="flex items-center gap-2 border-t border-border bg-card px-4 py-3 text-xs text-gray-600">
+        <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
+        Prices are per adult and inclusive of all taxes
       </div>
 
       <div className="flex-shrink-0">
