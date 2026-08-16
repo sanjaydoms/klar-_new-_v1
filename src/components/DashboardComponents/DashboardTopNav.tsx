@@ -129,12 +129,15 @@ export default function DashboardTopNav({ activeTab, onTabChange, user }: Dashbo
     </button>
   );
 
-  // Opaque, and sticky: once stuck, page content scrolls underneath, and the
-  // gap above the white bar would otherwise show it sliding past.
+  // No background of its own — the strip is frosted instead. Something has to
+  // cover the gap above the bar, or content scrolls past it sharply once stuck;
+  // a blur does that without painting a grey band over the hero photograph.
   return (
-    <nav className="sticky top-0 z-50 bg-gray-50 py-4">
+    <nav className="sticky top-0 z-50 py-4 backdrop-blur-md">
       <div className={LANDING_RAIL}>
-        <div className="flex items-center rounded-3xl bg-white px-5 py-3 shadow-[0_18px_50px_-24px_rgba(15,30,77,0.45)]">
+        {/* Glass: translucent white over a heavy blur, lifted by a light top
+            border and a hairline ring rather than a drop shadow. */}
+        <div className="flex items-center rounded-3xl border border-white/60 bg-white/60 px-5 py-3 ring-1 ring-black/5 backdrop-blur-2xl backdrop-saturate-150">
           <img src="/logo/KLARBlue.png" alt="Klar Travels" className="h-12 w-auto shrink-0" />
 
           <Divider />
