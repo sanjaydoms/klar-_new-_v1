@@ -1,4 +1,4 @@
-import { Printer, Sliders, Filter } from 'lucide-react';
+import { Sliders } from 'lucide-react';
 
 interface MobileFilterActionsProps {
   isApplying: boolean;
@@ -18,28 +18,28 @@ export const MobileFilterActions = ({
   onPrint,
 }: MobileFilterActionsProps) => {
   return (
-    <div className="mb-4 pb-4 border-b border-gray-200">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Sliders className="w-4 h-4 text-gray-600" />
-          <span className="text-sm font-semibold text-gray-900">Filter Options</span>
-        </div>
+    // The mobile results design puts the filter row on one line: the heading
+    // on the left, Apply on the right. Print lived here and did not.
+    <div className="mb-4 flex items-center justify-between gap-3 border-b border-border pb-4">
+      <div className="flex items-center gap-2">
+        <Sliders className="h-4 w-4 text-primary" />
+        <span className="text-sm font-semibold text-primary">Filters</span>
+      </div>
+
+      <div className="flex items-center gap-2">
         <button
-          onClick={onPrint}
-          disabled={isPrinting}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
+          onClick={onReset}
+          disabled={isApplying}
+          className="text-xs font-medium text-gray-500 transition-colors hover:text-primary disabled:opacity-50"
         >
-          {isPrinting ? (
-            <>
-              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-              <span>Printing...</span>
-            </>
-          ) : (
-            <>
-              <Printer className="w-3.5 h-3.5" />
-              <span>Print</span>
-            </>
-          )}
+          Reset
+        </button>
+        <button
+          onClick={onApply}
+          disabled={isApplying || !hasChanges}
+          className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
+        >
+          {isApplying ? 'Applying...' : 'Apply Filters'}
         </button>
       </div>
     </div>

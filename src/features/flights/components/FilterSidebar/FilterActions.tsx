@@ -1,4 +1,4 @@
-import { Printer, Sliders } from 'lucide-react';
+import { Printer, RotateCcw, Sliders } from 'lucide-react';
 
 interface FilterActionsProps {
   isApplying: boolean;
@@ -18,18 +18,24 @@ export const FilterActions = ({
   onPrint,
 }: FilterActionsProps) => {
   return (
-    <div className="mb-3 sm:mb-4 border-b border-gray-200 pb-3 sm:pb-4">
-      
-      {/* Title row */}
-      <div className="flex items-center justify-between mb-2 sm:mb-3">
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <Sliders className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
-          <h2 className="text-sm sm:text-lg font-semibold text-gray-900">Filters</h2>
+    <div className="mb-4 border-b border-border pb-4">
+      {/* Title row — Reset sits beside the heading in the results design. */}
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Sliders className="h-5 w-5 shrink-0 text-primary" />
+          <h2 className="text-lg font-semibold text-primary">Filters</h2>
         </div>
+        <button
+          onClick={onReset}
+          disabled={isApplying}
+          className="flex items-center gap-1 text-xs font-medium text-gray-500 transition-colors hover:text-primary disabled:opacity-50"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+          {isApplying ? 'Resetting...' : 'Reset All'}
+        </button>
       </div>
 
-      {/* All three buttons in one row */}
-      <div className="flex gap-1.5 sm:gap-2">
+      <div className="flex gap-2">
         {/* Print Button */}
         {/* <button
           onClick={onPrint}
@@ -50,20 +56,11 @@ export const FilterActions = ({
           )}
         </button> */}
 
-        {/* Reset All Button */}
-        <button
-          onClick={onReset}
-          disabled={isApplying}
-          className="flex-1 px-2 py-1.5 sm:py-2 text-[10px] xs:text-xs sm:text-sm font-medium bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isApplying ? 'Resetting...' : 'Reset All'}
-        </button>
-
         {/* Apply Filters Button */}
         <button
           onClick={onApply}
           disabled={isApplying || !hasChanges}
-          className="flex-[2] px-2 py-1.5 sm:py-2 text-[10px] xs:text-xs sm:text-sm font-medium bg-[#1A1F4D] text-white rounded-md hover:bg-[#2A2F6D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isApplying ? (
             <div className="flex items-center justify-center gap-1.5">

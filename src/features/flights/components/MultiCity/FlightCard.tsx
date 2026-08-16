@@ -5,8 +5,8 @@ import MultiFareDetailsCard from './MultiFareDetailsCard';
 import { getMultiCityFareDetails } from '@/api/flightService.api';
 import { Button } from '@/components/ui/button';
 import FareVariantRows from '../FareVariantRows';
+import FlightCardRoute from '../FlightCardRoute';
 import FlightCardFooter from '../FlightCardFooter';
-import { formatAircraft, formatTerminal } from '../../utils/flightDisplay';
 
 interface FlightCardProps {
   flight: FlightOption;
@@ -29,51 +29,7 @@ const formatDuration = (duration: number | string) => {
   return duration;
 };
 
-const formatTime = (time: string) => {
-  if (!time) return '--:--';
-  try {
-    const [hours = 0, minutes = 0] = time.split(':').map(Number);
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const hours12 = hours % 12 || 12;
-    return `${hours12}:${minutes.toString().padStart(2, '0')}${ampm}`;
-  } catch {
-    return time;
-  }
-};
 
-const formatDateDisplay = (dateStr: string) => {
-  if (!dateStr) return 'N/A';
-  try {
-    const parts = dateStr.split('-');
-    if (parts.length === 3) {
-      const day = parts[0];
-      const month = parts[1];
-      const year = parts[2];
-      const monthNames = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ];
-      const monthIndex = monthNames.indexOf(month as string);
-      const monthNum = (monthIndex + 1).toString().padStart(2, '0');
-      const dateObj = new Date(parseInt('20' + year), monthIndex, parseInt(day as string));
-      const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
-      return `${dayName}, ${day}-${monthNum}-20${year}`;
-    }
-    return dateStr;
-  } catch {
-    return dateStr;
-  }
-};
 
 const getStopDisplay = (stopDetails: any) => {
   if (!stopDetails) return 'Non-stop';
@@ -85,117 +41,10 @@ const getStopDisplay = (stopDetails: any) => {
   return `${stopDetails.count} Stops`;
 };
 
-const getCabinClassDisplay = (cabinClass: string) => {
-  if (!cabinClass) return 'Economy';
-  const classMap: Record<string, string> = {
-    ECONOMY: 'Economy',
-    PREMIUM_ECONOMY: 'Premium Economy',
-    BUSINESS: 'Business',
-    FIRST: 'First Class',
-  };
-  return classMap[cabinClass] || cabinClass.charAt(0) + cabinClass.slice(1).toLowerCase();
-};
 
 /**
  * Sub-components - MATCHING OneWay exactly
  */
-interface AirlineInfoProps {
-  airline: string;
-  airlineCode: string;
-  flightNumber: string;
-  cabinClass: string;
-  aircraft?: string;
-}
-
-const AirlineInfo = ({
-  airline,
-  airlineCode,
-  flightNumber,
-  cabinClass,
-  aircraft,
-}: AirlineInfoProps) => {
-  const airlineLogo = airlineCode ? `/airline-logos/${airlineCode}.png` : null;
-  const cabinClassDisplay = getCabinClassDisplay(cabinClass);
-
-  return (
-    <div className="flex items-center gap-4">
-      <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
-        {airlineLogo ? (
-          <img
-            src={airlineLogo}
-            alt={airline}
-            className="w-10 h-10 object-contain"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-              e.currentTarget.parentElement!.innerHTML = `<span className="text-lg font-bold text-blue-600">${airlineCode || airline?.substring(0, 2)}</span>`;
-            }}
-          />
-        ) : (
-          <span className="text-lg font-bold text-blue-600">
-            {airlineCode || airline?.substring(0, 2) || 'NA'}
-          </span>
-        )}
-      </div>
-      <div className="flex flex-col gap-0.5">
-        <p className="font-semibold text-sm">{airline || 'N/A'}</p>
-        <p className="text-xs text-gray-500">{flightNumber || 'N/A'}</p>
-        <p className="text-xs text-gray-500">{cabinClassDisplay}</p>
-        {aircraft && <p className="text-xs text-gray-400">Aircraft {aircraft}</p>}
-      </div>
-    </div>
-  );
-};
-
-interface FlightPointProps {
-  time: string;
-  airportCode: string;
-  date: string;
-  terminal?: string;
-}
-
-const FlightPoint = ({ time, airportCode, date, terminal }: FlightPointProps) => {
-  return (
-    <div className="text-center">
-      <p className="text-lg font-bold">
-        {airportCode || 'N/A'}
-        {terminal && <span className="ml-1 text-xs font-medium text-gray-500">{terminal}</span>}
-      </p>
-      <p className="text-sm font-medium">{formatTime(time)}</p>
-      <p className="text-xs text-gray-500">{formatDateDisplay(date)}</p>
-    </div>
-  );
-};
-
-interface DurationStopsProps {
-  duration: string | number;
-  stopDetails: any;
-}
-
-const DurationStops = ({ duration, stopDetails }: DurationStopsProps) => {
-  const stopDisplay = getStopDisplay(stopDetails);
-  const durationDisplay =
-    typeof duration === 'number' ? `${Math.floor(duration / 60)}h ${duration % 60}m` : duration;
-
-  return (
-    <div className="flex flex-col items-center w-full">
-      {/* Duration */}
-      <p className="text-sm text-gray-600 mb-1">{formatDuration(durationDisplay)}</p>
-
-      {/* Line */}
-      <div className="relative w-full flex items-center">
-        <div className="w-full border-t-2 border-dashed border-gray-300"></div>
-
-        {/* Dots */}
-        <div className="absolute left-0 w-2 h-2 bg-indigo-700 rounded-full -translate-x-1/2"></div>
-        <div className="absolute right-0 w-2 h-2 bg-indigo-700 rounded-full translate-x-1/2"></div>
-      </div>
-
-      {/* Stops */}
-      <p className="text-red-600 text-sm font-medium mt-1">{stopDisplay}</p>
-    </div>
-  );
-};
-
 interface PriceActionProps {
   price: number;
   isLoading: boolean;
@@ -206,24 +55,24 @@ interface PriceActionProps {
 const PriceAction = ({ price, isLoading, isSelected, onSelect }: PriceActionProps) => {
   return (
     <div className="flex flex-col items-end gap-2">
-      <div className="text-right">
-        <p className="text-xl font-bold text-black">₹ {price?.toFixed(0) || '0'}</p>
-        <p className="text-[10px] text-gray-500 uppercase tracking-wide">PER ADULT</p>
-      </div>
-      <div className="flex flex-col items-end gap-1 w-full">
-        <Button
-          onClick={onSelect}
-          disabled={isLoading}
-          variant={isSelected ? 'secondary' : 'accent'}
-          className="w-full px-8 sm:w-auto"
-        >
-          {isLoading ? 'Loading...' : isSelected ? 'Selected ✓' : 'Select'}
-        </Button>
-      </div>
+      <p className="text-xl font-bold text-primary">
+        ₹ {price != null ? Math.round(price).toLocaleString('en-IN') : '0'}
+      </p>
+      <p className="-mt-1 text-xs text-gray-500">per adult</p>
+      <Button
+        onClick={onSelect}
+        disabled={isLoading}
+        className={`mt-1 h-10 w-full rounded-lg px-7 text-[13px] font-semibold ${
+          isSelected
+            ? 'bg-secondary text-primary hover:bg-secondary/80'
+            : 'bg-primary text-white hover:bg-primary/90'
+        }`}
+      >
+        {isLoading ? 'Loading...' : isSelected ? 'Selected ✓' : 'Select'}
+      </Button>
     </div>
   );
 };
-
 
 /**
  * Main Component - MATCHING OneWay exactly
@@ -309,50 +158,37 @@ export default function FlightCard({
   return (
     <>
       <div
-        className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden border"
-        style={{ border: '0.4px solid #F3393F' }}
+        className={`overflow-hidden rounded-2xl border bg-card shadow-[0_10px_30px_-24px_rgba(15,30,77,0.5)] transition-shadow duration-300 hover:shadow-md ${
+          isSelected ? 'border-primary ring-1 ring-primary/30' : 'border-border'
+        }`}
       >
-        {/* Main Flight Info */}
-        <div className="p-4 pb-0">
-          <div className="flex items-center justify-between gap-4">
-            {/* Airline Info */}
-            <div className="flex-1">
-              <AirlineInfo
-                airline={flight.airline?.name || ''}
-                airlineCode={flight.airline?.code || ''}
-                flightNumber={flight.flightNumber || ''}
-                cabinClass={flight.cabinClass || ''}
-                aircraft={formatAircraft(activeFare.aircraftTypes)}
-              />
-            </div>
+        <div className="px-5 pt-5">
+          <div className="flex items-start gap-6">
+            <FlightCardRoute
+              airline={flight.airline?.name || ''}
+              airlineCode={flight.airline?.code}
+              flightNumber={flight.flightNumber}
+              cabinClass={flight.cabinClass}
+              aircraftTypes={activeFare.aircraftTypes}
+              from={{
+                time: flight.departure?.time,
+                airportCode: flight.departure?.airportCode,
+                city: flight.departure?.city,
+                date: flight.departure?.date,
+                terminal: activeFare.departure?.terminal,
+              }}
+              to={{
+                time: flight.arrival?.time,
+                airportCode: flight.arrival?.airportCode,
+                city: flight.arrival?.city,
+                date: flight.arrival?.date,
+                terminal: activeFare.arrival?.terminal,
+              }}
+              duration={formatDuration(flight.duration || 0)}
+              stopsLabel={getStopDisplay(stopDetails)}
+            />
 
-            {/* Departure */}
-            <div className="flex-1">
-              <FlightPoint
-                time={flight.departure?.time}
-                airportCode={flight.departure?.airportCode}
-                date={flight.departure?.date}
-                terminal={formatTerminal(activeFare.departure?.terminal)}
-              />
-            </div>
-
-            {/* Duration & Stops */}
-            <div className="flex-[1.5]">
-              <DurationStops duration={flight.duration || 0} stopDetails={stopDetails} />
-            </div>
-
-            {/* Arrival */}
-            <div className="flex-1">
-              <FlightPoint
-                time={flight.arrival?.time}
-                airportCode={flight.arrival?.airportCode}
-                date={flight.arrival?.date}
-                terminal={formatTerminal(activeFare.arrival?.terminal)}
-              />
-            </div>
-
-            {/* Price & Action */}
-            <div className="flex-1 flex justify-end">
+            <div className="w-[185px] shrink-0 border-l border-border pl-5">
               <PriceAction
                 price={price}
                 isLoading={isLoading}

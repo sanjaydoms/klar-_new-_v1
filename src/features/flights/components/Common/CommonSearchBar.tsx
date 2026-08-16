@@ -78,7 +78,7 @@ export const FromField = ({
       ref={containerRef}
     >
       <div
-        className={`bg-[#F8F9FA] border rounded-lg p-1 sm:p-1.5 flex items-center transition-colors ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-blue-400'
+        className={`rounded-xl border border-transparent bg-transparent p-1 sm:p-1.5 hover:border-border flex items-center transition-colors ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-border'
           }`}
         style={{ borderWidth: '0.79px', height: '44px' }}
         onClick={handleClick}
@@ -166,7 +166,7 @@ export const ToField = ({ value, onChange, className = '', placeholder = 'To', d
       ref={containerRef}
     >
       <div
-        className={`bg-[#F8F9FA] border rounded-lg p-1 sm:p-1.5 flex items-center transition-colors ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-blue-400'
+        className={`rounded-xl border border-transparent bg-transparent p-1 sm:p-1.5 hover:border-border flex items-center transition-colors ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-border'
           }`}
         style={{ borderWidth: '0.79px', height: '44px' }}
         onClick={handleClick}
@@ -249,7 +249,7 @@ export const DepartureDateField = ({
       ref={containerRef}
     >
       <div
-        className={`bg-[#F8F9FA] border rounded-lg p-1 sm:p-1.5 flex items-center transition-colors ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-blue-400'
+        className={`rounded-xl border border-transparent bg-transparent p-1 sm:p-1.5 hover:border-border flex items-center transition-colors ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-border'
           }`}
         style={{ borderWidth: '0.79px', height: '44px' }}
         onClick={handleClick}
@@ -330,7 +330,7 @@ export const ReturnDateField = ({
       ref={containerRef}
     >
       <div
-        className={`bg-[#F8F9FA] border rounded-lg p-1 sm:p-1.5 flex items-center transition-colors ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-blue-400'
+        className={`rounded-xl border border-transparent bg-transparent p-1 sm:p-1.5 hover:border-border flex items-center transition-colors ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-border'
           }`}
         style={{ borderWidth: '0.79px', height: '44px' }}
         onClick={handleClick}
@@ -493,7 +493,7 @@ export const PassengerClassField = ({
       ref={travelerRef}
     >
       <div
-        className={`bg-[#F8F9FA] border rounded-lg p-1 sm:p-1.5 flex flex-col justify-center transition-colors ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-blue-400'
+        className={`rounded-xl border border-transparent bg-transparent p-1 sm:p-1.5 hover:border-border flex flex-col justify-center transition-colors ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-border'
           }`}
         style={{ borderWidth: '0.79px', height: '44px' }}
         onClick={handleFieldClick}
@@ -922,7 +922,7 @@ export default function CommonSearchBarEnhanced({
     return (
       <div
         key={index}
-        className={`bg-white px-2 sm:px-3 py-2 rounded-lg border-1 border-gray-500 w-full ${isLoading ? 'opacity-60' : ''
+        className={`w-full rounded-2xl border border-border bg-card px-3 py-2.5 shadow-[0_10px_30px_-24px_rgba(15,30,77,0.5)] sm:px-4 ${isLoading ? 'opacity-60' : ''
           }`}
       >
         <div className="flex items-center gap-2 w-full">
@@ -934,7 +934,7 @@ export default function CommonSearchBarEnhanced({
 
           <div className="flex-1 min-w-[70px] flex flex-col">
             <div
-              className={`bg-[#F8F9FA] border rounded-lg p-1 sm:p-1.5 flex flex-col justify-center ${isLoading ? 'opacity-50 cursor-not-allowed' : ''
+              className={`rounded-xl border border-transparent bg-transparent p-1 sm:p-1.5 hover:border-border flex flex-col justify-center ${isLoading ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               style={{ borderWidth: '0.79px', height: '44px' }}
             >
@@ -967,7 +967,7 @@ export default function CommonSearchBarEnhanced({
 
           <div className="flex-1 min-w-[70px] flex flex-col">
             <div
-              className={`bg-[#F8F9FA] border rounded-lg p-1 sm:p-1.5 flex flex-col justify-center ${isLoading ? 'opacity-50 cursor-not-allowed' : ''
+              className={`rounded-xl border border-transparent bg-transparent p-1 sm:p-1.5 hover:border-border flex flex-col justify-center ${isLoading ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               style={{ borderWidth: '0.79px', height: '44px' }}
             >
@@ -998,7 +998,7 @@ export default function CommonSearchBarEnhanced({
 
           <div className="flex-1 min-w-[70px] flex flex-col">
             <div
-              className={`bg-[#F8F9FA] border rounded-lg p-1 sm:p-1.5 flex flex-col justify-center ${isLoading ? 'opacity-50 cursor-not-allowed' : ''
+              className={`rounded-xl border border-transparent bg-transparent p-1 sm:p-1.5 hover:border-border flex flex-col justify-center ${isLoading ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               style={{ borderWidth: '0.79px', height: '44px' }}
             >
