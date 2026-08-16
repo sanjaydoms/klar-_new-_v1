@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { refundableLabelFromType } from '@/features/flights/utils/flightDisplay';
 import {
   X,
   Clock,
@@ -147,7 +148,7 @@ export default function MultiFlightDetailsModal({
         baggage: null,
         cabinClass: '',
         fareBasis: 'N/A',
-        isRefundable: false,
+        refundable: '',
         bookingClass: 'N/A',
         penalties: null,
       };
@@ -162,7 +163,9 @@ export default function MultiFlightDetailsModal({
         baggage: fare.fd.ADULT.bI || null,
         cabinClass: fare.fd.ADULT.cc || '',
         fareBasis: fare.fd.ADULT.fB || 'N/A',
-        isRefundable: fare.fd.ADULT.rT === 1,
+        // rT 2 is PARTIALLY refundable; `=== 1` reported that as non-refundable,
+        // as it did a fare that states no type at all.
+        refundable: refundableLabelFromType(fare.fd.ADULT.rT),
         bookingClass: fare.fd.ADULT.cB || 'N/A',
         penalties: fare.fd.ADULT.penalties || null,
       };
@@ -177,7 +180,7 @@ export default function MultiFlightDetailsModal({
         baggage: fare.fd.ADULT.baggage || fare.fd.ADULT.bI || null,
         cabinClass: fare.fd.ADULT.cabinClass || fare.fd.ADULT.cc || '',
         fareBasis: fare.fd.ADULT.fareBasis || fare.fd.ADULT.fB || 'N/A',
-        isRefundable: fare.fd.ADULT.isRefundable || fare.fd.ADULT.rT === 1,
+        refundable: refundableLabelFromType(fare.fd.ADULT.rT),
         bookingClass: fare.fd.ADULT.bookingClass || fare.fd.ADULT.cB || 'N/A',
         penalties: fare.fd.ADULT.penalties || null,
       };
@@ -190,7 +193,7 @@ export default function MultiFlightDetailsModal({
       baggage: null,
       cabinClass: '',
       fareBasis: 'N/A',
-      isRefundable: false,
+      refundable: '',
       bookingClass: 'N/A',
       penalties: null,
     };
@@ -619,21 +622,27 @@ export default function MultiFlightDetailsModal({
                           <div className="grid grid-cols-2 gap-4 mb-4">
                             <div
                               className={`p-3 rounded-lg ${
-                                fareDetails.isRefundable ? 'bg-green-50' : 'bg-red-50'
+                                !fareDetails.refundable
+                                  ? 'bg-gray-50'
+                                  : /^refundable$/i.test(fareDetails.refundable)
+                                    ? 'bg-green-50'
+                                    : 'bg-red-50'
                               }`}
                             >
                               <p
                                 className={`text-sm font-medium ${
-                                  fareDetails.isRefundable ? 'text-green-700' : 'text-red-700'
+                                  !fareDetails.refundable
+                                    ? 'text-gray-500'
+                                    : /^refundable$/i.test(fareDetails.refundable)
+                                      ? 'text-green-700'
+                                      : 'text-red-700'
                                 }`}
                               >
-                                {fareDetails.isRefundable ? 'Refundable' : 'Non-refundable'}
+                                {fareDetails.refundable || 'Refundability not stated'}
                               </p>
-                              <p className="text-xs text-gray-600 mt-1">
-                                {fareDetails.isRefundable
-                                  ? 'Free cancellation within 24 hours'
-                                  : 'No refunds after booking'}
-                              </p>
+                              {/* 'Free cancellation within 24 hours' / 'No refunds after
+                                  booking' sat here — invented terms. The real windows come
+                                  from the fare-rule call. */}
                             </div>
                             <div className="bg-gray-50 p-3 rounded-lg">
                               <p className="text-sm font-medium text-gray-700">Booking Class</p>
@@ -702,11 +711,17 @@ export default function MultiFlightDetailsModal({
                               maximumFractionDigits: 0,
                             })}
                           </span>
-                          <span
-                            className={fareDetails.isRefundable ? 'text-green-600' : 'text-red-600'}
-                          >
-                            {fareDetails.isRefundable ? 'Refundable' : 'Non-refundable'}
-                          </span>
+                          {fareDetails.refundable && (
+                            <span
+                              className={
+                                /^refundable$/i.test(fareDetails.refundable)
+                                  ? 'text-green-600'
+                                  : 'text-red-600'
+                              }
+                            >
+                              {fareDetails.refundable}
+                            </span>
+                          )}
                         </div>
                       </div>
                     );

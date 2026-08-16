@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { refundableLabelFromType } from '@/features/flights/utils/flightDisplay';
 import {
   X,
   Clock,
@@ -98,7 +99,7 @@ export default function FlightDetailsModal({
         baggage: null,
         cabinClass: '',
         fareBasis: 'N/A',
-        isRefundable: false,
+        refundable: '',
         bookingClass: 'N/A',
       };
     if (fare.fd?.ADULT?.fC) {
@@ -110,7 +111,8 @@ export default function FlightDetailsModal({
         baggage: fare.fd.ADULT.bI || null,
         cabinClass: fare.fd.ADULT.cc || '',
         fareBasis: fare.fd.ADULT.fB || 'N/A',
-        isRefundable: fare.fd.ADULT.rT === 1,
+        // rT 2 is PARTIALLY refundable, and an unstated rT is not a No.
+        refundable: refundableLabelFromType(fare.fd.ADULT.rT),
         bookingClass: fare.fd.ADULT.cB || 'N/A',
       };
     }
@@ -122,7 +124,7 @@ export default function FlightDetailsModal({
         baggage: fare.fd.ADULT.baggage || fare.fd.ADULT.bI || null,
         cabinClass: fare.fd.ADULT.cabinClass || fare.fd.ADULT.cc || '',
         fareBasis: fare.fd.ADULT.fareBasis || fare.fd.ADULT.fB || 'N/A',
-        isRefundable: fare.fd.ADULT.isRefundable || fare.fd.ADULT.rT === 1,
+        refundable: refundableLabelFromType(fare.fd.ADULT.rT),
         bookingClass: fare.fd.ADULT.bookingClass || fare.fd.ADULT.cB || 'N/A',
       };
     }
@@ -133,7 +135,7 @@ export default function FlightDetailsModal({
       baggage: null,
       cabinClass: '',
       fareBasis: 'N/A',
-      isRefundable: false,
+      refundable: '',
       bookingClass: 'N/A',
     };
   };
@@ -825,19 +827,29 @@ export default function FlightDetailsModal({
                       )}
 
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 6 }}>
-                        <span
-                          style={{
-                            fontSize: 10.5,
-                            fontWeight: 600,
-                            background: fareDetails.isRefundable ? '#f0fdf4' : '#fef2f2',
-                            color: fareDetails.isRefundable ? '#15803d' : '#dc2626',
-                            border: `1px solid ${fareDetails.isRefundable ? '#86efac' : '#fca5a5'}`,
-                            borderRadius: 20,
-                            padding: '2px 8px',
-                          }}
-                        >
-                          {fareDetails.isRefundable ? 'Refundable' : 'Non-refundable'}
-                        </span>
+                        {fareDetails.refundable && (
+                          <span
+                            style={{
+                              fontSize: 10.5,
+                              fontWeight: 600,
+                              background: /^refundable$/i.test(fareDetails.refundable)
+                                ? '#f0fdf4'
+                                : '#fef2f2',
+                              color: /^refundable$/i.test(fareDetails.refundable)
+                                ? '#15803d'
+                                : '#dc2626',
+                              border: `1px solid ${
+                                /^refundable$/i.test(fareDetails.refundable)
+                                  ? '#86efac'
+                                  : '#fca5a5'
+                              }`,
+                              borderRadius: 20,
+                              padding: '2px 8px',
+                            }}
+                          >
+                            {fareDetails.refundable}
+                          </span>
+                        )}
                         <span
                           style={{
                             fontSize: 10.5,

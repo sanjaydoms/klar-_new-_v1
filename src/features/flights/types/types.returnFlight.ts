@@ -41,7 +41,8 @@ export interface Flight {
   searchId?: string;
   segmentId?: string;
   flightKey?: string;
-  isRefundable: boolean;
+  /** Optional: the return mapper set it to a constant false and nothing read it. */
+  isRefundable?: boolean;
   baggage?: FlightBaggage | null;
   fareOptions?: FlightFareOption[];
   stopDetails?: {

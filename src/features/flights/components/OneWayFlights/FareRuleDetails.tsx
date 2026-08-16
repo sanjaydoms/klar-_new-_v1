@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { refundableLabelFromType } from '@/features/flights/utils/flightDisplay';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Clock,
@@ -360,31 +361,37 @@ export default function FareRulesPage({ onConfirm, isOpen = true, onClose }: Far
                 {activeTab === 'summary' && (
                   <div className="space-y-6">
                     {/* Refundable status */}
-                    {selectedFare?.FareDetails?.AdultFare?.RefundableType !== undefined && (
-                      <div
-                        className={`p-3 border flex items-center gap-2 ${
-                          selectedFare.FareDetails.AdultFare.RefundableType === 1
-                            ? 'bg-green-50 border-green-200'
-                            : 'bg-red-50 border-red-200'
-                        }`}
-                      >
-                        {selectedFare.FareDetails.AdultFare.RefundableType === 1 ? (
-                          <>
+                    {(() => {
+                      // rT 2 is PARTIALLY refundable; `=== 1` labelled it
+                      // "Non-Refundable Fare" on the gate the user confirms.
+                      const refundable = refundableLabelFromType(
+                        selectedFare?.FareDetails?.AdultFare?.RefundableType,
+                      );
+                      if (!refundable) return null;
+                      const fullyRefundable = /^refundable$/i.test(refundable);
+                      return (
+                        <div
+                          className={`p-3 border flex items-center gap-2 ${
+                            fullyRefundable
+                              ? 'bg-green-50 border-green-200'
+                              : 'bg-red-50 border-red-200'
+                          }`}
+                        >
+                          {fullyRefundable ? (
                             <Check className="w-4 h-4 text-green-600" />
-                            <span className="text-sm font-semibold text-green-800">
-                              Refundable Fare
-                            </span>
-                          </>
-                        ) : (
-                          <>
+                          ) : (
                             <XCircle className="w-4 h-4 text-red-600" />
-                            <span className="text-sm font-semibold text-red-800">
-                              Non-Refundable Fare
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    )}
+                          )}
+                          <span
+                            className={`text-sm font-semibold ${
+                              fullyRefundable ? 'text-green-800' : 'text-red-800'
+                            }`}
+                          >
+                            {refundable} Fare
+                          </span>
+                        </div>
+                      );
+                    })()}
 
                     {/* Selected Fare Information */}
                     {selectedFare && (

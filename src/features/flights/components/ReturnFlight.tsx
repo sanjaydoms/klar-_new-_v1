@@ -336,7 +336,6 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
       class: flight.cabinClass || '',
       searchId: flight.searchId,
       segmentId: flight.flightKey,
-      isRefundable: false,
       baggage: null,
       fareOptions: flight.fareOptions || [
         {
