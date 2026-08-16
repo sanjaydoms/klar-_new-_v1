@@ -1,5 +1,6 @@
 import { FlightSegment } from "../../types/returnSort.types";
 import { SortField, SortOption } from "../../types/sort.types";
+import { compareTimes } from "./time.utils";
 
 export class ReturnFlightSorter {
 
@@ -81,31 +82,19 @@ export class ReturnFlightSorter {
     }
 
     /**
-     * Compare by departure time
+     * Compare by departure time, falling back to the date when they match
      */
     private static compareDepartureTime(a: FlightSegment, b: FlightSegment): number {
-        const timeA = this.timeToMinutes(a.from.time);
-        const timeB = this.timeToMinutes(b.from.time);
-
-        if (timeA === timeB) {
-            return this.compareDates(a.from.date, b.from.date);
-        }
-
-        return timeA - timeB;
+        const byTime = compareTimes(a.from.time, b.from.time);
+        return byTime !== 0 ? byTime : this.compareDates(a.from.date, b.from.date);
     }
 
     /**
-     * Compare by arrival time
+     * Compare by arrival time, falling back to the date when they match
      */
     private static compareArrivalTime(a: FlightSegment, b: FlightSegment): number {
-        const timeA = this.timeToMinutes(a.to.time);
-        const timeB = this.timeToMinutes(b.to.time);
-
-        if (timeA === timeB) {
-            return this.compareDates(a.to.date, b.to.date);
-        }
-
-        return timeA - timeB;
+        const byTime = compareTimes(a.to.time, b.to.time);
+        return byTime !== 0 ? byTime : this.compareDates(a.to.date, b.to.date);
     }
 
     /**
@@ -132,14 +121,6 @@ export class ReturnFlightSorter {
         const hours = hoursMatch ? parseInt(hoursMatch[1]) : 0;
         const minutes = minutesMatch ? parseInt(minutesMatch[1]) : 0;
 
-        return (hours * 60) + minutes;
-    }
-
-    /**
-     * Convert time string to minutes
-     */
-    private static timeToMinutes(time: string): number {
-        const [hours, minutes] = time.split(':').map(Number);
         return (hours * 60) + minutes;
     }
 

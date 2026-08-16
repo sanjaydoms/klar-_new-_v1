@@ -19,6 +19,8 @@
 import assert from "assert";
 import { FlightFilter } from "../src/utils/sorter/filter.utils";
 import { MultiCityFlightFilter } from "../src/utils/sorter/multiFilter.utils";
+import { OnewayFlightSorter } from "../src/utils/sorter/onewaySort.utils";
+import { compareTimes } from "../src/utils/sorter/time.utils";
 import { Filter } from "../src/types/filter.types";
 import { FlightSegment } from "../src/types/returnFilter.types";
 
@@ -172,4 +174,52 @@ const multiBad = MultiCityFlightFilter.applyFilters(
 );
 assert.strictEqual(multiBad.length, 1, "multi-city treats an unreadable window the same way");
 
-console.log("OK — filter options and ranges survive an applied filter; time windows wrap, handle red-eyes and reject unreadable input");
+// ── Sorting past an unreadable time ──────────────────────────────────────────
+// The sorters had the same unguarded parser, and `timeA - timeB` with a NaN
+// operand returns NaN — not a valid answer to "which comes first". The spec
+// leaves the result of an inconsistent comparator implementation-defined; what
+// is actually observable in V8 with one bad record is that the record lands at
+// an arbitrary position rather than a chosen one, splitting the sorted run.
+// Both are pinned below: where the bad record goes, and that the rest stay in
+// order around it.
+
+const flight = (airline: string, depart: string, date = "01-Sep-26") => ({
+    flightKey: `${airline}-${depart}`,
+    airline,
+    airlineCode: airline.slice(0, 2).toUpperCase(),
+    flightNumber: "100",
+    cabinClass: "ECONOMY",
+    from: { city: "Delhi", airportCode: "DEL", time: depart, date, day: "Tue" },
+    to: { city: "Mumbai", airportCode: "BOM", time: "12:00", date, day: "Tue" },
+    duration: "2h 00m",
+    stops: 0,
+    price: 5000,
+}) as any;
+
+const sorted = OnewayFlightSorter.sortFlights(
+    [flight("Late", "21:00"), flight("Broken", ""), flight("Early", "06:00"), flight("Mid", "12:30")],
+    { field: "departureTime", order: "asc" },
+);
+
+// Nothing is lost, and the readable flights keep their order around the bad one.
+assert.strictEqual(sorted.length, 4, "sorting drops nothing");
+assert.deepStrictEqual(
+    sorted.filter(f => f.airline !== "Broken").map(f => f.airline),
+    ["Early", "Mid", "Late"],
+    "an unreadable time does not disturb the order of everything else",
+);
+
+// ...and the unorderable record is parked at the end rather than mid-list.
+assert.strictEqual(
+    sorted[sorted.length - 1].airline,
+    "Broken",
+    "the record with no usable time sorts last",
+);
+
+// Two unreadable times are equal to each other, not indeterminate.
+assert.strictEqual(compareTimes("", ""), 0, "two unreadable times compare equal");
+assert.ok(compareTimes("", "06:00") > 0, "unreadable sorts after readable");
+assert.ok(compareTimes("06:00", "") < 0, "and readable before unreadable");
+assert.ok(!Number.isNaN(compareTimes("nope", "also-nope")), "compareTimes never returns NaN");
+
+console.log("OK — filter options and ranges survive an applied filter; time windows wrap, handle red-eyes and reject unreadable input; sorting tolerates it");
