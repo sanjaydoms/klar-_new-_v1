@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, Check, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 import { getFareRule } from '@/api/flightService.api';
+import { cabinBaggageOf, refundableLabelFromType } from '@/features/flights/utils/flightDisplay';
 import MultiFareRuleCard from './MultiFareRuleCard';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -347,7 +348,7 @@ export default function MultiFareDetailsCard({
       baggage: fareData.BaggageInfo || { CheckInBaggage: 'N/A', ClassCode: 'N/A' },
       cabinClass: fareData.CabinClass || 'ECONOMY',
       fareBasis: fareData.FareBasis || 'N/A',
-      isRefundable: fareData.RefundableType === 1,
+      refundable: refundableLabelFromType(fareData.RefundableType),
       bookingClass: fareData.ClassCode || 'N/A',
       seatsRemaining: fareData.SeatsRemaining || 0,
       mealIncluded: fareData.MealIncluded || false,
@@ -482,14 +483,18 @@ export default function MultiFareDetailsCard({
           <div>
             <p className="text-xs font-bold text-gray-800 uppercase tracking-wide">Baggage</p>
             <div className="mt-0.5 text-xs text-gray-600 space-y-0.5">
-              <div className="flex items-start gap-1.5">
-                <GreenCheck />
-                <span>{details.baggage?.ClassCode || '7 Kg'} Cabin Baggage</span>
-              </div>
-              <div className="flex items-start gap-1.5">
-                <GreenCheck />
-                <span>{details.baggage?.CheckInBaggage || 'Not included'} Check-in Baggage</span>
-              </div>
+              {cabinBaggageOf(details.baggage) && (
+                <div className="flex items-start gap-1.5">
+                  <GreenCheck />
+                  <span>{cabinBaggageOf(details.baggage)} Cabin Baggage</span>
+                </div>
+              )}
+              {details.baggage?.CheckInBaggage && (
+                <div className="flex items-start gap-1.5">
+                  <GreenCheck />
+                  <span>{details.baggage.CheckInBaggage} Check-in Baggage</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -497,10 +502,14 @@ export default function MultiFareDetailsCard({
           <div>
             <p className="text-xs font-bold text-gray-800 uppercase tracking-wide">Flexibility</p>
             <div className="mt-0.5 text-xs text-gray-600">
-              <div className="flex items-start gap-1.5">
-                {details.isRefundable ? <GreenCheck /> : <RedCross />}
-                <span>{details.isRefundable ? 'Refundable' : 'Non-Refundable'}</span>
-              </div>
+              {details.refundable ? (
+                <div className="flex items-start gap-1.5">
+                  {/^refundable$/i.test(details.refundable) ? <GreenCheck /> : <RedCross />}
+                  <span>{details.refundable}</span>
+                </div>
+              ) : (
+                <span className="text-gray-400">Not stated by the airline</span>
+              )}
             </div>
           </div>
 

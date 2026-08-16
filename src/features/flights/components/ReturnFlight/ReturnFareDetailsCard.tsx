@@ -1,6 +1,7 @@
 import { X, Clock, Plane, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import { getFareRule } from '../../../../api/flightService.api';
+import { cabinBaggageOf, refundableLabelFromType } from '@/features/flights/utils/flightDisplay';
 import ReturnFareRuleCard from './ReturnFareRuleCard';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -252,10 +253,10 @@ export default function ReturnFareDetailsCard({
     }
 
     // Extract baggage info
-    const cabinBaggage = baggageInfo.ClassCode || '7 Kgs';
-    const checkInBaggage = baggageInfo.CheckInBaggage || '15 Kgs';
+    const cabinBaggage = cabinBaggageOf(baggageInfo);
+    const checkInBaggage = baggageInfo.CheckInBaggage || '';
 
-    const isRefundable = adultFare.RefundableType === 1;
+    const refundable = refundableLabelFromType(adultFare.RefundableType);
     const isMealIncluded = adultFare.MealIncluded === true;
     const cabinClass = adultFare.CabinClass || 'ECONOMY';
     const classCode = adultFare.ClassCode || 'N/A';
@@ -323,10 +324,14 @@ export default function ReturnFareDetailsCard({
           <div>
             <p className="text-xs font-bold text-gray-800 uppercase tracking-wide">Flexibility</p>
             <div className="mt-1 text-xs text-gray-600">
-              <div className="flex items-start gap-1.5">
-                {isRefundable ? <GreenCheck /> : <RedCross />}
-                <span>{isRefundable ? 'Refundable' : 'Non-Refundable'}</span>
-              </div>
+              {refundable ? (
+                <div className="flex items-start gap-1.5">
+                  {/^refundable$/i.test(refundable) ? <GreenCheck /> : <RedCross />}
+                  <span>{refundable}</span>
+                </div>
+              ) : (
+                <span className="text-gray-400">Not stated by the airline</span>
+              )}
             </div>
           </div>
 
@@ -506,6 +511,9 @@ export default function ReturnFareDetailsCard({
         <ReturnFareRuleCard
           isOpen={showFareRuleCard}
           onClose={handleCloseFareRule}
+          refundable={refundableLabelFromType(
+            selectedFareDetails?.passengerBreakup?.AdultFare?.RefundableType,
+          )}
           fareRuleData={fareRuleData}
           onConfirm={handleConfirmFareRule}
           fareType="Return Flight"

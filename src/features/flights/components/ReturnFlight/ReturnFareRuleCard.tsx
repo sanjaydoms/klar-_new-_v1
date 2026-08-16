@@ -21,11 +21,14 @@ interface ReturnFareRuleCardProps {
   onConfirm: () => void;
   fareType: string;
   currency?: string;
+  /** Selected fare's label; '' when it states none, and the banner is hidden. */
+  refundable?: string;
 }
 
 export default function ReturnFareRuleCard({
   isOpen,
   onClose,
+  refundable = '',
   fareRuleData,
   onConfirm,
   fareType,
@@ -67,7 +70,10 @@ export default function ReturnFareRuleCard({
   const basicFareRules = routeData?.fr;
 
   const summary = {
-    isRefundable: false, // Determine from your data if available
+    // Was hardcoded false, so this modal announced "Non-Refundable Fare" over
+    // every fare, refundable ones included. It comes from the selected fare's
+    // RefundableType now, and says nothing when the fare states nothing.
+    refundable,
     cancellationFee: fareRules?.CANCELLATION?.[0]?.amount || 0,
     cancellationAdditionalFee: fareRules?.CANCELLATION?.[0]?.additionalFee || 0,
     cancellationTimeWindow: fareRules?.CANCELLATION?.[0]
@@ -440,20 +446,28 @@ export default function ReturnFareRuleCard({
         {/* Content */}
         <div className="overflow-y-auto p-6" style={{ maxHeight: 'calc(80vh - 140px)' }}>
           {/* Refundable Status */}
-          {summary && (
+          {summary.refundable && (
             <div
-              className={`mb-4 p-3 rounded-lg ${summary.isRefundable ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}
+              className={`mb-4 p-3 rounded-lg ${
+                /^refundable$/i.test(summary.refundable)
+                  ? 'bg-green-50 border border-green-200'
+                  : 'bg-red-50 border border-red-200'
+              }`}
             >
               <div className="flex items-center gap-2">
-                {summary.isRefundable ? (
+                {/^refundable$/i.test(summary.refundable) ? (
                   <>
                     <Check className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-medium text-green-700">Refundable Fare</span>
+                    <span className="text-sm font-medium text-green-700">
+                      {summary.refundable} Fare
+                    </span>
                   </>
                 ) : (
                   <>
                     <XCircle className="w-4 h-4 text-red-600" />
-                    <span className="text-sm font-medium text-red-700">Non-Refundable Fare</span>
+                    <span className="text-sm font-medium text-red-700">
+                      {summary.refundable} Fare
+                    </span>
                   </>
                 )}
               </div>

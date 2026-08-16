@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, Check, AlertCircle, ArrowRight, ChevronUp, ChevronDown, Loader2 } from 'lucide-react';
 import { getFareRule } from '@/api/flightService.api';
+import { cabinBaggageOf, refundableLabelFromType } from '@/features/flights/utils/flightDisplay';
 import InternationalMultiFareRuleCard from './InternationalMultiFareRuleCard';
 
 interface InternationalMultiFareDetailsCardProps {
@@ -188,7 +189,7 @@ export default function InternationalMultiFareDetailsCard({
       baggage: fareData.BaggageInfo || { CheckInBaggage: 'N/A', ClassCode: 'N/A' },
       cabinClass: fareData.CabinClass || 'ECONOMY',
       fareBasis: fareData.FareBasis || 'N/A',
-      isRefundable: fareData.RefundableType === 1,
+      refundable: refundableLabelFromType(fareData.RefundableType),
       bookingClass: fareData.ClassCode || 'N/A',
       seatsRemaining: fareData.SeatsRemaining || 0,
       mealIncluded: fareData.MealIncluded || false,
@@ -422,14 +423,22 @@ export default function InternationalMultiFareDetailsCard({
 
         <div className={`${body} px-4 pb-2.5 pt-1`}>
           <SectionLabel label="Baggage" />
-          <FeatureRow ok label={`${details.baggage?.ClassCode || '7 Kg'} Cabin Baggage`} />
-          <FeatureRow ok label={`${details.baggage?.CheckInBaggage || 'N/A'} Check-in Baggage`} />
+          {cabinBaggageOf(details.baggage) && (
+            <FeatureRow ok label={`${cabinBaggageOf(details.baggage)} Cabin Baggage`} />
+          )}
+          {details.baggage?.CheckInBaggage && (
+            <FeatureRow ok label={`${details.baggage.CheckInBaggage} Check-in Baggage`} />
+          )}
 
           <SectionLabel label="Flexibility" />
-          <FeatureRow
-            ok={details.isRefundable}
-            label={details.isRefundable ? 'Refundable' : 'Non-Refundable'}
-          />
+          {details.refundable ? (
+            <FeatureRow
+              ok={/^refundable$/i.test(details.refundable)}
+              label={details.refundable}
+            />
+          ) : (
+            <FeatureRow ok={false} label="Refundability not stated by the airline" />
+          )}
 
           <SectionLabel label="Seats, Meals & More" />
           <FeatureRow ok label={`${details.cabinClass} · Class ${details.bookingClass}`} />

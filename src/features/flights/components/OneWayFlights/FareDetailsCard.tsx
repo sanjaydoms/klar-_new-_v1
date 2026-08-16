@@ -1,6 +1,7 @@
 import { X, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import { getFareRule } from '../../../../api/flightService.api';
+import { cabinBaggageOf, refundableLabelFromType } from '@/features/flights/utils/flightDisplay';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -205,7 +206,9 @@ export default function FareDetailsCard({
     const fareData = fd || passengerFd;
 
     const totalFare = fareOption?.priceSummary?.AdultFare?.total || 0;
-    const isRefundable = fareData?.RefundableType === 1;
+    // rT 2 is PARTIALLY refundable and rT absent states nothing; `=== 1` called
+    // both of those Non-Refundable.
+    const refundable = refundableLabelFromType(fareData?.RefundableType);
     const isMealIncluded = fareData?.MealIncluded === true;
     const cabinClass = fareData?.CabinClass || 'ECONOMY';
     const classCode = fareData?.ClassCode || 'N/A';
@@ -213,8 +216,9 @@ export default function FareDetailsCard({
     const seatsRemaining = fareData?.SeatsRemaining || 0;
 
     const baggageInfo = fareData?.BaggageInfo || {};
-    const cabinBaggage = baggageInfo?.ClassCode || '7 Kgs';
-    const checkInBaggage = baggageInfo?.CheckInBaggage || '15 Kgs';
+    // No invented allowances, and CabinBaggage over its legacy ClassCode alias.
+    const cabinBaggage = cabinBaggageOf(baggageInfo);
+    const checkInBaggage = baggageInfo?.CheckInBaggage || '';
 
     const isLoading = loadingFareId === fareOption.fareId;
 
@@ -262,14 +266,22 @@ export default function FareDetailsCard({
           <div>
             <p className="text-xs font-bold text-gray-800 uppercase tracking-wide">Baggage</p>
             <div className="mt-1 text-xs text-gray-600 space-y-1">
-              <div className="flex items-start gap-1.5">
-                <GreenCheck />
-                <span>{cabinBaggage} Cabin Baggage</span>
-              </div>
-              <div className="flex items-start gap-1.5">
-                <GreenCheck />
-                <span>{checkInBaggage} Check-in Baggage</span>
-              </div>
+              {/* A row per allowance the fare actually states. */}
+              {cabinBaggage && (
+                <div className="flex items-start gap-1.5">
+                  <GreenCheck />
+                  <span>{cabinBaggage} Cabin Baggage</span>
+                </div>
+              )}
+              {checkInBaggage && (
+                <div className="flex items-start gap-1.5">
+                  <GreenCheck />
+                  <span>{checkInBaggage} Check-in Baggage</span>
+                </div>
+              )}
+              {!cabinBaggage && !checkInBaggage && (
+                <span className="text-gray-400">Not stated by the airline</span>
+              )}
             </div>
           </div>
 
@@ -277,10 +289,20 @@ export default function FareDetailsCard({
           <div>
             <p className="text-xs font-bold text-gray-800 uppercase tracking-wide">Flexibility</p>
             <div className="mt-1 text-xs text-gray-600">
-              <div className="flex items-start gap-1.5">
-                {isRefundable ? <GreenCheck /> : <RedCross />}
-                <span>{isRefundable ? 'Refundable' : 'Non-Refundable'}</span>
-              </div>
+              {refundable ? (
+                <div className="flex items-start gap-1.5">
+                  {/refundable/i.test(refundable) && !/non-/i.test(refundable) ? (
+                    <GreenCheck />
+                  ) : (
+                    <RedCross />
+                  )}
+                  <span>{refundable}</span>
+                </div>
+              ) : (
+                <div className="flex items-start gap-1.5">
+                  <span className="text-gray-400">Not stated by the airline</span>
+                </div>
+              )}
             </div>
           </div>
 

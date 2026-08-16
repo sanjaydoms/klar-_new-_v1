@@ -1,6 +1,7 @@
 import { X, Check, AlertCircle } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { getFareRule } from '@/api/flightService.api';
+import { cabinBaggageOf, refundableLabelFromType } from '@/features/flights/utils/flightDisplay';
 import InternationalReturnFlightFareRuleCard from './InternationalReturnFlightFareRuleCard';
 
 interface InternationalReturnFlightFareDetailsCardProps {
@@ -142,20 +143,14 @@ const transformFareData = (fare: any) => {
       );
     }
 
-    let cabinBaggage = '7 Kgs';
-    let checkInBaggage = '15 Kgs';
-
-    if (baggageInfo.ClassCode) {
-      cabinBaggage = baggageInfo.ClassCode;
-    }
-    if (baggageInfo.CheckInBaggage) {
-      checkInBaggage = baggageInfo.CheckInBaggage;
-    }
+    // Was defaulted to '7 Kgs' / '15 Kgs' for fares that state neither.
+    const cabinBaggage = cabinBaggageOf(baggageInfo);
+    const checkInBaggage = baggageInfo.CheckInBaggage || '';
 
     const fareIdentifier =
       fareItem.FareIdentifierType || fareItem.meta?.fareType || `FARE ${index + 1}`;
     const seatsRemaining = adultFare.SeatsRemaining || 9;
-    const isRefundable = adultFare.RefundableType === 1;
+    const refundableType = adultFare.RefundableType;
     const cabinClass = adultFare.CabinClass || 'ECONOMY';
     const classCode = adultFare.ClassCode || 'N/A';
     const fareBasis = adultFare.FareBasis || 'N/A';
@@ -176,7 +171,9 @@ const transformFareData = (fare: any) => {
             cB: cabinBaggage,
             iB: checkInBaggage,
           },
-          rT: isRefundable ? 1 : 0,
+          // Pass rT THROUGH: `isRefundable ? 1 : 0` turned 2 (partially
+          // refundable) and an unstated type into a hard 0.
+          rT: refundableType,
           sR: seatsRemaining,
           cc: cabinClass,
           cB: classCode,
@@ -324,7 +321,7 @@ export default function InternationalReturnFlightFareDetailsCard({
     const totalFare = fC?.TF || 0;
     const baseFare = fC?.BF || 0;
     const taxFare = fC?.TAF || 0;
-    const isRefundable = fd?.rT === 1;
+    const refundable = refundableLabelFromType(fd?.rT);
 
     return (
       <div
@@ -370,12 +367,19 @@ export default function InternationalReturnFlightFareDetailsCard({
         <div className={`${body} px-4 pb-2 pt-1`}>
           {/* Baggage Section */}
           <SectionLabel label="Baggage" />
-          <FeatureRow ok label={`${bI?.cB || 'N/A'} Cabin Baggage`} />
-          <FeatureRow ok label={`${bI?.iB || 'N/A'} Check-in Baggage`} />
+          {bI?.cB && <FeatureRow ok label={`${bI.cB} Cabin Baggage`} />}
+          {bI?.iB && <FeatureRow ok label={`${bI.iB} Check-in Baggage`} />}
+          {!bI?.cB && !bI?.iB && (
+            <FeatureRow ok={false} label="Baggage not stated by the airline" />
+          )}
 
           {/* Flexibility Section */}
           <SectionLabel label="Flexibility" />
-          <FeatureRow ok={isRefundable} label={isRefundable ? 'Refundable' : 'Non-Refundable'} />
+          {refundable ? (
+            <FeatureRow ok={/^refundable$/i.test(refundable)} label={refundable} />
+          ) : (
+            <FeatureRow ok={false} label="Refundability not stated by the airline" />
+          )}
 
           {/* Seats, Meals & More */}
           <SectionLabel label="Seats, Meals & More" />
@@ -556,6 +560,7 @@ export default function InternationalReturnFlightFareDetailsCard({
 
       {showFareRuleCard && fareRuleData && (
         <InternationalReturnFlightFareRuleCard
+          refundable={refundableLabelFromType(selectedFareDetails?.fd?.ADULT?.rT)}
           isOpen={showFareRuleCard}
           onClose={handleCloseFareRule}
           fareRuleData={fareRuleData}

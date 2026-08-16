@@ -24,9 +24,12 @@ interface InternationalReturnFlightFareRuleCardProps {
   fareType: string;
   currency?: string;
   selectedFareId?: string | null;
+  /** Selected fare's label; '' hides the banner rather than guessing. */
+  refundable?: string;
 }
 
 export default function InternationalReturnFlightFareRuleCard({
+  refundable = '',
   isOpen,
   onClose,
   fareRuleData,
@@ -69,7 +72,8 @@ export default function InternationalReturnFlightFareRuleCard({
   const fareRules = routeData?.tfr;
 
   const summary = {
-    isRefundable: false,
+    // Was hardcoded false — the modal called every fare Non-Refundable.
+    refundable,
     cancellationFee: fareRules?.CANCELLATION?.[0]?.amount || 0,
     cancellationAdditionalFee: fareRules?.CANCELLATION?.[0]?.additionalFee || 0,
     cancellationTimeWindow: fareRules?.CANCELLATION?.[0]
@@ -483,22 +487,27 @@ export default function InternationalReturnFlightFareRuleCard({
         </div>
 
         <div className="overflow-y-auto p-6" style={{ maxHeight: 'calc(80vh - 200px)' }}>
-          {summary && (
+          {summary.refundable && (
             <div
-              className={`mb-4 p-3 rounded-lg ${summary.isRefundable ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}
+              className={`mb-4 p-3 rounded-lg ${
+                /^refundable$/i.test(summary.refundable)
+                  ? 'bg-green-50 border border-green-200'
+                  : 'bg-red-50 border border-red-200'
+              }`}
             >
               <div className="flex items-center gap-2">
-                {summary.isRefundable ? (
-                  <>
-                    <Check className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-medium text-green-700">Refundable Fare</span>
-                  </>
+                {/^refundable$/i.test(summary.refundable) ? (
+                  <Check className="w-4 h-4 text-green-600" />
                 ) : (
-                  <>
-                    <XCircle className="w-4 h-4 text-red-600" />
-                    <span className="text-sm font-medium text-red-700">Non-Refundable Fare</span>
-                  </>
+                  <XCircle className="w-4 h-4 text-red-600" />
                 )}
+                <span
+                  className={`text-sm font-medium ${
+                    /^refundable$/i.test(summary.refundable) ? 'text-green-700' : 'text-red-700'
+                  }`}
+                >
+                  {summary.refundable} Fare
+                </span>
               </div>
             </div>
           )}
