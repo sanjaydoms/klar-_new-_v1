@@ -379,7 +379,11 @@ export default function InternationalMultiFareRuleCard({
 
           {summary && (
             <div
-              className={`mt-3 p-3 rounded-xl ${summary.isRefundable ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'}`}
+              className={`mt-3 p-3 rounded-xl ${
+                /^refundable$/i.test(summary.refundable || '')
+                  ? 'bg-green-50 border border-green-200'
+                  : 'bg-orange-50 border border-orange-200'
+              }`}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -388,14 +392,20 @@ export default function InternationalMultiFareRuleCard({
                     {formatCurrency(totalFare, currency)}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs font-medium text-gray-600">Refundability</p>
-                  <p
-                    className={`text-sm font-semibold ${summary.isRefundable ? 'text-green-600' : 'text-orange-600'}`}
-                  >
-                    {summary.isRefundable ? 'Refundable' : 'Non-Refundable'}
-                  </p>
-                </div>
+                {summary.refundable && (
+                  <div className="text-right">
+                    <p className="text-xs font-medium text-gray-600">Refundability</p>
+                    <p
+                      className={`text-sm font-semibold ${
+                        /^refundable$/i.test(summary.refundable)
+                          ? 'text-green-600'
+                          : 'text-orange-600'
+                      }`}
+                    >
+                      {summary.refundable}
+                    </p>
+                  </div>
+                )}
               </div>
               {summary.cancellationFee > 0 && (
                 <div className="mt-2 pt-2 border-t border-green-200/50 text-xs text-gray-600">

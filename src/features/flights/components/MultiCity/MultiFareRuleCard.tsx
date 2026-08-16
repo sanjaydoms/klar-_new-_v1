@@ -344,23 +344,26 @@ export default function MultiFareRuleCard({
         {/* ── Scrollable Content ─────────────────────────────────── */}
         <div className="flex-1 overflow-y-auto px-6 py-5">
           {/* Refundable status */}
-          {summary && (
+          {summary?.refundable && (
             <div
               className={`mb-4 p-3 rounded-xl border flex items-center gap-2 ${
-                summary.isRefundable ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+                /^refundable$/i.test(summary.refundable)
+                  ? 'bg-green-50 border-green-200'
+                  : 'bg-red-50 border-red-200'
               }`}
             >
-              {summary.isRefundable ? (
-                <>
-                  <Check className="w-4 h-4 text-green-600" />
-                  <span className="text-sm font-semibold text-green-800">Refundable Fare</span>
-                </>
+              {/^refundable$/i.test(summary.refundable) ? (
+                <Check className="w-4 h-4 text-green-600" />
               ) : (
-                <>
-                  <XCircle className="w-4 h-4 text-red-600" />
-                  <span className="text-sm font-semibold text-red-800">Non-Refundable Fare</span>
-                </>
+                <XCircle className="w-4 h-4 text-red-600" />
               )}
+              <span
+                className={`text-sm font-semibold ${
+                  /^refundable$/i.test(summary.refundable) ? 'text-green-800' : 'text-red-800'
+                }`}
+              >
+                {summary.refundable} Fare
+              </span>
             </div>
           )}
 

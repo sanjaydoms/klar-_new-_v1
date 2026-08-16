@@ -170,7 +170,7 @@ export default function MultiFareDetailsCard({
   const fares = flightData.fares || [];
 
   // ── Transform API response to expected format ───────────────────────────────
-  const transformFareRuleResponse = (response: any) => {
+  const transformFareRuleResponse = (response: any, refundable: string) => {
     // Get the first route key (like "BOM-HYD")
     const routeKey = Object.keys(response.fareRule || {})[0];
     const routeData = response.fareRule?.[routeKey];
@@ -222,8 +222,11 @@ export default function MultiFareDetailsCard({
     const firstDateChange = tfr.DATECHANGE?.[0];
     const firstNoShow = tfr.NO_SHOW?.[0];
 
-    // Determine if fare is refundable (fee is 0)
-    const isRefundable = firstCancellation?.amount === 0 && firstCancellation?.additionalFee === 0;
+    // Refundability is the FARE's RefundableType, not something to infer from
+    // the cancellation fee: a refundable fare normally charges one, and a zero
+    // charge means free cancellation. Reading `amount === 0` called almost
+    // every fare Non-Refundable, and a fare with no CANCELLATION window at all
+    // (undefined === 0 is false) too.
 
     return {
       data: {
@@ -240,7 +243,7 @@ export default function MultiFareDetailsCard({
         summary: {
           summaries: [
             {
-              isRefundable: isRefundable,
+              refundable,
               cancellationFee: firstCancellation?.amount || 0,
               cancellationAdditionalFee: firstCancellation?.additionalFee || 0,
               cancellationTimeWindow: firstCancellation
@@ -368,7 +371,11 @@ export default function MultiFareDetailsCard({
       console.log(JSON.stringify(response, null, 2));
 
       // Transform the backend response to match expected structure
-      const transformedData = transformFareRuleResponse(response);
+      const selectedFare = fares.find((f: any) => f.fareId === fareId);
+      const transformedData = transformFareRuleResponse(
+        response,
+        refundableLabelFromType(selectedFare?.passengerBreakup?.AdultFare?.RefundableType),
+      );
       setFareRuleData(transformedData);
       setShowFareRuleCard(true);
     } catch (error) {

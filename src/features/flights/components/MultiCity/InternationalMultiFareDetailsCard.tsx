@@ -223,7 +223,10 @@ export default function InternationalMultiFareDetailsCard({
         throw new Error('No fare rule data received');
       }
 
-      const transformedData = transformFareRuleResponse(response);
+      const transformedData = transformFareRuleResponse(
+        response,
+        refundableLabelFromType(fare?.passengerBreakup?.AdultFare?.RefundableType),
+      );
 
       if (!transformedData?.data?.fareRules?.length) {
         setFareRuleError('No fare rules available for this option.');
@@ -245,7 +248,7 @@ export default function InternationalMultiFareDetailsCard({
     }
   };
 
-  const transformFareRuleResponse = (response: any) => {
+  const transformFareRuleResponse = (response: any, refundable: string) => {
     let fareRuleData = response.fareRule || response.data?.fareRule || response;
 
     const routeKey = Object.keys(fareRuleData || {})[0];
@@ -260,7 +263,7 @@ export default function InternationalMultiFareDetailsCard({
             summary: {
               summaries: [
                 {
-                  isRefundable: alternateData.isRefundable || false,
+                  refundable,
                   cancellationFee: alternateData.cancellationFee || 0,
                   dateChangeFee: alternateData.dateChangeFee || 0,
                   noShowPolicy: alternateData.noShowPolicy || 'N/A',
@@ -315,7 +318,7 @@ export default function InternationalMultiFareDetailsCard({
     const firstDateChange = dateChangeWindows[0];
     const firstNoShow = noShowWindows[0];
 
-    const isRefundable = firstCancellation?.amount === 0 && firstCancellation?.additionalFee === 0;
+    // See MultiFareDetailsCard: a zero cancellation fee is not refundability.
 
     return {
       data: {
@@ -332,7 +335,7 @@ export default function InternationalMultiFareDetailsCard({
         summary: {
           summaries: [
             {
-              isRefundable: isRefundable,
+              refundable,
               cancellationFee: firstCancellation?.amount || 0,
               cancellationAdditionalFee: firstCancellation?.additionalFee || 0,
               cancellationTimeWindow: firstCancellation
