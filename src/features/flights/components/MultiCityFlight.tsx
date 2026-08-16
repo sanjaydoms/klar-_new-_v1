@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { parseLocation } from '../utils/utils';
 import FlightList from './MultiCity/FlightList';
+import { groupAndMap } from '../utils/groupFareVariants';
 import { ChevronRight, Home, Loader2, Plane, ArrowUpDown, ChevronDown, Check } from 'lucide-react';
 import CommonSearchBar from './Common/CommonSearchBar';
 import { searchMultiCityFlights } from '@/api/flightService.api';
@@ -522,7 +523,7 @@ export default function MultiCityFlight({ onBack, onBookNow }: MultiCityFlightPr
                 const legIndex = leg.legIndex;
                 const flightOptions = leg.flights || [];
 
-                const mappedFlights = flightOptions.map((flight: any, idx: number) => ({
+                const mappedFlights = groupAndMap(flightOptions, (flight: any, idx: number): any => ({
                   flightId: `${flight.flightKey}-${idx}`,
                   segmentId: flight.flightKey,
                   searchId: flight.searchId || flight.flightKey,
@@ -555,6 +556,10 @@ export default function MultiCityFlight({ onBack, onBookNow }: MultiCityFlightPr
                   ],
                   cabinClass: flight.cabinClass,
                   legIndex: legIndex,
+                  fareId: flight.fareId,
+                  fareIdentifier: flight.fareIdentifier,
+                  refundable: flight.refundable,
+                  seatsRemaining: flight.seatsRemaining,
                 }));
 
                 newLegFlights.set(legIndex, mappedFlights);
@@ -1153,7 +1158,7 @@ export default function MultiCityFlight({ onBack, onBookNow }: MultiCityFlightPr
       const originalFlights = legFlights.get(legIndex) || [];
       const originalFlightMap = new Map(originalFlights.map((flight) => [flight.flightId, flight]));
 
-      return flightOptions.map((flight: any, idx: number) => {
+      return groupAndMap(flightOptions, (flight: any, idx: number): any => {
         const flightId = `${flight.flightKey}-${idx}`;
         const originalFlight = originalFlightMap.get(flightId);
 
@@ -1193,6 +1198,10 @@ export default function MultiCityFlight({ onBack, onBookNow }: MultiCityFlightPr
           ],
           cabinClass: flight.cabinClass,
           legIndex: legIndex,
+          fareId: flight.fareId,
+          fareIdentifier: flight.fareIdentifier,
+          refundable: flight.refundable,
+          seatsRemaining: flight.seatsRemaining,
         };
       });
     };

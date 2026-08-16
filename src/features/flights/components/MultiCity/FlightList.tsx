@@ -72,8 +72,12 @@ export default function FlightList({
               <FlightCard
                 key={flight.flightId}
                 flight={flight}
-                isSelected={selectedFlightId === flight.flightId}
-                onSelect={() => onSelectFlight(flight)}
+                // The selection is a fare VARIANT of this card, not always its
+                // cheapest one.
+                isSelected={(flight.variants ?? [flight]).some(
+                  (v) => v.flightId === selectedFlightId,
+                )}
+                onSelect={(chosen) => onSelectFlight(chosen ?? flight)}
                 onViewDetails={() => onViewDetails(flight)}
                 getFlightPrice={getFlightPrice}
                 legIndex={currentSegment}

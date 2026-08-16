@@ -5,6 +5,7 @@ import CommonSearchBar from './Common/CommonSearchBar';
 import FlightFilterSidebar from './Common/filterSidebar';
 import FlightDetailsModal from './modals/FlightDetailsModal';
 import { toFlightDetailsView } from './ReturnFlight/flightDetailsView';
+import { groupAndMap } from '../utils/groupFareVariants';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Flight, ReturnFlightProps, PairedFlight } from '../types/types.returnFlight';
 import {
@@ -336,6 +337,12 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
           priceId: flight.priceId,
         },
       ],
+      // Fare-group meta the normalizer already sends; the card's fare strip
+      // reads it. Dropping it here is what made the variants indistinguishable.
+      fareId: flight.fareId,
+      fareIdentifier: flight.fareIdentifier,
+      refundable: flight.refundable,
+      seatsRemaining: flight.seatsRemaining,
     };
   };
 
@@ -432,11 +439,11 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
             const returnData = response?.data?.flights?.return || [];
 
             if (Array.isArray(onwardData) && onwardData.length > 0) {
-              onwardFlightsList = onwardData.map(mapFlightData);
+              onwardFlightsList = groupAndMap(onwardData, mapFlightData);
             }
 
             if (Array.isArray(returnData) && returnData.length > 0) {
-              returnFlightsList = returnData.map(mapFlightData);
+              returnFlightsList = groupAndMap(returnData, mapFlightData);
             }
 
             console.log('Mapped Onward Flights:', onwardFlightsList.length);
@@ -570,8 +577,8 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
       return;
     }
 
-    const mappedOnward = onwardData.map(mapFlightData);
-    const mappedReturn = returnData.map(mapFlightData);
+    const mappedOnward = groupAndMap(onwardData, mapFlightData);
+    const mappedReturn = groupAndMap(returnData, mapFlightData);
 
     setOnwardFlights(mappedOnward);
     setReturnFlights(mappedReturn);

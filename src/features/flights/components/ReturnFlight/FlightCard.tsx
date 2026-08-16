@@ -2,6 +2,7 @@ import { Plane, Clock, AlertCircle, CheckCircle, ChevronDown } from 'lucide-reac
 import { Flight } from '../../types/types.returnFlight';
 import { useState } from 'react';
 import ReturnFareDetailsCard from './ReturnFareDetailsCard';
+import FareVariantRows from '../FareVariantRows';
 import { getReturnFareDetails } from '@/api/flightService.api';
 import { notifyError } from '@/utils/notify';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,8 @@ import { Button } from '@/components/ui/button';
 interface FlightCardProps {
   flight: Flight;
   isSelected: boolean;
-  onSelect: () => void;
+  /** Called with the fare variant the user has active on this card. */
+  onSelect: (chosen?: Flight) => void;
   onDeselect: () => void;
   onViewDetails: () => void;
   type: 'departure' | 'return';
@@ -282,6 +284,12 @@ export default function FlightCard({
   const [showFareDetailsPopup, setShowFareDetailsPopup] = useState(false);
   const [flightDetailsData, setFlightDetailsData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  // Fare groups of this physical flight; the chosen one drives price, the
+  // fare-details call and what gets stored as the selection.
+  const fares = flight.variants && flight.variants.length > 0 ? flight.variants : [flight];
+  const [fareIndex, setFareIndex] = useState(0);
+  const activeFare = fares[Math.min(fareIndex, fares.length - 1)] ?? flight;
+  const seatsLeft = activeFare.seatsRemaining;
 
   const departureAirportCode = flight.departure?.airportCode || 'N/A';
   const departureTime = flight.departure?.time || '--:--';
@@ -297,18 +305,25 @@ export default function FlightCard({
       : flight.duration || '0h 0m';
 
   const getCheapestFare = () => {
-    if (flight.fareOptions && flight.fareOptions.length > 0) {
-      const cheapest = Math.min(...flight.fareOptions.map((f) => f.totalFare));
+    if (activeFare.fareOptions && activeFare.fareOptions.length > 0) {
+      const cheapest = Math.min(...activeFare.fareOptions.map((f) => f.totalFare));
       return cheapest;
     }
-    return flight.price || 0;
+    return activeFare.price || 0;
   };
 
   const getCabinClass = () => {
-    if (flight.fareOptions && flight.fareOptions.length > 0) {
-      return flight.fareOptions[0]?.cabinClass;
+    if (activeFare.fareOptions && activeFare.fareOptions.length > 0) {
+      return activeFare.fareOptions[0]?.cabinClass;
     }
-    return flight.class || '';
+    return activeFare.class || '';
+  };
+
+  // Switching fare invalidates a selection made on the previous one — the
+  // parent holds the variant, not the card.
+  const handleFareChange = (index: number) => {
+    setFareIndex(index);
+    if (isSelected) onDeselect();
   };
 
   const cheapestFare = getCheapestFare();
@@ -324,7 +339,7 @@ export default function FlightCard({
 
       try {
         const sessionId = sessionStorage.getItem('returnFlightSessionId');
-        const flightKey = flight.segmentId || flight.flightId || flight.flightKey;
+        const flightKey = activeFare.segmentId || activeFare.flightId || activeFare.flightKey;
 
         if (!sessionId || !flightKey) {
           notifyError('Flight information missing');
@@ -345,7 +360,7 @@ export default function FlightCard({
             data: fareDetailsResponse.data,
           });
           setShowFareDetailsPopup(true);
-          onSelect();
+          onSelect(activeFare);
         } else {
           notifyError(
             fareDetailsResponse?.message || 'Unable to load fare details. Please try again.',
@@ -379,7 +394,7 @@ export default function FlightCard({
           fareId: selectedFareId,
           fareDetails: selectedFareDetails,
           flightType: 'departure',
-          flightId: flight.flightId,
+          flightId: activeFare.flightId,
           timestamp: new Date().toISOString(),
         }),
       );
@@ -391,7 +406,7 @@ export default function FlightCard({
           fareId: selectedFareId,
           fareDetails: selectedFareDetails,
           flightType: 'return',
-          flightId: flight.flightId,
+          flightId: activeFare.flightId,
           timestamp: new Date().toISOString(),
         }),
       );
@@ -452,6 +467,12 @@ export default function FlightCard({
               />
             </div>
           </div>
+
+          {typeof seatsLeft === 'number' && seatsLeft <= 6 && (
+            <p className="mt-2 text-xs font-semibold text-destructive">Seats left: {seatsLeft}</p>
+          )}
+
+          <FareVariantRows fares={fares} activeIndex={fareIndex} onSelectFare={handleFareChange} />
 
           <FooterInfo onViewDetails={onViewDetails} flightType={type} />
         </div>

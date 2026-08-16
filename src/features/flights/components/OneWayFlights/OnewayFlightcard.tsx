@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CheckCircle, ChevronDown, Clock } from 'lucide-react';
 import FareDetailsCard from './FareDetailsCard';
 import FlightDetailsModal from '../FlightDetailsModal';
+import FareVariantRows from '../FareVariantRows';
 import { FlightData } from '../../types/types.oneWayFlight';
 import { getOnewayFareDetails } from '@/api/flightService.api';
 import { notifyError } from '@/utils/notify';
@@ -362,35 +363,7 @@ export default function OneWayFlightCard({
               )}
             </div>
           )}
-          {fares.length > 1 && (
-            <div className="mt-3 divide-y divide-border rounded-lg border border-border">
-              {fares.map((f, i) => (
-                <button
-                  key={(f as any).fareId || i}
-                  type="button"
-                  onClick={() => setFareIndex(i)}
-                  className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left transition-colors ${
-                    i === fareIndex ? 'bg-secondary/60' : 'hover:bg-muted/60'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <span
-                      className={`inline-block h-3 w-3 rounded-full border ${
-                        i === fareIndex ? 'border-accent bg-accent' : 'border-border'
-                      }`}
-                    />
-                    <span className="rounded bg-primary/10 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-primary uppercase">
-                      {(f as any).fareIdentifier || 'Fare'}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{(f as any).refundable}</span>
-                  </span>
-                  <span className="font-display text-sm font-medium text-primary">
-                    ₹ {(f as any).price?.toFixed(0)}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
+          <FareVariantRows fares={fares} activeIndex={fareIndex} onSelectFare={setFareIndex} />
           {/* Footer with Refundable Row - No margin, minimal padding */}
           <FooterInfo onViewDetails={handleViewDetails} />
         </div>

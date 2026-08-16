@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { groupFareVariants, durationToMinutes } from './groupFareVariants';
+import { groupFareVariants, groupAndMap, durationToMinutes } from './groupFareVariants';
 
 const mk = (over: any) => ({
   flightNumber: 'SG-476',
@@ -33,6 +33,37 @@ describe('groupFareVariants', () => {
       mk({ from: { time: '21:00' }, to: { time: '23:10' } }),
     ]);
     expect(groups.length).toBe(2);
+  });
+});
+
+describe('groupAndMap', () => {
+  // The return/multicity screens rename from/to to departure/arrival, so the
+  // grouping has to happen on the RAW shape, before their mapper runs.
+  const map = (f: any, i: number) => ({
+    flightId: `${f.flightKey}-${i}`,
+    departure: { time: f.from.time },
+    arrival: { time: f.to.time },
+    price: f.price,
+    fareIdentifier: f.fareIdentifier,
+  });
+
+  it('gives the card the cheapest variant plus every variant of that flight', () => {
+    const rows = groupAndMap(
+      [
+        mk({ flightKey: 'k-eco', price: 8100, fareIdentifier: 'ECO VALUE' }),
+        mk({ flightKey: 'k-pub', price: 7932.5, fareIdentifier: 'PUBLISHED' }),
+        mk({ flightKey: 'k-other', flightNumber: '6E-123', from: { time: '09:00' }, to: { time: '11:00' }, price: 5000 }), // prettier-ignore
+      ],
+      map,
+    );
+
+    expect(rows.length).toBe(2);
+    const sg = rows.find((r) => r.fareIdentifier === 'PUBLISHED')!;
+    expect(sg.price).toBe(7932.5);
+    expect(sg.variants.map((v) => v.fareIdentifier)).toEqual(['PUBLISHED', 'ECO VALUE']);
+    // The card must BE its cheapest variant — a second mapping would mint a
+    // twin whose id no selection can match.
+    expect(sg.flightId).toBe(sg.variants[0]!.flightId);
   });
 });
 

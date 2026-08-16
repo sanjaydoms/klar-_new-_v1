@@ -35,6 +35,24 @@ export function groupFareVariants<T extends Record<string, any>>(flights: T[]): 
   return groups;
 }
 
+/**
+ * Groups a raw search list, then runs each entry through the screen's own
+ * mapper. The card gets the cheapest variant plus `variants` for the fare
+ * strip. Group BEFORE mapping: the raw shape carries `from`/`to` times, which
+ * the screens rename (departure/arrival) and the grouping key needs.
+ */
+export function groupAndMap<R extends Record<string, any>, T extends object>(
+  flights: R[],
+  map: (flight: R, index: number) => T,
+): (T & { variants: T[] })[] {
+  return groupFareVariants(flights).map((g) => {
+    // The card IS its cheapest variant — mapping it twice would mint two
+    // objects for one fare, and ids derived from the index would disagree.
+    const variants = g.variants.map((v, i) => map(v, i));
+    return { ...(variants[0] as T), variants };
+  });
+}
+
 /** "2h 10m" -> minutes; unparseable -> Infinity so it never wins "fastest". */
 export function durationToMinutes(duration: unknown): number {
   if (typeof duration !== 'string') return Infinity;

@@ -48,6 +48,13 @@ export interface Flight {
     count: number;
     stopCities?: string[];
   };
+  /** Fare-group meta from the normalizer (one entry per TripJack fare group). */
+  fareId?: string;
+  fareIdentifier?: string;
+  refundable?: string;
+  seatsRemaining?: number;
+  /** Other fare groups of the same physical flight, cheapest first. */
+  variants?: Flight[];
 }
 
 export interface TravelerDetails {

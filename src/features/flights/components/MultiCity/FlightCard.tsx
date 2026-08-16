@@ -5,11 +5,13 @@ import MultiFlightDetailsModal from './MultiFlightDetailsModalProps';
 import MultiFareDetailsCard from './MultiFareDetailsCard';
 import { getMultiCityFareDetails } from '@/api/flightService.api';
 import { Button } from '@/components/ui/button';
+import FareVariantRows from '../FareVariantRows';
 
 interface FlightCardProps {
   flight: FlightOption;
   isSelected: boolean;
-  onSelect: () => void;
+  /** Called with the fare variant the user has active on this card. */
+  onSelect: (chosen?: FlightOption) => void;
   onViewDetails: (fareRuleData?: any) => void;
   getFlightPrice: (flight: FlightOption) => number;
   legIndex?: number;
@@ -264,12 +266,18 @@ export default function FlightCard({
   const [selectedFareDetails, setSelectedFareDetails] = useState<any>(null);
   const [selectedSegmentId, setSelectedSegmentId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  // Fare groups of this physical flight; the chosen one drives price, the
+  // fare-details call and what gets stored as the selection.
+  const fares = flight.variants && flight.variants.length > 0 ? flight.variants : [flight];
+  const [fareIndex, setFareIndex] = useState(0);
+  const activeFare = fares[Math.min(fareIndex, fares.length - 1)] ?? flight;
+  const seatsLeft = activeFare.seatsRemaining;
 
   const handleViewDetails = () => {
     setShowFlightDetailsModal(true);
   };
 
-  const price = getFlightPrice(flight);
+  const price = getFlightPrice(activeFare);
 
   // Prepare stopDetails object to match OneWay format
   const stopDetails = {
@@ -279,11 +287,11 @@ export default function FlightCard({
 
   const handleSelectClick = async () => {
     if (isSelected) {
-      onSelect();
+      onSelect(activeFare);
       return;
     }
 
-    const segmentId = flight.segmentId;
+    const segmentId = activeFare.segmentId;
     if (!segmentId) {
       console.error('No segment ID available for this flight');
       return;
@@ -299,7 +307,7 @@ export default function FlightCard({
         return;
       }
 
-      const filterSegmentId = flight.segmentId?.split(',')[0] ?? '';
+      const filterSegmentId = activeFare.segmentId?.split(',')[0] ?? '';
       if (!filterSegmentId) {
         console.error('Segment ID not found');
         return;
@@ -314,7 +322,7 @@ export default function FlightCard({
       console.log('Multi-city fare details:', JSON.stringify(fareDetails, null, 2));
       setSelectedFareDetails(fareDetails);
       setShowFareDetailsModal(true);
-      onSelect();
+      onSelect(activeFare);
     } catch (error) {
       console.error('Failed to fetch fare details:', error);
     } finally {
@@ -374,6 +382,12 @@ export default function FlightCard({
               />
             </div>
           </div>
+
+          {typeof seatsLeft === 'number' && seatsLeft <= 6 && (
+            <p className="mt-2 text-xs font-semibold text-destructive">Seats left: {seatsLeft}</p>
+          )}
+
+          <FareVariantRows fares={fares} activeIndex={fareIndex} onSelectFare={setFareIndex} />
 
           {/* Footer with Refundable Row */}
           <FooterInfo onViewDetails={handleViewDetails} />

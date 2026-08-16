@@ -85,9 +85,15 @@ export default function FlightList({
             key={`${flight.airlineCode}-${flight.flightNumber}-${flight.departure?.time}-${index}`}
             flight={flight}
             isSelected={
-              selectedFlight?.flightId === flight.flightId || selectedFlight?.id === flight.id
+              // The selection is a fare VARIANT, so match any variant of this
+              // card — otherwise picking a non-cheapest fare leaves the card
+              // reading "Select" while it is in fact selected.
+              !!selectedFlight &&
+              (flight.variants ?? [flight]).some(
+                (v) => v.flightId === selectedFlight.flightId || v.id === selectedFlight.id,
+              )
             }
-            onSelect={() => onSelectFlight(flight)}
+            onSelect={(chosen) => onSelectFlight(chosen ?? flight)}
             onDeselect={onDeselectFlight}
             onViewDetails={() => onViewDetails(flight)}
             type={title === 'Departure Flights' ? 'departure' : 'return'}

@@ -70,7 +70,10 @@ export function mapSegmentResponseToFlight(apiData: any): Flight {
     },
     class: publishedFare?.ADULT?.cc || 'ECONOMY',
     fareBasis: publishedFare?.ADULT?.fB || '',
-    refundable: publishedFare?.ADULT?.rT !== 0, // rT=0 usually means non-refundable
+    // `refundable` on a Flight is the search normalizer's LABEL ("Refundable" /
+    // "Partially Refundable" / …), which the fare-variant strip renders. This
+    // mapper used to put a boolean in the same slot; nothing read it.
+    isRefundable: publishedFare?.ADULT?.rT !== 0, // rT=0 usually means non-refundable
     segments: data.segments.map((seg: any, idx: number) => ({
       flightNumber: seg.fD.fN,
       airline: seg.fD.aI.name,
