@@ -129,15 +129,14 @@ export default function DashboardTopNav({ activeTab, onTabChange, user }: Dashbo
     </button>
   );
 
-  // No background of its own — the strip is frosted instead. Something has to
-  // cover the gap above the bar, or content scrolls past it sharply once stuck;
-  // a blur does that without painting a grey band over the hero photograph.
+  // No card behind the items: the frosting is on the bar itself, edge to edge,
+  // so the nav reads as part of the page rather than as a panel sitting on it.
+  // The blur still has to be here rather than nowhere — once the bar is stuck,
+  // whatever scrolls underneath would otherwise pass behind the labels sharply.
   return (
-    <nav className="sticky top-0 z-50 py-4 backdrop-blur-md">
+    <nav className="sticky top-0 z-50 py-3 backdrop-blur-md backdrop-saturate-150">
       <div className={LANDING_RAIL}>
-        {/* Glass: translucent white over a heavy blur, lifted by a light top
-            border and a hairline ring rather than a drop shadow. */}
-        <div className="flex items-center rounded-3xl border border-white/60 bg-white/60 px-5 py-3 ring-1 ring-black/5 backdrop-blur-2xl backdrop-saturate-150">
+        <div className="flex items-center">
           <img src="/logo/KLARBlue.png" alt="Klar Travels" className="h-12 w-auto shrink-0" />
 
           <Divider />
