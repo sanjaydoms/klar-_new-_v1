@@ -18,6 +18,7 @@
 /// <reference types="node" />
 import assert from "assert";
 import { FlightFilter } from "../src/utils/sorter/filter.utils";
+import { MultiCityFlightFilter } from "../src/utils/sorter/multiFilter.utils";
 import { Filter } from "../src/types/filter.types";
 import { FlightSegment } from "../src/types/returnFilter.types";
 
@@ -129,4 +130,46 @@ assert.strictEqual(
     "and does not match an afternoon window",
 );
 
-console.log("OK — filter options and ranges survive an applied filter; time windows wrap and handle red-eyes");
+// ── Unreadable times ─────────────────────────────────────────────────────────
+// `timeToMinutes` used to return NaN for anything it could not parse, and NaN
+// compares false against everything, so both of these fell out silently and in
+// the same direction: excluded, with nothing logged. They now get opposite
+// answers on purpose.
+
+// A malformed window is not a filter — it must not empty the result set.
+const badWindow = FlightFilter.applyFilters(ALL, [
+    { type: "departureTimeRange", start: "not-a-time", end: "10:00" },
+]);
+assert.strictEqual(badWindow.length, ALL.length, "an unreadable window filters nothing out");
+
+// A malformed time on one flight excludes only that flight, and does not
+// disturb the others.
+const brokenTime: FlightSegment = {
+    ...seg("SpiceJet", 4000, 0, "2h 00m", ""),
+    from: { city: "Delhi", airportCode: "DEL", time: "", date: "2026-09-01", day: "Tue" },
+};
+const withBroken = FlightFilter.applyFilters(
+    [...ALL, brokenTime],
+    [{ type: "departureTimeRange", start: "05:00", end: "07:00" }],
+);
+assert.deepStrictEqual(
+    withBroken.map(f => f.airline),
+    ["IndiGo"],
+    "a flight with an unreadable time is excluded; the readable ones are unaffected",
+);
+
+// 24:00 and 25:61 are not times — the guard is a real parse, not a split.
+assert.strictEqual(
+    FlightFilter.applyFilters(ALL, [{ type: "departureTimeRange", start: "24:00", end: "25:61" }]).length,
+    ALL.length,
+    "out-of-range hours and minutes are rejected as a window, not silently arithmetic'd",
+);
+
+// Both filter classes agree — the multi-city panel is the same code path.
+const multiBad = MultiCityFlightFilter.applyFilters(
+    [seg("IndiGo", 5000, 0, "2h 10m", "06:00") as any],
+    [{ type: "arrivalTimeRange", start: "bad", end: "bad" }],
+);
+assert.strictEqual(multiBad.length, 1, "multi-city treats an unreadable window the same way");
+
+console.log("OK — filter options and ranges survive an applied filter; time windows wrap, handle red-eyes and reject unreadable input");

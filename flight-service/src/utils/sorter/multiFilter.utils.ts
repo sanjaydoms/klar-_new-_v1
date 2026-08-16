@@ -1,5 +1,6 @@
 import { Filter, FilterStats } from '../../types/filter.types';
 import { MultiCityFlight, MultiCityLeg } from '../../types/multiFilter.types';
+import { timeToMinutes } from './time.utils';
 
 export class MultiCityFlightFilter {
 
@@ -139,31 +140,43 @@ export class MultiCityFlightFilter {
      * Filter by departure time range
      */
     private static filterByDepartureTimeRange(flight: MultiCityFlight, start: string, end: string): boolean {
-        const flightTime = this.timeToMinutes(flight.from.time);
-        const startTime = this.timeToMinutes(start);
-        const endTime = this.timeToMinutes(end);
-
-        // Handle overnight ranges
-        if (startTime <= endTime) {
-            return flightTime >= startTime && flightTime <= endTime;
-        } else {
-            return flightTime >= startTime || flightTime <= endTime;
-        }
+        return this.isTimeInRange(flight.from.time, start, end);
     }
 
     /**
      * Filter by arrival time range
      */
     private static filterByArrivalTimeRange(flight: MultiCityFlight, start: string, end: string): boolean {
-        const flightTime = this.timeToMinutes(flight.to.time);
-        const startTime = this.timeToMinutes(start);
-        const endTime = this.timeToMinutes(end);
+        return this.isTimeInRange(flight.to.time, start, end);
+    }
+
+    /**
+     * Is a time of day within [start, end]? Wraps past midnight when the start
+     * is after the end. Unreadable values are handled the same way as
+     * `FlightFilter.isTimeInRange` — see there for why the two cases differ.
+     */
+    private static isTimeInRange(time: string, start: string, end: string): boolean {
+        const startTime = timeToMinutes(start);
+        const endTime = timeToMinutes(end);
+        if (startTime === null || endTime === null) {
+            console.warn(
+                `[MultiCityFlightFilter] unreadable time window ${JSON.stringify(start)}-${JSON.stringify(end)}; not filtering on it`
+            );
+            return true;
+        }
+
+        const flightTime = timeToMinutes(time);
+        if (flightTime === null) {
+            console.warn(
+                `[MultiCityFlightFilter] unreadable time ${JSON.stringify(time)} on a flight; excluded from the time filter`
+            );
+            return false;
+        }
 
         if (startTime <= endTime) {
             return flightTime >= startTime && flightTime <= endTime;
-        } else {
-            return flightTime >= startTime || flightTime <= endTime;
         }
+        return flightTime >= startTime || flightTime <= endTime;
     }
 
     /**
@@ -311,18 +324,10 @@ export class MultiCityFlightFilter {
     }
 
     /**
-     * Convert time string to minutes
-     */
-    private static timeToMinutes(time: string): number {
-        const [hours, minutes] = time.split(':').map(Number);
-        return (hours * 60) + minutes;
-    }
-
-    /**
-     * Validate time format
+     * Validate time format (HH:MM)
      */
     private static isValidTimeFormat(time: string): boolean {
-        return /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time);
+        return timeToMinutes(time) !== null;
     }
 }
 

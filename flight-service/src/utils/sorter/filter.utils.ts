@@ -1,5 +1,6 @@
 import { Filter, FilterStats } from '../../types/filter.types';
 import { FlightSegment } from '../../types/returnFilter.types';
+import { timeToMinutes } from './time.utils';
 
 export class FlightFilter {
 
@@ -138,11 +139,34 @@ export class FlightFilter {
      *
      * A window whose start is after its end wraps past midnight — 22:00–06:00 is
      * "late evening or early morning", not an empty range.
+     *
+     * The two unreadable cases get opposite answers, deliberately:
+     *
+     *  - **An unreadable window is not a filter.** One malformed query parameter
+     *    would otherwise exclude every flight and return an empty result set that
+     *    looks exactly like "nothing flies that day". Matching the convention the
+     *    airline and cabin filters already use, a criterion that says nothing
+     *    keeps everything.
+     *  - **An unreadable time on a flight excludes that flight**, because it
+     *    cannot be shown to fall inside the window the customer asked for — but
+     *    it is logged, which is the part that was missing. It used to drop out
+     *    through `NaN` comparing false against everything, silently.
      */
     private static isTimeInRange(time: string, start: string, end: string): boolean {
-        const flightTime = this.timeToMinutes(time);
-        const startTime = this.timeToMinutes(start);
-        const endTime = this.timeToMinutes(end);
+        const startTime = timeToMinutes(start);
+        const endTime = timeToMinutes(end);
+        if (startTime === null || endTime === null) {
+            console.warn(
+                `[FlightFilter] unreadable time window ${JSON.stringify(start)}-${JSON.stringify(end)}; not filtering on it`
+            );
+            return true;
+        }
+
+        const flightTime = timeToMinutes(time);
+        if (flightTime === null) {
+            console.warn(`[FlightFilter] unreadable time ${JSON.stringify(time)} on a flight; excluded from the time filter`);
+            return false;
+        }
 
         if (startTime <= endTime) {
             return flightTime >= startTime && flightTime <= endTime;
@@ -284,17 +308,9 @@ export class FlightFilter {
     }
 
     /**
-     * Convert time string "HH:MM" to minutes since midnight
-     */
-    private static timeToMinutes(time: string): number {
-        const [hours, minutes] = time.split(':').map(Number);
-        return (hours * 60) + minutes;
-    }
-
-    /**
      * Validate time format (HH:MM)
      */
     private static isValidTimeFormat(time: string): boolean {
-        return /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time);
+        return timeToMinutes(time) !== null;
     }
 }
