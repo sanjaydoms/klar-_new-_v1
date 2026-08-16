@@ -17,6 +17,7 @@ import { FlightSearchValidator, ValidationError } from '@/utils/FlightSearchVali
 import { openDatePicker } from '@/utils/datePicker.util';
 import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import TripTypeRow from './TripTypeRow';
 
 interface FlightSearchSectionProps {
   onFlightSearch: ((params: any) => void) | undefined;
@@ -357,50 +358,21 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
     };
 
     return (
-      <div
-        className="w-full rounded-2xl p-6"
-        style={{
-          backgroundColor: '#FEF6F6',
-          border: '1px solid #D4AF37',
-          borderRadius: '16px',
-          boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.3)',
-        }}
-      >
+      <div className="w-full">
         {/* Trip Type Selector - Centered */}
-        <div className="flex justify-start mb-2">
-          <div className="flex items-center gap-6 backdrop-blur-sm px-6 py-2">
-            {(['oneway', 'return', 'multicity'] as const).map((t) => (
-              <button
-                key={t}
-                type="button"
-                className="flex items-center gap-2 cursor-pointer select-none py-1 bg-transparent border-0 focus:outline-none"
-                onClick={() => {
-                  setTripType(t);
-                  setValidationErrors([]);
-                }}
-              >
-                <div
-                  className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${tripType === t ? 'border-blue-600' : 'border-gray-400'
-                    }`}
-                >
-                  {tripType === t && <div className="w-2 h-2 bg-blue-600 rounded-full" />}
-                </div>
-                <span
-                  className={`text-base font-medium transition-colors ${tripType === t ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'
-                    }`}
-                >
-                  {t === 'oneway' ? 'One Way' : t === 'return' ? 'Round Trip' : 'Multi City'}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-        {/* 4 Column Layout - From, To, Departure, Travellers */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-0">
+        <TripTypeRow
+          tripType={tripType}
+          onChange={(t) => {
+            setTripType(t);
+            setValidationErrors([]);
+          }}
+        />
+        {/* From, To, Departure, Travellers, CTA — the design's inset panel */}
+        <div className="grid grid-cols-1 items-center rounded-2xl border border-border/70 bg-white p-2 md:grid-cols-[1fr_1fr_0.85fr_0.85fr_auto]">
           {/* From */}
-          <div className="border-r border-gray-300 px-3 py-2 relative">
+          <div className="relative border-border/70 px-4 py-3 md:border-r">
             <div className="mb-1">
-              <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#b68d40]">From</span>
+              <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">From</span>
             </div>
             <div
               className={`bg-transparent h-[64px] flex items-center relative w-full ${getFieldError('from') && touchedFields.has('from') ? errorInputClass : ''
@@ -418,7 +390,9 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
                 placeholder="Delhi"
                 className="w-full bg-transparent font-display text-lg font-medium text-primary focus:outline-none border-0 h-full !px-3 !pl-10 rounded-xl"
               />
-              <Plane className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4.5 h-4.5 text-gray-400 pointer-events-none" />
+              <span className="pointer-events-none absolute left-0 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl bg-slate-100">
+                <Plane className="h-4.5 w-4.5 text-primary" />
+              </span>
             </div>
             <div className="text-xs text-gray-400 mt-1">
               {from ? (
@@ -451,18 +425,23 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
 
             {/* Arrow pointing from From to To */}
             <div className="hidden md:block absolute -right-3 top-1/2 transform -translate-y-1/2 z-10">
-              <div className="w-6 h-6 bg-[#FAF5F5] rounded-full flex items-center justify-center border border-gray-300">
-                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-[0_4px_14px_-4px_rgba(224,36,47,0.6)] ring-1 ring-black/5">
+                <svg
+                  className="h-4 w-4 text-[var(--color-brand-red)]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16h13m0 0l-4-4m4 4l-4 4M17 8H4m0 0l4-4M4 8l4 4" />
                 </svg>
               </div>
             </div>
           </div>
 
           {/* To */}
-          <div className="border-r border-gray-300 px-3 py-2">
+          <div className="border-border/70 px-4 py-3 md:border-r">
             <div className="mb-1">
-              <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#b68d40]">To</span>
+              <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">To</span>
             </div>
             <div
               className={`bg-transparent h-[64px] flex items-center relative w-full ${getFieldError('to') && touchedFields.has('to') ? errorInputClass : ''
@@ -513,9 +492,9 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
           </div>
 
           {/* Departure Date */}
-          <div className="border-r border-gray-300 px-3 py-2">
+          <div className="border-border/70 px-4 py-3 md:border-r">
             <div className="mb-1">
-              <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#b68d40]">Departure</span>
+              <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">Departure</span>
               <span className="text-xs text-gray-400 ml-1">▼</span>
             </div>
             <div
@@ -525,7 +504,9 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
                 : ''
                 }`}
             >
-              <Calendar className="w-4.5 h-4.5 text-gray-400 shrink-0 mr-2.5" />
+              <span className="mr-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
+                <Calendar className="h-4.5 w-4.5 text-primary" />
+              </span>
               <input
                 type="date"
                 value={departureDate}
@@ -550,7 +531,7 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
           {/* Travellers & Class */}
           <div className="px-3 py-2">
             <div className="mb-1">
-              <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#b68d40]">Travellers</span>
+              <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">Travellers</span>
               <span className="text-xs text-gray-400 ml-1">▼</span>
             </div>
             <div className="relative">
@@ -561,24 +542,21 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
                 <button
                   ref={travelerButtonRef}
                   onClick={() => setShowTravelerCard(!showTravelerCard)}
-                  className="w-full text-left flex items-center gap-3"
+                  className="flex w-full items-center gap-3 text-left"
                 >
-                  <div className="flex items-center gap-1">
-                    <UserRound className="w-4.5 h-4.5 text-gray-500" strokeWidth={1.5} />
-                    <span className="font-display text-lg font-medium text-primary">{adults}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Baby className="w-4.5 h-4.5 text-gray-500" strokeWidth={1.5} />
-                    <span className="font-display text-lg font-medium text-primary">{children}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Milk className="w-4.5 h-4.5 text-gray-500" strokeWidth={1.5} />
-                    <span className="font-display text-lg font-medium text-primary">{infants}</span>
-                  </div>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
+                    <UserRound className="h-4.5 w-4.5 text-primary" strokeWidth={1.5} />
+                  </span>
+                  {/* One summary line rather than three counters; the counts
+                      still live in the dropdown this opens. */}
+                  <span className="font-display text-lg font-medium whitespace-nowrap text-primary">
+                    {adults + children + infants} Traveller
+                    {adults + children + infants > 1 ? 's' : ''}
+                  </span>
                 </button>
               </div>
-              <div className="text-xs text-gray-400 mt-1">
-                <span className="font-bold text-sm text-gray-600">Economy</span>/ Premium...
+              <div className="mt-1 text-xs text-gray-500">
+                <span className="text-sm font-medium text-gray-600">{travelClass || 'Economy'}</span>
               </div>
               {renderFieldError('travelers')}
 
@@ -628,26 +606,27 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
               )}
             </div>
           </div>
-        </div>
-        {/* Footer - Reduced margin top */}
-        <div className="mt-2 flex justify-end">
-          <Button
-            onClick={handleFlightSearch}
-            disabled={isSearching}
-            className="h-12 gap-2 px-8 text-sm font-semibold tracking-[0.08em] uppercase shadow-lg" 
-          >
-            {isSearching ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Searching...
-              </>
-            ) : (
-              <>
-                <Search className="w-4 h-4" />
-                Search Flights
-              </>
-            )}
-          </Button>
+
+          {/* Search sits in the row, per the design */}
+          <div className="px-2 py-2">
+            <Button
+              onClick={handleFlightSearch}
+              disabled={isSearching}
+              className="h-14 w-full gap-2 rounded-xl bg-[var(--color-brand-red)] px-8 text-[15px] font-semibold text-white shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] hover:bg-[var(--color-brand-red)]/90 md:w-auto"
+            >
+              {isSearching ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Searching...
+                </>
+              ) : (
+                <>
+                  <Search className="w-4 h-4" />
+                  Search Flights
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -657,50 +636,21 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
   const renderReturnContent = () => {
 
     return (
-      <div
-        className="w-full rounded-2xl p-6"
-        style={{
-          backgroundColor: '#FEF6F6',
-          border: '1px solid #D4AF37',
-          borderRadius: '16px',
-          boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.3)',
-        }}
-      >
+      <div className="w-full">
         {/* Trip Type Selector - Centered */}
-        <div className="flex justify-start mb-2">
-          <div className="flex items-center gap-6 backdrop-blur-sm px-6 py-2">
-            {(['oneway', 'return', 'multicity'] as const).map((t) => (
-              <button
-                key={t}
-                type="button"
-                className="flex items-center gap-2 cursor-pointer select-none py-1 bg-transparent border-0 focus:outline-none"
-                onClick={() => {
-                  setTripType(t);
-                  setValidationErrors([]);
-                }}
-              >
-                <div
-                  className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${tripType === t ? 'border-blue-600' : 'border-gray-400'
-                    }`}
-                >
-                  {tripType === t && <div className="w-2 h-2 bg-blue-600 rounded-full" />}
-                </div>
-                <span
-                  className={`text-base font-medium transition-colors ${tripType === t ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'
-                    }`}
-                >
-                  {t === 'oneway' ? 'One Way' : t === 'return' ? 'Round Trip' : 'Multi City'}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
+        <TripTypeRow
+          tripType={tripType}
+          onChange={(t) => {
+            setTripType(t);
+            setValidationErrors([]);
+          }}
+        />
         {/* 5 Column Layout - From, To, Departure, Return, Travellers */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-0">
           {/* From */}
           <div className="border-r border-gray-300 px-2 py-2">
             <div className="mb-1">
-              <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#b68d40]">From</span>
+              <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">From</span>
             </div>
             <div
               className={`bg-transparent h-[52px] flex items-center relative w-full ${getFieldError('from') && touchedFields.has('from') ? errorInputClass : ''
@@ -750,7 +700,7 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
           {/* To */}
           <div className="border-r border-gray-300 px-2 py-2">
             <div className="mb-1">
-              <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#b68d40]">To</span>
+              <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">To</span>
             </div>
             <div
               className={`bg-transparent h-[52px] flex items-center relative w-full ${getFieldError('to') && touchedFields.has('to') ? errorInputClass : ''
@@ -800,7 +750,7 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
           {/* Departure Date */}
           <div className="border-r border-gray-300 px-2 py-2">
             <div className="mb-1">
-              <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#b68d40]">Departure</span>
+              <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">Departure</span>
               <span className="text-xs text-gray-400 ml-1">▼</span>
             </div>
             <div
@@ -835,7 +785,7 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
           {/* Return Date */}
           <div className="border-r border-gray-300 px-2 py-2">
             <div className="mb-1">
-              <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#b68d40]">Return</span>
+              <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">Return</span>
               <span className="text-xs text-gray-400 ml-1">▼</span>
             </div>
             <div
@@ -887,7 +837,7 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
           {/* Travellers */}
           <div className="px-2 py-2 relative">
             <div className="mb-1">
-              <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#b68d40]">Travellers</span>
+              <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">Travellers</span>
               <span className="text-xs text-gray-400 ml-1">▼</span>
             </div>
             <div className="relative">
@@ -914,8 +864,8 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
                   </div>
                 </button>
               </div>
-              <div className="text-xs text-gray-400 mt-1">
-                <span className="font-bold text-sm text-gray-600">Economy</span>/ Premium...
+              <div className="mt-1 text-xs text-gray-500">
+                <span className="text-sm font-medium text-gray-600">{travelClass || 'Economy'}</span>
               </div>
               {renderFieldError('travelers')}
 
@@ -980,7 +930,7 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
           <Button
             onClick={handleFlightSearch}
             disabled={isSearching}
-            className="h-12 gap-2 px-8 text-sm font-semibold tracking-[0.08em] uppercase shadow-lg" 
+            className="h-14 gap-2 rounded-xl bg-[var(--color-brand-red)] px-10 text-[15px] font-semibold text-white shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] hover:bg-[var(--color-brand-red)]/90" 
           >
             {isSearching ? (
               <>
@@ -1001,44 +951,15 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
 
   // ============= MULTI-CITY SCREEN =============
   const renderMultiCityContent = () => (
-    <div
-      className="w-full rounded-2xl p-6"
-      style={{
-        backgroundColor: '#FEF6F6',
-        border: '1px solid #D4AF37',
-        borderRadius: '16px',
-        boxShadow: '0px 4px 12px rgba(3, 0, 0, 0.3)',
-      }}
-    >
+    <div className="w-full">
       {/* Trip Type Selector - Centered */}
-      <div className="flex justify-start mb-2">
-        <div className="flex items-center gap-6 backdrop-blur-sm px-6 py-2">
-          {(['oneway', 'return', 'multicity'] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              className="flex items-center gap-2 cursor-pointer select-none py-1 bg-transparent border-0 focus:outline-none"
-              onClick={() => {
-                setTripType(t);
-                setValidationErrors([]);
-              }}
-            >
-              <div
-                className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${tripType === t ? 'border-blue-600' : 'border-gray-400'
-                  }`}
-              >
-                {tripType === t && <div className="w-2 h-2 bg-blue-600 rounded-full" />}
-              </div>
-              <span
-                className={`text-base font-medium transition-colors ${tripType === t ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'
-                  }`}
-              >
-                {t === 'oneway' ? 'One Way' : t === 'return' ? 'Round Trip' : 'Multi City'}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
+      <TripTypeRow
+        tripType={tripType}
+        onChange={(t) => {
+          setTripType(t);
+          setValidationErrors([]);
+        }}
+      />
       {/* Header labels for multi-city */}
       <div className="hidden md:grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_1fr_auto] gap-4 mb-1 px-1">
         <div>

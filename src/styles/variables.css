@@ -30,6 +30,12 @@
   /* Named brand colors pending consolidation into the palette above. */
   --color-brand-gold: #d4af37;
   --color-brand-maroon: #7f0909;
+  /*
+   * Signal red from the new landing design: the search CTA, the swap control
+   * and the second line of the headline. Distinct from --color-destructive,
+   * which means "something is wrong" — this one is a brand accent.
+   */
+  --color-brand-red: #e0242f;
   --color-black: #000000;
   --color-white: #ffffff;
 

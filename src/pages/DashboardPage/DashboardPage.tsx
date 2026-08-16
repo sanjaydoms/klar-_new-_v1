@@ -4,11 +4,13 @@ import HotelsContent from '../../features/hotels/components/HotelsContent';
 import VisaContent from '../../features/visa/components/VisaContent';
 import CabsContent from '../../features/cabs/components/CabsContent';
 import DashboardSearchCard from '../../components/DashboardComponents/DashboardSearchCard/index';
+import DashboardTopNav from '../../components/DashboardComponents/DashboardTopNav';
+import {
+  DashboardHeroCopy,
+  DashboardHeroPromises,
+} from '../../components/DashboardComponents/DashboardHero';
 import { useAuth } from '../../features/authentication/hooks/useAuth';
-import { Menu, User, Luggage, Heart } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import ProfileDropdown from '@/components/ProfileComponents/ProfileDropdown';
-import { ROUTES } from '../../routes/routes.config';
 // NEW IMPORTS FOR MOBILE RESPONSIVENESS
 import HomePage from '../../components/MobileResponsive/DashboardPage/HomePage';
 import BottomNav from '@/components/MobileResponsive/DashboardPage/BottomNav';
@@ -38,7 +40,8 @@ interface DashboardProps {
   }) => void;
 }
 
-export default function Dashboard({ onLogout, onFlightSearch }: DashboardProps) {
+// onLogout is part of the page contract; the nav owns sign-out now.
+export default function Dashboard({ onFlightSearch }: DashboardProps) {
   const location = useLocation();
   const { user } = useAuth();
   // const [activeTab, setActiveTab] = useState((location.state as any)?.activeTab || 'flights');
@@ -152,174 +155,24 @@ export default function Dashboard({ onLogout, onFlightSearch }: DashboardProps) 
             <div className="relative z-10">
               {/* --- DESKTOP VIEW (Untouched) --- */}
               <div className="hidden md:block">
-                {/* Elevated nav stacking context to ensure dropdown displays above search card */}
-                <nav className="relative z-50 bg-transparent">
-                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center h-20">
-                      <div className="flex items-center gap-12"></div>
+                <DashboardTopNav activeTab={activeTab} onTabChange={setActiveTab} user={user} />
 
-                      <div className="absolute left-[10%] transform -translate-x-1/2">
-                        <img src="/logo/KLARBlue.png" alt="Klar Travel" className="h-16 w-auto" />
-                      </div>
+                <DashboardHeroCopy />
 
-                      <div className="flex items-center gap-4 sm:gap-5 lg:gap-8">
-                        {user ? (
-                          <>
-                            {/* My Bookings - per design spec */}
-                            <button
-                              className="hover:opacity-70 transition-opacity whitespace-nowrap"
-                              style={{
-                                color: '#000000',
-                                fontFamily: 'Inter, sans-serif',
-                                fontWeight: 600,
-                                fontSize: 'clamp(13px, 1.2vw, 15px)',
-                                lineHeight: '20px',
-                                letterSpacing: '0px',
-                              }}
-                              onClick={() => navigate('/my-bookings')}
-                            >
-                              My Bookings
-                            </button>
-                            <button
-                              className="hover:opacity-70 transition-opacity whitespace-nowrap"
-                              style={{
-                                color: '#000000',
-                                fontFamily: 'Inter, sans-serif',
-                                fontWeight: 600,
-                                fontSize: 'clamp(13px, 1.2vw, 15px)',
-                                lineHeight: '20px',
-                                letterSpacing: '0px',
-                              }}
-                              onClick={() => navigate(ROUTES.HOTEL_WISHLIST)}
-                            >
-                              Wishlist
-                            </button>
-                            <button
-                              className="hover:opacity-70 transition-opacity whitespace-nowrap"
-                              style={{
-                                color: '#000000',
-                                fontFamily: 'Inter, sans-serif',
-                                fontWeight: 600,
-                                fontSize: 'clamp(13px, 1.2vw, 15px)',
-                                lineHeight: '20px',
-                                letterSpacing: '0px',
-                              }}
-                              onClick={() => navigate('/contact-us')}
-                            >
-                              Contact Us
-                            </button>
-
-                            {/* Profile Dropdown - Single Popup Container with High Stacking Context */}
-                            <div className="relative z-50" ref={dropdownRef}>
-                              <div
-                                className="flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 pr-2 sm:pr-3 bg-gray-50 border border-gray-200 rounded-full cursor-pointer hover:bg-white hover:shadow-md transition-all duration-300 group"
-                                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                              >
-                                <div className="bg-gray-600 p-1.5 sm:p-2 rounded-full cursor-pointer hover:bg-gray-700 transition-colors">
-                                  <User size={16} className="text-white sm:w-[18px] sm:h-[18px]" />
-                                </div>
-                                <Menu className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-gray-900 transition-colors" />
-                              </div>
-
-                              {/* Profile Dropdown - shown when user is logged in and dropdown is open */}
-                              {showProfileDropdown && (
-                                <div className="absolute right-0 top-full mt-2 w-64 z-50">
-                                  <ProfileDropdown onLogout={onLogout} />
-                                </div>
-                              )}
-                            </div>
-                          </>
-                        ) : (
-                          <div className="flex items-center relative" style={{ width: '569.01px', height: '45.41px', gap: '12.06px' }}>
-                            {/* My Trips */}
-                            <div className="flex items-center gap-3 cursor-pointer" style={{ width: '201px' }} onClick={() => navigate(ROUTES.LOGIN)}>
-                              <div className="w-[44.78px] h-[44.78px] bg-white rounded-full flex items-center justify-center shadow-sm">
-                                <Luggage className="w-6 h-6 text-red-500" strokeWidth={2} />
-                              </div>
-                              <div className="flex flex-col justify-center h-full">
-                                <span className="text-[#210202] font-medium" style={{ fontFamily: 'Inter', fontSize: '13.78px', lineHeight: '100%' }}>My Trips</span>
-                                <span className="text-[#210202] mt-1" style={{ fontFamily: 'Inter', fontSize: '10px' }}>Manage Your bookings</span>
-                              </div>
-                            </div>
-
-                            {/* Vertical line separator */}
-                            <div className="w-px h-[25px] border-l border-dashed border-gray-400 mx-1"></div>
-
-                            {/* Wishlist */}
-                            <div className="flex items-center gap-3 cursor-pointer" style={{ width: '201px' }} onClick={() => navigate(ROUTES.HOTEL_WISHLIST)}>
-                              <div className="w-[44.78px] h-[44.78px] bg-white rounded-full flex items-center justify-center shadow-sm">
-                                <Heart className="w-6 h-6 text-red-500 fill-current" strokeWidth={0} />
-                              </div>
-                              <div className="flex flex-col justify-center h-full">
-                                <span className="text-[#210202] font-medium" style={{ fontFamily: 'Inter', fontSize: '13.78px', lineHeight: '100%' }}>Wishlist</span>
-                                <span className="text-[#210202] mt-1" style={{ fontFamily: 'Inter', fontSize: '10px' }}>Save favourites</span>
-                              </div>
-                            </div>
-
-                            {/* Login or Create Account Button */}
-                            <button
-                              onClick={() => navigate(ROUTES.LOGIN)}
-                              className="hover:opacity-90 transition-opacity flex items-center justify-center ml-2"
-                              style={{
-                                width: '178.22px',
-                                height: '44.78px',
-                                background: 'linear-gradient(90deg, #431718 0%, #4B1B1C 44.23%, #5B2525 91.83%)',
-                                border: 'none',
-                                borderRadius: '6.89px',
-                                cursor: 'pointer',
-                                boxShadow: '0px 3.44px 5.17px -0.86px #0000001A',
-                              }}
-                            >
-                              <span style={{
-                                width: '161px',
-                                height: '18px',
-                                fontFamily: 'Inter, sans-serif',
-                                fontWeight: 500,
-                                fontSize: '13.78px',
-                                lineHeight: '17.22px',
-                                letterSpacing: '0px',
-                                textAlign: 'center',
-                                color: '#FFFFFF',
-                              }}>
-                                Login / Sign Up
-                              </span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </nav>
-
-                <div className="max-w-full mx-auto px-0 pt-0 pb-0">
-                  <div className="text-center mb-0">
-                    <p className="mb-4 -mt-6 text-center text-[11px] font-medium tracking-[0.35em] uppercase text-[#b68d40]">
-                      Premium Travel Experiences Since 2000
-                    </p>
-                    <h1 className="font-display mb-3 text-center text-[40px] leading-[46px] font-medium text-primary">
-                      Extraordinary Journeys,{' '}
-                      <em className="italic text-[#b68d40]">Unforgettable Luxury.</em>
-                    </h1>
-                    <div className="mx-auto mb-4 h-0.5 w-16 bg-gradient-to-r from-transparent via-accent to-transparent"></div>
-                    <p className="text-center text-base text-muted-foreground">
-                      Handpicked luxury travel experiences crafted around you
-                    </p>
-                    <div className="mt-8 pb-5 pt-5">
-                      {/* <LuxuryFeatures /> */}
-                    </div>
-                  </div>
-
+                <div className="max-w-full mx-auto px-0 pt-8 pb-0">
                   <DashboardSearchCard
                     activeTab={activeTab}
                     onTabChange={setActiveTab}
                     onFlightSearch={onFlightSearch}
                     selectedPassportPlan={selectedPassportPlan}
                   />
+                  <DashboardHeroPromises />
+
                   <div className="relative z-10">
                     <div
                       className="h-20 w-full"
                       style={{
-                        background: 'linear-gradient(180deg, rgba(255,255,255,0) 0%, #F9FAFB 100%)'
+                        background: 'linear-gradient(180deg, rgba(255,255,255,0) 0%, #F9FAFB 100%)',
                       }}
                     />
                   </div>
