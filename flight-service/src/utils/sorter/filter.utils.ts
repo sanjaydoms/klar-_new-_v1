@@ -171,23 +171,30 @@ export class FlightFilter {
     }
 
     /**
-     * Get filter statistics from flights
+     * Get filter statistics from flights.
+     *
+     * `allFlights` is the UNFILTERED result set and drives every option list and
+     * range; `filteredFlights` only supplies the count. Deriving the options from
+     * the filtered set instead collapses the panel the moment a filter is applied
+     * — pick one airline and that airline becomes the only one on offer, so the
+     * selection can never be widened or changed. Both arguments are required so
+     * that mistake cannot be made by passing one array.
      */
-    static getFilterStats(flights: FlightSegment[]): FilterStats {
+    static getFilterStats(allFlights: FlightSegment[], filteredFlights: FlightSegment[]): FilterStats {
         const stats: FilterStats = {
             availableAirlines: [],
             availableCabinClasses: [],
             priceRange: { min: Infinity, max: -Infinity },
             stopsRange: { min: Infinity, max: -Infinity },
             durationRange: { min: Infinity, max: -Infinity },
-            totalFlights: flights.length,
-            filteredFlights: flights.length
+            totalFlights: allFlights.length,
+            filteredFlights: filteredFlights.length
         };
 
         const airlines = new Set<string>();
         const cabinClasses = new Set<string>();
 
-        flights.forEach(flight => {
+        allFlights.forEach(flight => {
             // Collect airlines
             airlines.add(flight.airline);
 
@@ -212,7 +219,7 @@ export class FlightFilter {
         stats.availableCabinClasses = Array.from(cabinClasses).sort();
 
         // Reset min/max if no flights
-        if (flights.length === 0) {
+        if (allFlights.length === 0) {
             stats.priceRange = { min: 0, max: 0 };
             stats.stopsRange = { min: 0, max: 0 };
             stats.durationRange = { min: 0, max: 0 };

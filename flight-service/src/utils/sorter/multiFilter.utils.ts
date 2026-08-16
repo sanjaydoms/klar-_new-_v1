@@ -177,34 +177,45 @@ export class MultiCityFlightFilter {
     /**
      * Get filter statistics from multi-city flights
      */
-    static getMultiCityFilterStats(flights: MultiCityLeg[]): { [key: number]: FilterStats } {
+    static getMultiCityFilterStats(
+        allLegs: MultiCityLeg[],
+        filteredLegs: MultiCityLeg[]
+    ): { [key: number]: FilterStats } {
         const stats: { [key: number]: FilterStats } = {};
+        const filteredByIndex = new Map(filteredLegs.map(leg => [leg.legIndex, leg.flights]));
 
-        flights.forEach(leg => {
-            stats[leg.legIndex] = this.getFilterStats(leg.flights);
+        allLegs.forEach(leg => {
+            stats[leg.legIndex] = this.getFilterStats(
+                leg.flights,
+                filteredByIndex.get(leg.legIndex) ?? []
+            );
         });
 
         return stats;
     }
 
     /**
-     * Get filter statistics from flights array
+     * Get filter statistics from flights array.
+     *
+     * `allFlights` is the UNFILTERED leg and drives every option list and range;
+     * `filteredFlights` only supplies the count. See `FlightFilter.getFilterStats`
+     * for why deriving the options from the filtered set collapses the panel.
      */
-    static getFilterStats(flights: MultiCityFlight[]): FilterStats {
+    static getFilterStats(allFlights: MultiCityFlight[], filteredFlights: MultiCityFlight[]): FilterStats {
         const stats: FilterStats = {
             availableAirlines: [],
             availableCabinClasses: [],
             priceRange: { min: Infinity, max: -Infinity },
             stopsRange: { min: Infinity, max: -Infinity },
             durationRange: { min: Infinity, max: -Infinity },
-            totalFlights: flights.length,
-            filteredFlights: flights.length
+            totalFlights: allFlights.length,
+            filteredFlights: filteredFlights.length
         };
 
         const airlines = new Set<string>();
         const cabinClasses = new Set<string>();
 
-        flights.forEach(flight => {
+        allFlights.forEach(flight => {
             airlines.add(flight.airline);
             cabinClasses.add(flight.cabinClass);
 
@@ -223,7 +234,7 @@ export class MultiCityFlightFilter {
         stats.availableCabinClasses = Array.from(cabinClasses).sort();
 
         // Reset if no flights
-        if (flights.length === 0) {
+        if (allFlights.length === 0) {
             stats.priceRange = { min: 0, max: 0 };
             stats.stopsRange = { min: 0, max: 0 };
             stats.durationRange = { min: 0, max: 0 };

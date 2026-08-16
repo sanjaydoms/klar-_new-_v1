@@ -58,7 +58,6 @@ class SearchService {
 
                     let normalized = normalizedResult.flights;
                     const airlineStats = normalizedResult.airlineStats;
-                    const originalCount = normalized.length;
 
                     if (filters && filters.length > 0) {
                         const validation = FlightFilter.validateFilters(filters);
@@ -78,10 +77,7 @@ class SearchService {
 
                     const response: any = { sessionId, flights: normalized, airlineStats, fromCache: true };
                     if (includeStats) {
-                        const stats = FlightFilter.getFilterStats(normalized);
-                        stats.totalFlights = originalCount;
-                        stats.filteredFlights = normalized.length;
-                        response.stats = stats;
+                        response.stats = FlightFilter.getFilterStats(normalizedResult.flights, normalized);
                     }
                     return response;
                 }
@@ -111,7 +107,7 @@ class SearchService {
                     data: markedUpResponse
                 });
 
-                const originalCount = normalized.length;
+                const unfiltered = normalized;
 
 
                 if (filters && filters.length > 0) {
@@ -131,9 +127,7 @@ class SearchService {
 
                 let stats: FilterStats | undefined;
                 if (includeStats) {
-                    stats = FlightFilter.getFilterStats(normalized);
-                    stats.totalFlights = originalCount;
-                    stats.filteredFlights = normalized.length;
+                    stats = FlightFilter.getFilterStats(unfiltered, normalized);
                 }
 
 
@@ -164,8 +158,6 @@ class SearchService {
             let normalized = normalizedResult.flights;
             const airlineStats = normalizedResult.airlineStats;
 
-            const originalCount = normalized.length;
-
             if (filters && filters.length > 0) {
                 const validation = FlightFilter.validateFilters(filters);
                 if (validation.isValid) {
@@ -181,9 +173,7 @@ class SearchService {
 
             let stats: FilterStats | undefined;
             if (includeStats) {
-                stats = FlightFilter.getFilterStats(normalized);
-                stats.totalFlights = originalCount;
-                stats.filteredFlights = normalized.length;
+                stats = FlightFilter.getFilterStats(normalizedResult.flights, normalized);
             }
 
             // Store by session id (for fare/details lookup)
@@ -271,8 +261,8 @@ class SearchService {
                     let onward = normalizedWithAllFares.onward || [];
                     let returnFlights = normalizedWithAllFares.return || [];
 
-                    const originalOnwardCount = onward.length;
-                    const originalReturnCount = returnFlights.length;
+                    const unfilteredOnward = onward;
+                    const unfilteredReturn = returnFlights;
 
 
                     if (filters && filters.length > 0) {
@@ -308,18 +298,16 @@ class SearchService {
 
                     if (includeStats) {
                         result.stats = {
-                            onward: FlightFilter.getFilterStats(onward),
-                            return: FlightFilter.getFilterStats(returnFlights)
+                            onward: FlightFilter.getFilterStats(unfilteredOnward, onward),
+                            return: FlightFilter.getFilterStats(unfilteredReturn, returnFlights)
                         };
-                        result.stats.onward.totalFlights = originalOnwardCount;
-                        result.stats.return.totalFlights = originalReturnCount;
                     }
                 }
 
 
                 else if (normalizedWithAllFares.type === 'international') {
                     let roundTrips = normalizedWithAllFares.roundTrips || [];
-                    const originalCount = roundTrips.length;
+                    const unfilteredRoundTrips = roundTrips;
 
 
                     if (filters && filters.length > 0) {
@@ -409,14 +397,16 @@ class SearchService {
 
 
                     if (includeStats) {
-                        const onwardFlights = roundTrips.map((rt: any) => rt.onward);
-                        const returnFlights = roundTrips.map((rt: any) => rt.return);
                         result.stats = {
-                            onward: FlightFilter.getFilterStats(onwardFlights),
-                            return: FlightFilter.getFilterStats(returnFlights)
+                            onward: FlightFilter.getFilterStats(
+                                unfilteredRoundTrips.map((rt: any) => rt.onward),
+                                roundTrips.map((rt: any) => rt.onward)
+                            ),
+                            return: FlightFilter.getFilterStats(
+                                unfilteredRoundTrips.map((rt: any) => rt.return),
+                                roundTrips.map((rt: any) => rt.return)
+                            )
                         };
-                        result.stats.onward.totalFlights = originalCount;
-                        result.stats.return.totalFlights = originalCount;
                     }
                 }
 
@@ -462,13 +452,9 @@ class SearchService {
             const isDomestic = 'onward' in normalized && 'return' in normalized;
             const isInternational = 'roundTrips' in normalized;
 
-            let originalOnwardCount = 0;
-            let originalReturnCount = 0;
-
-            if (isDomestic) {
-                originalOnwardCount = normalized.onward.length;
-                originalReturnCount = normalized.return.length;
-            }
+            // Held before filtering: the stats below describe the whole result
+            // set, not the filtered slice of it.
+            const unfiltered = normalized;
 
             if (filters && filters.length > 0) {
                 const validation = FlightFilter.validateFilters(filters);
@@ -576,18 +562,27 @@ class SearchService {
             if (includeStats) {
                 if (isDomestic) {
                     stats = {
-                        onward: FlightFilter.getFilterStats((normalized as { onward: FlightSegment[] }).onward),
-                        return: FlightFilter.getFilterStats((normalized as { return: FlightSegment[] }).return)
+                        onward: FlightFilter.getFilterStats(
+                            (unfiltered as { onward: FlightSegment[] }).onward,
+                            (normalized as { onward: FlightSegment[] }).onward
+                        ),
+                        return: FlightFilter.getFilterStats(
+                            (unfiltered as { return: FlightSegment[] }).return,
+                            (normalized as { return: FlightSegment[] }).return
+                        )
                     };
-                    stats.onward.totalFlights = originalOnwardCount;
-                    stats.return.totalFlights = originalReturnCount;
                 } else if (isInternational) {
+                    const allRoundTrips = (unfiltered as { roundTrips: any[] }).roundTrips;
                     const roundTrips = (normalized as { roundTrips: any[] }).roundTrips;
-                    const onwardFlights = roundTrips.map(rt => rt.onward);
-                    const returnFlights = roundTrips.map(rt => rt.return);
                     stats = {
-                        onward: FlightFilter.getFilterStats(onwardFlights),
-                        return: FlightFilter.getFilterStats(returnFlights)
+                        onward: FlightFilter.getFilterStats(
+                            allRoundTrips.map(rt => rt.onward),
+                            roundTrips.map(rt => rt.onward)
+                        ),
+                        return: FlightFilter.getFilterStats(
+                            allRoundTrips.map(rt => rt.return),
+                            roundTrips.map(rt => rt.return)
+                        )
                     };
                 }
             }
@@ -665,13 +660,9 @@ class SearchService {
                 if (normalizedWithAllFares.type === 'domestic') {
                     let legs = normalizedWithAllFares.flights || [];
 
-                    
-                    const originalCounts = legs.map((leg: any) => ({
-                        legIndex: leg.legIndex,
-                        count: leg.flights.length
-                    }));
+                    const unfilteredLegs = legs;
 
-                    
+
                     if (filters && filters.length > 0) {
                         const validation = MultiCityFlightFilter.validateFilters(filters);
                         if (validation.isValid) {
@@ -701,13 +692,7 @@ class SearchService {
 
                     
                     if (includeStats) {
-                        result.stats = MultiCityFlightFilter.getMultiCityFilterStats(legs);
-                        originalCounts.forEach((original: { legIndex: number; count: number }) => {
-                            if (result.stats[original.legIndex]) {
-                                result.stats[original.legIndex].totalFlights = original.count;
-                                result.stats[original.legIndex].filteredFlights = legs[original.legIndex]?.flights.length || 0;
-                            }
-                        });
+                        result.stats = MultiCityFlightFilter.getMultiCityFilterStats(unfilteredLegs, legs);
                     }
                 }
 
@@ -801,14 +786,9 @@ class SearchService {
             const isDomestic = normalized.length > 0 && 'flights' in normalized[0];
             const isInternational = normalized.length > 0 && 'legs' in normalized[0];
 
-            let originalCounts: Array<{ legIndex: number; count: number }> = [];
-
-            if (isDomestic) {
-                originalCounts = normalized.map((leg: any) => ({
-                    legIndex: leg.legIndex,
-                    count: leg.flights.length
-                }));
-            }
+            // Held before filtering: the stats below describe the whole result
+            // set, not the filtered slice of it.
+            const unfilteredLegs = normalized;
 
             if (filters && filters.length > 0) {
                 const validation = MultiCityFlightFilter.validateFilters(filters);
@@ -864,19 +844,16 @@ class SearchService {
             let stats: any = undefined;
             if (includeStats) {
                 if (isDomestic) {
-                    stats = MultiCityFlightFilter.getMultiCityFilterStats(normalized);
-                    originalCounts.forEach((original: { legIndex: number; count: number }) => {
-                        if (stats[original.legIndex]) {
-                            stats[original.legIndex].totalFlights = original.count;
-                            stats[original.legIndex].filteredFlights = normalized[original.legIndex]?.flights.length || 0;
-                        }
-                    });
+                    stats = MultiCityFlightFilter.getMultiCityFilterStats(unfilteredLegs, normalized);
                 } else if (isInternational) {
+                    // Range from the unfiltered set for the same reason as above:
+                    // a price slider rebuilt from its own output can only shrink.
                     stats = {
-                        totalItineraries: normalized.length,
+                        totalItineraries: unfilteredLegs.length,
+                        filteredItineraries: normalized.length,
                         priceRange: {
-                            min: normalized.length > 0 ? Math.min(...normalized.map((i: any) => i.totalPrice)) : 0,
-                            max: normalized.length > 0 ? Math.max(...normalized.map((i: any) => i.totalPrice)) : 0
+                            min: unfilteredLegs.length > 0 ? Math.min(...unfilteredLegs.map((i: any) => i.totalPrice)) : 0,
+                            max: unfilteredLegs.length > 0 ? Math.max(...unfilteredLegs.map((i: any) => i.totalPrice)) : 0
                         }
                     };
                 }
