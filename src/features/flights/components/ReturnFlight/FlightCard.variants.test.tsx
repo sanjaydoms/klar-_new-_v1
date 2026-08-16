@@ -30,6 +30,8 @@ const mk = (over: Partial<Flight>): Flight =>
     isRefundable: true,
     fareIdentifier: 'PUBLISHED',
     refundable: 'Refundable',
+    checkInBaggage: '15 kg',
+    cabinBaggage: '7 Kg',
     ...over,
   }) as Flight;
 
@@ -41,6 +43,8 @@ const pricier = mk({
   price: 8100,
   fareIdentifier: 'ECO VALUE',
   seatsRemaining: 3,
+  refundable: 'Non-Refundable',
+  checkInBaggage: '40 Kg',
 });
 const grouped = mk({ variants: [cheapest, pricier] });
 
@@ -84,6 +88,9 @@ describe('return flight card fare variants', () => {
     fireEvent.click(screen.getByText('ECO VALUE'));
     expect(screen.getAllByText('₹ 8100').length).toBe(2);
     expect(screen.getByText('Seats left: 3')).toBeTruthy();
+    // refundability and baggage belong to the FARE, not the flight
+    expect(screen.getAllByText('Non-Refundable').length).toBe(2); // footer + its strip row
+    expect(screen.getByText('40 Kg / 7 Kg')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Select' }));
 

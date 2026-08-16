@@ -101,6 +101,8 @@ export interface FlightOption {
   fareIdentifier?: string;
   refundable?: string;
   seatsRemaining?: number;
+  checkInBaggage?: string;
+  cabinBaggage?: string;
   /** Other fare groups of the same physical flight, cheapest first. */
   variants?: FlightOption[];
 }

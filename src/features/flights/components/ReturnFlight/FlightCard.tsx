@@ -1,8 +1,8 @@
-import { Plane, Clock, AlertCircle, CheckCircle, ChevronDown } from 'lucide-react';
 import { Flight } from '../../types/types.returnFlight';
 import { useState } from 'react';
 import ReturnFareDetailsCard from './ReturnFareDetailsCard';
 import FareVariantRows from '../FareVariantRows';
+import FlightCardFooter from '../FlightCardFooter';
 import { getReturnFareDetails } from '@/api/flightService.api';
 import { notifyError } from '@/utils/notify';
 import { Button } from '@/components/ui/button';
@@ -233,43 +233,6 @@ const PriceAction = ({ price, isLoading, isSelected, onSelect, onDeselect }: Pri
   );
 };
 
-interface FooterInfoProps {
-  onViewDetails?: () => void;
-  flightType: 'departure' | 'return';
-}
-
-const FooterInfo = ({ onViewDetails }: FooterInfoProps) => {
-  return (
-    <div
-      className="mt-2 pb-2 pt-2 px-4 -mx-4 border-t flex items-center justify-between text-xs"
-      style={{
-        borderTop: '1px solid rgba(203, 139, 12, 0.25)',
-        background:
-          'linear-gradient(90deg, rgba(250, 197, 93, 0.25) 11.01%, rgba(203, 139, 12, 0.25) 59.57%)',
-      }}
-    >
-      <div className="flex items-center gap-25">
-        <div className="flex items-center gap-1">
-          <CheckCircle className="w-4 h-4 text-green-600" />
-          <span className="text-green-600 font-medium font-semibold">REFUNDABLE</span>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <img src="/logo/luggage.png" alt="Baggage" className="w-4 h-4 object-contain" />
-          <span className="text-gray-600">15 KG / 7 KG</span>
-        </div>
-      </div>
-
-      {/* <button
-        onClick={onViewDetails}
-        className="flex items-center gap-1 text-gray-900 hover:text-blue-800 hover:underline font-medium"
-      >
-        <span>Flight Details</span>
-        <ChevronDown className="w-4 h-4" />
-      </button> */}
-    </div>
-  );
-};
 
 export default function FlightCard({
   flight,
@@ -474,7 +437,11 @@ export default function FlightCard({
 
           <FareVariantRows fares={fares} activeIndex={fareIndex} onSelectFare={handleFareChange} />
 
-          <FooterInfo onViewDetails={onViewDetails} flightType={type} />
+          <FlightCardFooter
+            refundable={activeFare.refundable}
+            checkInBaggage={activeFare.checkInBaggage}
+            cabinBaggage={activeFare.cabinBaggage}
+          />
         </div>
       </div>
 

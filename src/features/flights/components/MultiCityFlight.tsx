@@ -560,6 +560,8 @@ export default function MultiCityFlight({ onBack, onBookNow }: MultiCityFlightPr
                   fareIdentifier: flight.fareIdentifier,
                   refundable: flight.refundable,
                   seatsRemaining: flight.seatsRemaining,
+                  checkInBaggage: flight.checkInBaggage,
+                  cabinBaggage: flight.cabinBaggage,
                 }));
 
                 newLegFlights.set(legIndex, mappedFlights);
@@ -1202,6 +1204,8 @@ export default function MultiCityFlight({ onBack, onBookNow }: MultiCityFlightPr
           fareIdentifier: flight.fareIdentifier,
           refundable: flight.refundable,
           seatsRemaining: flight.seatsRemaining,
+          checkInBaggage: flight.checkInBaggage,
+          cabinBaggage: flight.cabinBaggage,
         };
       });
     };

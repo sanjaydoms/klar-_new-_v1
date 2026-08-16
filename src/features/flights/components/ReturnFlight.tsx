@@ -343,6 +343,8 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
       fareIdentifier: flight.fareIdentifier,
       refundable: flight.refundable,
       seatsRemaining: flight.seatsRemaining,
+      checkInBaggage: flight.checkInBaggage,
+      cabinBaggage: flight.cabinBaggage,
     };
   };
 
