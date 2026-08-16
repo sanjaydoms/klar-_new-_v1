@@ -83,4 +83,50 @@ assert.deepStrictEqual(
 );
 assert.deepStrictEqual(emptyStats.priceRange, { min: 5000, max: 9200 }, "and still spans the real price range");
 
-console.log("OK — filter options and ranges survive an applied filter");
+// ── Time-of-day windows ──────────────────────────────────────────────────────
+// The departure/arrival filters used to branch on whether the flight landed on a
+// later date and then run the identical comparison in both branches. Removing
+// that is only safe if a window still behaves the same across midnight and for a
+// red-eye, so both are pinned here.
+
+const overnight: FlightSegment = {
+    ...seg("IndiGo", 6000, 0, "8h 30m", "23:30"),
+    // Departs 23:30, lands 08:00 the NEXT day.
+    to: { city: "Mumbai", airportCode: "BOM", time: "08:00", date: "2026-09-02", day: "Wed" },
+};
+const midday = seg("Vistara", 6000, 0, "2h 00m", "12:00"); // 12:00 → 12:00 same day
+
+const inWindow = (flights: FlightSegment[], f: Filter) => FlightFilter.applyFilters(flights, f ? [f] : []);
+
+// A plain window keeps what falls inside it and drops what does not.
+assert.deepStrictEqual(
+    inWindow(ALL, { type: "departureTimeRange", start: "05:00", end: "07:00" }).map(f => f.airline),
+    ["IndiGo"],
+    "06:00 departure falls inside 05:00-07:00",
+);
+
+// A window whose start is after its end wraps past midnight.
+assert.deepStrictEqual(
+    inWindow([overnight, midday], { type: "departureTimeRange", start: "22:00", end: "06:00" }).map(f => f.from.time),
+    ["23:30"],
+    "23:30 departure falls inside the wrapping window 22:00-06:00",
+);
+assert.strictEqual(
+    inWindow([midday], { type: "departureTimeRange", start: "22:00", end: "06:00" }).length,
+    0,
+    "a midday departure does not fall inside 22:00-06:00",
+);
+
+// The red-eye: arrival is matched on time of day, regardless of landing a day later.
+assert.strictEqual(
+    inWindow([overnight], { type: "arrivalTimeRange", start: "07:00", end: "09:00" }).length,
+    1,
+    "an 08:00 next-day arrival matches a 07:00-09:00 window",
+);
+assert.strictEqual(
+    inWindow([overnight], { type: "arrivalTimeRange", start: "12:00", end: "18:00" }).length,
+    0,
+    "and does not match an afternoon window",
+);
+
+console.log("OK — filter options and ranges survive an applied filter; time windows wrap and handle red-eyes");
