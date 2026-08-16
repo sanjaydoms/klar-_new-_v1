@@ -1,0 +1,64 @@
+@theme {
+  /*
+   * Brand tokens. Primary is the Klar navy — the most-used color family in
+   * the product (#1a1f4d and siblings, ~440 uses) — with the luxury gold as
+   * accent. The old #ff5a5f coral primary matched nothing the product
+   * renders; raw #ff5a5f hexes that still exist are migration debt, not the
+   * brand. The -foreground/muted/border/ring family below is REQUIRED by the
+   * shadcn primitives in components/ui — without these defined, their
+   * bg-primary / border-border classes silently resolve to nothing.
+   */
+  --color-primary: #1a1f4d;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #eae4da;
+  --color-secondary-foreground: #1a1f4d;
+  --color-accent: #d4af37;
+  --color-accent-foreground: #1a1f4d;
+  --color-background: #f8f5ec;
+  --color-foreground: #0f172a;
+  --color-muted: #f1ead9;
+  --color-muted-foreground: #64748b;
+  --color-border: #e3d9c2;
+  --color-input: #e3d9c2;
+  --color-ring: #1a1f4d;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-popover: #fffdf8;
+  --color-popover-foreground: #0f172a;
+  --color-card: #fffdf8;
+  --color-card-foreground: #0f172a;
+  /* Named brand colors pending consolidation into the palette above. */
+  --color-brand-gold: #d4af37;
+  --color-brand-maroon: #7f0909;
+  --color-black: #000000;
+  --color-white: #ffffff;
+
+  /* Typography */
+  --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-primary: 'Inter', sans-serif;
+  --font-secondary: 'Poppins', sans-serif;
+  --font-outfit: 'Outfit', sans-serif;
+
+  /* Border radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.8rem;
+  --radius-lg: 1rem;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 300ms ease;
+  --transition-slow: 500ms ease;
+
+  /* Z-index */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal: 1040;
+  --z-popover: 1050;
+  --z-tooltip: 1060;
+}
