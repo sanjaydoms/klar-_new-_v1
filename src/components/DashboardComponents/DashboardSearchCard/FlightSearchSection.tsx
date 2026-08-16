@@ -30,6 +30,41 @@ interface MultiCitySegment {
   date: string;
 }
 
+/**
+ * The circle that sits on the seam between From and To.
+ *
+ * One definition, used by every trip type with a From/To pair. It was inline
+ * markup in the oneway branch alone, so Round Trip — the screen where reversing
+ * the route is most obviously useful — had no swap at all. Pasting a second
+ * copy is how the landing containers drifted apart, so this is a component.
+ *
+ * Absolutely positioned: the cell it sits in must be `relative`.
+ */
+function SwapButton({ onSwap, disabled }: { onSwap: () => void; disabled: boolean }) {
+  return (
+    <div className="hidden md:block absolute -right-3 top-1/2 transform -translate-y-1/2 z-10">
+      <button
+        type="button"
+        onClick={onSwap}
+        disabled={disabled}
+        aria-label="Swap origin and destination"
+        title="Swap origin and destination"
+        className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-[0_4px_14px_-4px_rgba(224,36,47,0.6)] ring-1 ring-black/5 transition hover:bg-red-50 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-red)] disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <svg
+          className="h-4 w-4 text-[var(--color-brand-red)]"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16h13m0 0l-4-4m4 4l-4 4M17 8H4m0 0l4-4M4 8l4 4" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
 export default function FlightSearchSection({ onFlightSearch }: FlightSearchSectionProps) {
   const location = useLocation();
   const { state } = location;
@@ -443,27 +478,7 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
             </div>
             {renderFieldError('from')}
 
-            {/* Swap From and To */}
-            <div className="hidden md:block absolute -right-3 top-1/2 transform -translate-y-1/2 z-10">
-              <button
-                type="button"
-                onClick={handleSwapLocations}
-                disabled={isSearching}
-                aria-label="Swap origin and destination"
-                title="Swap origin and destination"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-[0_4px_14px_-4px_rgba(224,36,47,0.6)] ring-1 ring-black/5 transition hover:bg-red-50 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-red)] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <svg
-                  className="h-4 w-4 text-[var(--color-brand-red)]"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16h13m0 0l-4-4m4 4l-4 4M17 8H4m0 0l4-4M4 8l4 4" />
-                </svg>
-              </button>
-            </div>
+            <SwapButton onSwap={handleSwapLocations} disabled={isSearching} />
           </div>
 
           {/* To */}
@@ -674,7 +689,7 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
         {/* 5 Column Layout - From, To, Departure, Return, Travellers */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-0">
           {/* From */}
-          <div className="border-r border-gray-300 px-2 py-2">
+          <div className="relative border-r border-gray-300 px-2 py-2">
             <div className="mb-1">
               <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">From</span>
             </div>
@@ -721,6 +736,7 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
               )}
             </div>
             {renderFieldError('from')}
+            <SwapButton onSwap={handleSwapLocations} disabled={isSearching} />
           </div>
 
           {/* To */}
