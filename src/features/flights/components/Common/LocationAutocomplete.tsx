@@ -1,4 +1,5 @@
 import React from 'react';
+import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
 import { Search } from 'lucide-react';
 import { searchAirports } from '../../../../services/flightApi';
@@ -158,18 +159,22 @@ export default function LocationAutocomplete({
           onBlur={handleInputBlur}
           autoFocus={autoFocus}
           placeholder={placeholder}
-          className={`w-full h-full text-gray-900 bg-transparent focus:outline-none ${className}`}
-          style={{
-            paddingRight: '2rem',
-            fontFamily: "'Inter', serif",
-            fontWeight: 700,
-            fontSize: "21.57px",
-            lineHeight: "32.1px",
-            letterSpacing: "0%",
-            verticalAlign: "middle",
-            textTransform: "capitalize",
-            color: "#1F2937"
-          }}
+          /*
+           * These were an inline `style` block, which beats every utility class
+           * a caller passes — so `font-display`, `text-lg`, `font-medium` and
+           * `text-primary` on the landing card were all inert, and the field
+           * rendered as bold 21.57px Inter regardless. They are classes now, and
+           * `cn` runs tailwind-merge, so a caller's className wins the conflict
+           * instead of losing to specificity it cannot beat.
+           *
+           * `letterSpacing: "0%"` went with them: a percentage is not a valid
+           * letter-spacing, so the browser had been dropping it anyway.
+           */
+          className={cn(
+            'h-full w-full bg-transparent capitalize align-middle focus:outline-none',
+            'font-primary text-[21.57px] font-bold leading-[32.1px] text-gray-800 pr-8',
+            className,
+          )}
         />
         {/* <Search className="absolute right-3 w-4 h-4 text-gray-400 pointer-events-none" /> */}
       </div>
