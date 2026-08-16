@@ -140,6 +140,12 @@ export default function Dashboard({ onFlightSearch }: DashboardProps) {
       <div className="hidden md:block">
         {/* Main Content */}
         <div>
+          {/* The nav sits here rather than inside the hero: `sticky` is bounded
+              by its parent's box, and inside the hero it stopped sticking as
+              soon as the photograph scrolled past. This wrapper spans the whole
+              desktop page, so the bar stays put the entire way down. */}
+          <DashboardTopNav activeTab={activeTab} onTabChange={setActiveTab} user={user} />
+
           {/* Header Section with Airplane Wing Background */}
           <div className="relative">
             {/* Background Image - Airplane Wing Sunset */}
@@ -155,8 +161,6 @@ export default function Dashboard({ onFlightSearch }: DashboardProps) {
             <div className="relative z-10">
               {/* --- DESKTOP VIEW (Untouched) --- */}
               <div className="hidden md:block">
-                <DashboardTopNav activeTab={activeTab} onTabChange={setActiveTab} user={user} />
-
                 <DashboardHeroCopy />
 
                 <div className="max-w-full mx-auto px-0 pt-8 pb-0">

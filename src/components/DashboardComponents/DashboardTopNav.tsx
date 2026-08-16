@@ -129,8 +129,10 @@ export default function DashboardTopNav({ activeTab, onTabChange, user }: Dashbo
     </button>
   );
 
+  // Opaque, and sticky: once stuck, page content scrolls underneath, and the
+  // gap above the white bar would otherwise show it sliding past.
   return (
-    <nav className="relative z-50 pt-5">
+    <nav className="sticky top-0 z-50 bg-gray-50 py-4">
       <div className={LANDING_RAIL}>
         <div className="flex items-center rounded-3xl bg-white px-5 py-3 shadow-[0_18px_50px_-24px_rgba(15,30,77,0.45)]">
           <img src="/logo/KLARBlue.png" alt="Klar Travels" className="h-12 w-auto shrink-0" />
