@@ -1,4 +1,3 @@
-import { Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface PopularDestinationsProps {
@@ -10,18 +9,13 @@ export default function PopularDestinations({ onViewAll }: PopularDestinationsPr
 
     return (
         <div className="w-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-8">
-          <div className="mb-8">
-            <h2
-              className="text-3xl font-bold text-gray-900 mb-4 text-center"
-              style={{ fontFamily: "'Playfair Display', serif" }}
-            >
-              Popular Destinations
+          {/* Section heading, new direction: navy serif with the accent word in
+              signal red. The gold rule-and-star that sat under it belonged to
+              Heritage Luxury, which is off the flight product. */}
+          <div className="mb-8 text-center">
+            <h2 className="font-display text-3xl font-medium text-primary">
+              Popular <span className="text-[var(--color-brand-red)]">Destinations</span>
             </h2>
-            <div className="flex items-center justify-center gap-4 mb-4">
-              <div className="w-24 h-[2px] bg-[#D4AF37]"></div>
-              <Star size={20} className="text-[#D4AF37] fill-[#D4AF37]" />
-              <div className="w-24 h-[2px] bg-[#D4AF37]"></div>
-            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 md:gap-6">
             {[

@@ -44,7 +44,7 @@ export default function TravelPartner({ className = '', onBookNow }: TravelPartn
                 // Redirect to root path using window.location
                 window.location.href = '/';
               }}
-              className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-white bg-[#7F0909] hover:bg-[#C49A2A] transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl text-sm md:text-base"
+              className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-white bg-[var(--color-brand-red)] hover:bg-[var(--color-brand-red)]/90 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl text-sm md:text-base"
               style={{ fontFamily: "'Inter', sans-serif" }}
             >
               Book Now

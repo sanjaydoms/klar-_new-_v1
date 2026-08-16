@@ -15,37 +15,37 @@ const features = [
         title: 'Best Price Guarantee',
         description: 'Never overpay for your journey. We compare thousands of travel options to bring you the best available prices.',
         icon: Shield,
-        iconColor: '#2563EB',
-        bgColor: '#DBEAFE'
+        iconColor: '#1a1f4d',
+        bgColor: '#f1f5f9'
     },
     {
         title: '24/7 Expert Support',
         description: 'Travel confidently with dedicated assistance available anytime, anywhere around the world.',
         icon: Headphones,
-        iconColor: '#7F0909',
-        bgColor: '#FEE2E2'
+        iconColor: '#1a1f4d',
+        bgColor: '#f1f5f9'
     },
     {
         title: 'Flexible Booking',
         description: 'Plans change. Modify or cancel your bookings easily with flexible travel options.',
         icon: Calendar,
-        iconColor: '#059669',
-        bgColor: '#D1FAE5'
+        iconColor: '#1a1f4d',
+        bgColor: '#f1f5f9'
     },
     {
         title: 'Secure Payments',
         description: 'Enjoy worry-free transactions protected by advanced encryption and globally trusted payment gateways.',
         icon: Lock,
-        iconColor: '#7C3AED',
-        bgColor: '#EDE9FE'
+        iconColor: '#1a1f4d',
+        bgColor: '#f1f5f9'
     },
 ];
 
 const stats = [
-    { number: '50K+', label: 'Happy Travelers', icon: Users, iconColor: '#2563EB' },
-    { number: '120+', label: 'Countries Covered', icon: Globe, iconColor: '#059669' },
-    { number: '4.9★', label: 'Average Rating', icon: Star, iconColor: '#D97706' },
-    { number: '24/7', label: 'Support', icon: Clock, iconColor: '#7C3AED' },
+    { number: '50K+', label: 'Happy Travelers', icon: Users, iconColor: '#1a1f4d' },
+    { number: '120+', label: 'Countries Covered', icon: Globe, iconColor: '#1a1f4d' },
+    { number: '4.9★', label: 'Average Rating', icon: Star, iconColor: '#1a1f4d' },
+    { number: '24/7', label: 'Support', icon: Clock, iconColor: '#1a1f4d' },
 ];
 
 export default function WhyTravelWithKlar() {
@@ -54,10 +54,10 @@ export default function WhyTravelWithKlar() {
             <div className="max-w-7xl mx-auto">
                 {/* Capsule Badge - Why Travel With Klar */}
                 <div className="flex items-center justify-center gap-4 mb-3">
-                    <div className="h-px w-12 bg-[#2563EB]/30"></div>
-                    <div className="bg-[#2563EB]/10 border border-[#2563EB]/30 rounded-full px-6 py-1.5">
+                    <div className="h-px w-12 bg-primary/20"></div>
+                    <div className="bg-primary/5 border border-primary/20 rounded-full px-6 py-1.5">
                         <p
-                            className="text-[#2563EB] uppercase whitespace-nowrap"
+                            className="text-primary/70 uppercase whitespace-nowrap"
                             style={{
                                 fontFamily: "'Playfair Display', serif",
                                 fontWeight: 600,
@@ -71,15 +71,15 @@ export default function WhyTravelWithKlar() {
                             Why Travel With Klar
                         </p>
                     </div>
-                    <div className="h-px w-12 bg-[#2563EB]/30"></div>
+                    <div className="h-px w-12 bg-primary/20"></div>
                 </div>
 
                 {/* Header Section */}
                 <div className="text-center mb-10 md:mb-14">
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4" style={{ color: '#7F0909' }}>
+                    <h2 className="font-display mb-3 text-2xl font-medium text-primary sm:text-3xl md:mb-4 md:text-4xl lg:text-5xl">
                         Premium travel experiences
                         <br />
-                        backed by <span className="text-[#7F0909]">trust</span>
+                        backed by <span className="text-[var(--color-brand-red)]">trust</span>
                     </h2>
                     <p
                         className="text-gray-600 max-w-2xl mx-auto"
@@ -104,7 +104,7 @@ export default function WhyTravelWithKlar() {
                         return (
                             <div
                                 key={index}
-                                className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 transition-all duration-300 border hover:border-[#2563EB]/30 hover:shadow-xl group flex flex-col items-center text-center"
+                                className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 transition-all duration-300 border hover:border-primary/20 hover:shadow-xl group flex flex-col items-center text-center"
                                 style={{
                                     borderColor: '#D1D5DB'
                                 }}

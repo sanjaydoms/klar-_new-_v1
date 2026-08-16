@@ -95,14 +95,14 @@ const Footer: React.FC = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={() => (window.location.href = '/privacy-policy')}
-              className="text-[#1A1F4D] text-sm hover:text-[#D4AF37] transition-colors duration-200 cursor-pointer"
+              className="text-primary text-sm hover:text-[var(--color-brand-red)] transition-colors duration-200 cursor-pointer"
               style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 400, fontSize: '14px' }}
             >
               Privacy Policy
             </button>
             <button
               onClick={() => (window.location.href = '/terms-and-conditions')}
-              className="text-[#1A1F4D] text-sm hover:text-[#D4AF37] transition-colors duration-200 cursor-pointer"
+              className="text-primary text-sm hover:text-[var(--color-brand-red)] transition-colors duration-200 cursor-pointer"
               style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 400, fontSize: '14px' }}
             >
               Terms of Service

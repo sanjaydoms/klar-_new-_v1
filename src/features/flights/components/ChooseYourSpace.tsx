@@ -194,7 +194,7 @@ export default function ChooseYourSpace({ className = '', onSelectSpace }: Choos
               fontSize: '32px',
               lineHeight: '100%',
               letterSpacing: '-1px',
-              color: '#7F0909',
+              color: '#e0242f',
             }}
           >
             Curated Staycation
@@ -209,7 +209,7 @@ export default function ChooseYourSpace({ className = '', onSelectSpace }: Choos
                 className="group flex flex-col items-center focus:outline-none"
               >
                 {/* Square Image */}
-                <div className="w-full aspect-square rounded-xl overflow-hidden shadow-md group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 border-2 border-transparent group-hover:border-[#7F0909]/30">
+                <div className="w-full aspect-square rounded-xl overflow-hidden shadow-md group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 border-2 border-transparent group-hover:border-[var(--color-brand-red)]/30">
                   <img
                     src={space.image}
                     alt={space.name}
@@ -220,7 +220,7 @@ export default function ChooseYourSpace({ className = '', onSelectSpace }: Choos
 
                 {/* Label */}
                 <span
-                  className="text-xs sm:text-sm md:text-base font-semibold text-[#1A1F4D] mt-2 text-center group-hover:text-[#7F0909] transition-colors line-clamp-1"
+                  className="text-xs sm:text-sm md:text-base font-semibold text-primary mt-2 text-center group-hover:text-[var(--color-brand-red)] transition-colors line-clamp-1"
                   style={{ fontFamily: "'Inter', sans-serif" }}
                 >
                   {space.name}
@@ -280,7 +280,7 @@ export default function ChooseYourSpace({ className = '', onSelectSpace }: Choos
           {/* Property type badge */}
           {selectedSpace && (
             <div className="mb-4 flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 bg-[#7F0909]/10 text-[#7F0909] text-xs font-bold px-3 py-1.5 rounded-full border border-[#7F0909]/20">
+              <span className="inline-flex items-center gap-1.5 bg-[var(--color-brand-red)]/10 text-[var(--color-brand-red)] text-xs font-bold px-3 py-1.5 rounded-full border border-[var(--color-brand-red)]/20">
                 {selectedSpace.emoji} {selectedSpace.name} only
               </span>
               <span className="text-xs text-gray-400">· We'll filter results to show only this type</span>
@@ -301,10 +301,10 @@ export default function ChooseYourSpace({ className = '', onSelectSpace }: Choos
                 onChange={(e) => { setCity(e.target.value); setDestCode(''); setSugOpen(true); }}
                 onFocus={() => setSugOpen(true)}
                 placeholder="Search city, area or hotel…"
-                className="w-full pl-9 pr-9 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-[#7F0909] focus:ring-2 focus:ring-[#7F0909]/10 transition-all"
+                className="w-full pl-9 pr-9 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-[var(--color-brand-red)] focus:ring-2 focus:ring-[var(--color-brand-red)]/10 transition-all"
               />
               {isLoadingSug ? (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[#7F0909] border-t-transparent rounded-full animate-spin" />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[var(--color-brand-red)] border-t-transparent rounded-full animate-spin" />
               ) : city ? (
                 <button
                   onClick={() => { setCity(''); setDestCode(''); setSuggestions([]); cityInputRef.current?.focus(); }}
@@ -347,7 +347,7 @@ export default function ChooseYourSpace({ className = '', onSelectSpace }: Choos
           <button
             onClick={handleSearch}
             disabled={!city}
-            className="w-full mt-2 flex items-center justify-center gap-2.5 bg-[#7F0909] hover:bg-[#6a0707] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-colors text-base shadow-lg shadow-[#7F0909]/25"
+            className="w-full mt-2 flex items-center justify-center gap-2.5 bg-[var(--color-brand-red)] hover:bg-[var(--color-brand-red)]/90 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-colors text-base shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)]"
           >
             <Search className="w-5 h-5" />
             {city

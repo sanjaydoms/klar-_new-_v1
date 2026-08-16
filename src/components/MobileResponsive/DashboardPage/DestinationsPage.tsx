@@ -16,7 +16,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ iconBg, title, description, i
       </div>
       
       {/* Text Content */}
-      <h3 className="text-[#1A2B49] text-lg sm:text-xl font-bold tracking-tight mb-2 font-sans">
+      <h3 className="text-primary text-lg sm:text-xl font-bold tracking-tight mb-2 font-sans">
         {title}
       </h3>
       <p className="text-[#8A99AD] text-sm sm:text-base font-normal leading-relaxed font-sans max-w-[240px]">
@@ -33,7 +33,7 @@ const DestinationsPage: React.FC = () => {
       description: 'Get the best rates for your journey.',
       iconBg: 'bg-[#E1ECFE]', // Light Blue tint
       icon: (
-        <svg className="w-6 h-6 text-[#1A2B49]" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+        <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
         </svg>
       )
@@ -43,7 +43,7 @@ const DestinationsPage: React.FC = () => {
       description: 'Round-the-clock help for your travel.',
       iconBg: 'bg-[#E1FBF0]', // Light Green tint
       icon: (
-        <svg className="w-6 h-6 text-[#1A2B49]" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+        <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-6-11.25a6 6 0 1112 0v1.5a3.375 3.375 0 01-3.375 3.375H15.75m-3.75-3.75H18m-6-3.75h.008v.008H12V8.25z" />
         </svg>
       )
@@ -53,7 +53,7 @@ const DestinationsPage: React.FC = () => {
       description: 'Change or cancel with flexible options.',
       iconBg: 'bg-[#FFFDE0]', // Light Yellow tint
       icon: (
-        <svg className="w-6 h-6 text-[#1A2B49]" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+        <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" />
         </svg>
       )
@@ -63,7 +63,7 @@ const DestinationsPage: React.FC = () => {
       description: 'Your info is always safe with us.',
       iconBg: 'bg-[#FFE6E6]', // Light Red/Pink tint
       icon: (
-        <svg className="w-6 h-6 text-[#1A2B49]" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+        <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
         </svg>
       )

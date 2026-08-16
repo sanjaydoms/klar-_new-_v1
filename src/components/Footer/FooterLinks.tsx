@@ -126,7 +126,7 @@ const RouteLink = ({ from, to }: { from: string; to: string }) => {
   return (
     <span
       onClick={handleClick}
-      className="cursor-pointer text-gray-600 hover:text-[#272E7C] hover:underline underline-offset-2 decoration-2 transition-all duration-200"
+      className="cursor-pointer text-gray-600 hover:text-[var(--color-brand-red)] hover:underline underline-offset-2 decoration-2 transition-all duration-200"
     >
       {from} to {to} flight
     </span>

@@ -87,8 +87,8 @@ export default function LimitedTimeOffer({ className = '', onBookNow }: LimitedT
         }}
       >
         {/* Decorative Elements */}
-        <div className="absolute top-0 right-0 w-40 h-40 bg-[#D4AF37]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-        <div className="absolute bottom-0 left-0 w-40 h-40 bg-[#D4AF37]/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+        <div className="absolute top-0 right-0 w-40 h-40 bg-[var(--color-brand-red)]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-40 h-40 bg-[var(--color-brand-red)]/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
 
         {/* Gradient Overlay*/}
         <div
@@ -101,7 +101,7 @@ export default function LimitedTimeOffer({ className = '', onBookNow }: LimitedT
         {/* Content */}
         <div className="relative z-10 flex flex-col items-start text-left max-w-2xl">
           {/* Limited Time Offer Badge */}
-          <div className="inline-flex items-center gap-2 backdrop-blur-sm rounded-full px-3 py-1 mb-2 border border-[#FF5A5F]/30" style={{ backgroundColor: '#FF5A5F' }}>
+          <div className="inline-flex items-center gap-2 backdrop-blur-sm rounded-full px-3 py-1 mb-2 border border-[var(--color-brand-red)]/30" style={{ backgroundColor: '#e0242f' }}>
             <span className="relative flex h-1.5 w-1.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
@@ -139,7 +139,7 @@ export default function LimitedTimeOffer({ className = '', onBookNow }: LimitedT
             style={{
               fontFamily: "'Inter', sans-serif",
               backgroundColor: '#FFFFFF',
-              color: '#272E7C'
+              color: '#1a1f4d'
             }}
           >
             Book Now

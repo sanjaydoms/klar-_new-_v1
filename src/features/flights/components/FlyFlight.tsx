@@ -21,7 +21,7 @@ export default function FlyFlight({ onViewFlights }: FlyFlightProps) {
             {/* Header Section */}
             <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-10 md:mb-12">
                 <h2
-                    className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold text-[#6C1717] mb-2 sm:mb-3"
+                    className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold text-primary mb-2 sm:mb-3"
                     style={{ fontFamily: "'Playfair Display', serif" }}
                 >
                     Book Your Flights
@@ -56,7 +56,7 @@ export default function FlyFlight({ onViewFlights }: FlyFlightProps) {
                     {/* Content Section */}
                     <div className="relative z-10 max-w-[200px] sm:max-w-xs md:max-w-sm mt-auto">
                         <span
-                            className="text-[#6C1717] font-semibold text-xs sm:text-sm md:text-base tracking-wide block mb-1 sm:mb-2"
+                            className="text-[var(--color-brand-red)] font-semibold text-xs sm:text-sm md:text-base tracking-wide block mb-1 sm:mb-2"
                             style={{ fontFamily: "'Inter', sans-serif" }}
                         >
                             International Flights
@@ -82,7 +82,7 @@ export default function FlyFlight({ onViewFlights }: FlyFlightProps) {
                                 e.stopPropagation();
                                 handleFlightClick('international');
                             }}
-                            className="inline-flex items-center gap-2 bg-[#520909] hover:bg-[#6C1717] text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs md:text-sm font-medium transition-all shadow-md group-hover:gap-3"
+                            className="inline-flex items-center gap-2 bg-[var(--color-brand-red)] hover:bg-[var(--color-brand-red)]/90 text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs md:text-sm font-medium transition-all shadow-md group-hover:gap-3"
                             style={{ fontFamily: "'Inter', sans-serif" }}
                         >
                             <span>View International Flights</span>
@@ -110,7 +110,7 @@ export default function FlyFlight({ onViewFlights }: FlyFlightProps) {
                     {/* Content Section */}
                     <div className="relative z-10 max-w-[200px] sm:max-w-xs md:max-w-sm mt-auto">
                         <span
-                            className="text-[#6C1717] font-semibold text-xs sm:text-sm md:text-base tracking-wide block mb-1 sm:mb-2"
+                            className="text-[var(--color-brand-red)] font-semibold text-xs sm:text-sm md:text-base tracking-wide block mb-1 sm:mb-2"
                             style={{ fontFamily: "'Inter', sans-serif" }}
                         >
                             Domestic Flights
@@ -136,7 +136,7 @@ export default function FlyFlight({ onViewFlights }: FlyFlightProps) {
                                 e.stopPropagation();
                                 handleFlightClick('domestic');
                             }}
-                            className="inline-flex items-center gap-2 bg-[#520909] hover:bg-[#6C1717] text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs md:text-sm font-medium transition-all shadow-md group-hover:gap-3"
+                            className="inline-flex items-center gap-2 bg-[var(--color-brand-red)] hover:bg-[var(--color-brand-red)]/90 text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs md:text-sm font-medium transition-all shadow-md group-hover:gap-3"
                             style={{ fontFamily: "'Inter', sans-serif" }}
                         >
                             <span>View Domestic Flights</span>
