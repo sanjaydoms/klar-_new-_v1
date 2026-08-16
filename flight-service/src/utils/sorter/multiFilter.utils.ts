@@ -1,6 +1,6 @@
 import { Filter, FilterStats } from '../../types/filter.types';
 import { MultiCityFlight, MultiCityLeg } from '../../types/multiFilter.types';
-import { timeToMinutes } from './time.utils';
+import { timeToMinutes, durationToMinutes } from './time.utils';
 
 export class MultiCityFlightFilter {
 
@@ -183,7 +183,13 @@ export class MultiCityFlightFilter {
      * Filter by duration range (in minutes)
      */
     private static filterByDurationRange(flight: MultiCityFlight, min: number, max: number): boolean {
-        const durationMinutes = this.durationToMinutes(flight.duration);
+        const durationMinutes = durationToMinutes(flight.duration);
+        if (durationMinutes === null) {
+            console.warn(
+                `[MultiCityFlightFilter] unreadable duration ${JSON.stringify(flight.duration)} on a flight; excluded from the duration filter`
+            );
+            return false;
+        }
         return durationMinutes >= min && durationMinutes <= max;
     }
 
@@ -238,20 +244,21 @@ export class MultiCityFlightFilter {
             stats.stopsRange.min = Math.min(stats.stopsRange.min, flight.stops);
             stats.stopsRange.max = Math.max(stats.stopsRange.max, flight.stops);
 
-            const duration = this.durationToMinutes(flight.duration);
-            stats.durationRange.min = Math.min(stats.durationRange.min, duration);
-            stats.durationRange.max = Math.max(stats.durationRange.max, duration);
+            // Skipped rather than counted as zero — see FlightFilter.
+            const duration = durationToMinutes(flight.duration);
+            if (duration !== null) {
+                stats.durationRange.min = Math.min(stats.durationRange.min, duration);
+                stats.durationRange.max = Math.max(stats.durationRange.max, duration);
+            }
         });
 
         stats.availableAirlines = Array.from(airlines).sort();
         stats.availableCabinClasses = Array.from(cabinClasses).sort();
 
-        // Reset if no flights
-        if (allFlights.length === 0) {
-            stats.priceRange = { min: 0, max: 0 };
-            stats.stopsRange = { min: 0, max: 0 };
-            stats.durationRange = { min: 0, max: 0 };
-        }
+        // Reset any range nothing contributed to, so Infinity never escapes.
+        if (!Number.isFinite(stats.priceRange.min)) stats.priceRange = { min: 0, max: 0 };
+        if (!Number.isFinite(stats.stopsRange.min)) stats.stopsRange = { min: 0, max: 0 };
+        if (!Number.isFinite(stats.durationRange.min)) stats.durationRange = { min: 0, max: 0 };
 
         return stats;
     }
@@ -308,19 +315,6 @@ export class MultiCityFlightFilter {
             isValid: errors.length === 0,
             errors
         };
-    }
-
-    /**
-     * Convert duration string to minutes
-     */
-    private static durationToMinutes(duration: string): number {
-        const hoursMatch = duration.match(/(\d+)h/);
-        const minutesMatch = duration.match(/(\d+)m/);
-
-        const hours = hoursMatch ? parseInt(hoursMatch[1]) : 0;
-        const minutes = minutesMatch ? parseInt(minutesMatch[1]) : 0;
-
-        return (hours * 60) + minutes;
     }
 
     /**

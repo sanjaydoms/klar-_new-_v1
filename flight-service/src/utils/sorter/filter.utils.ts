@@ -1,6 +1,6 @@
 import { Filter, FilterStats } from '../../types/filter.types';
 import { FlightSegment } from '../../types/returnFilter.types';
-import { timeToMinutes } from './time.utils';
+import { timeToMinutes, durationToMinutes } from './time.utils';
 
 export class FlightFilter {
 
@@ -175,10 +175,21 @@ export class FlightFilter {
     }
 
     /**
-     * Filter by duration range (in minutes)
+     * Filter by duration range (in minutes).
+     *
+     * An unreadable duration excludes the flight, the same call the time filter
+     * makes and for the same reason: it cannot be shown to fall in the range the
+     * customer asked for. It used to read as 0 minutes, which is inside every
+     * range starting at 0 — so a broken record was silently *kept*.
      */
     private static filterByDurationRange(flight: FlightSegment, min: number, max: number): boolean {
-        const durationMinutes = this.durationToMinutes(flight.duration);
+        const durationMinutes = durationToMinutes(flight.duration);
+        if (durationMinutes === null) {
+            console.warn(
+                `[FlightFilter] unreadable duration ${JSON.stringify(flight.duration)} on a flight; excluded from the duration filter`
+            );
+            return false;
+        }
         return durationMinutes >= min && durationMinutes <= max;
     }
 
@@ -221,21 +232,26 @@ export class FlightFilter {
             stats.stopsRange.min = Math.min(stats.stopsRange.min, flight.stops);
             stats.stopsRange.max = Math.max(stats.stopsRange.max, flight.stops);
 
-            // Update duration range
-            const duration = this.durationToMinutes(flight.duration);
-            stats.durationRange.min = Math.min(stats.durationRange.min, duration);
-            stats.durationRange.max = Math.max(stats.durationRange.max, duration);
+            // Update duration range. A flight whose duration cannot be read is
+            // skipped rather than counted as zero — reading it as 0 pulled the
+            // facet's minimum to zero and offered the customer a slider bound no
+            // flight actually has.
+            const duration = durationToMinutes(flight.duration);
+            if (duration !== null) {
+                stats.durationRange.min = Math.min(stats.durationRange.min, duration);
+                stats.durationRange.max = Math.max(stats.durationRange.max, duration);
+            }
         });
 
         stats.availableAirlines = Array.from(airlines).sort();
         stats.availableCabinClasses = Array.from(cabinClasses).sort();
 
-        // Reset min/max if no flights
-        if (allFlights.length === 0) {
-            stats.priceRange = { min: 0, max: 0 };
-            stats.stopsRange = { min: 0, max: 0 };
-            stats.durationRange = { min: 0, max: 0 };
-        }
+        // Reset any range nothing contributed to, so Infinity never leaves this
+        // function. That is no flights at all — and now also the case where no
+        // flight had a readable duration, since those are skipped above.
+        if (!Number.isFinite(stats.priceRange.min)) stats.priceRange = { min: 0, max: 0 };
+        if (!Number.isFinite(stats.stopsRange.min)) stats.stopsRange = { min: 0, max: 0 };
+        if (!Number.isFinite(stats.durationRange.min)) stats.durationRange = { min: 0, max: 0 };
 
         return stats;
     }
@@ -292,19 +308,6 @@ export class FlightFilter {
             isValid: errors.length === 0,
             errors
         };
-    }
-
-    /**
-     * Convert duration string "2h 30m" to total minutes
-     */
-    private static durationToMinutes(duration: string): number {
-        const hoursMatch = duration.match(/(\d+)h/);
-        const minutesMatch = duration.match(/(\d+)m/);
-
-        const hours = hoursMatch ? parseInt(hoursMatch[1]) : 0;
-        const minutes = minutesMatch ? parseInt(minutesMatch[1]) : 0;
-
-        return (hours * 60) + minutes;
     }
 
     /**

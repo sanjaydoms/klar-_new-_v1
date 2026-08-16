@@ -20,7 +20,7 @@ import assert from "assert";
 import { FlightFilter } from "../src/utils/sorter/filter.utils";
 import { MultiCityFlightFilter } from "../src/utils/sorter/multiFilter.utils";
 import { OnewayFlightSorter } from "../src/utils/sorter/onewaySort.utils";
-import { compareTimes } from "../src/utils/sorter/time.utils";
+import { compareTimes, compareDates, dateToEpoch, durationToMinutes } from "../src/utils/sorter/time.utils";
 import { Filter } from "../src/types/filter.types";
 import { FlightSegment } from "../src/types/returnFilter.types";
 
@@ -37,8 +37,8 @@ const seg = (
     airlineCode: airline.slice(0, 2).toUpperCase(),
     flightNumber: "100",
     cabinClass: "ECONOMY",
-    from: { city: "Delhi", airportCode: "DEL", time: depart, date: "2026-09-01", day: "Tue" },
-    to: { city: "Mumbai", airportCode: "BOM", time: "12:00", date: "2026-09-01", day: "Tue" },
+    from: { city: "Delhi", airportCode: "DEL", time: depart, date: "01-Sep-26", day: "Tue" },
+    to: { city: "Mumbai", airportCode: "BOM", time: "12:00", date: "01-Sep-26", day: "Tue" },
     duration,
     stops,
     price,
@@ -95,7 +95,7 @@ assert.deepStrictEqual(emptyStats.priceRange, { min: 5000, max: 9200 }, "and sti
 const overnight: FlightSegment = {
     ...seg("IndiGo", 6000, 0, "8h 30m", "23:30"),
     // Departs 23:30, lands 08:00 the NEXT day.
-    to: { city: "Mumbai", airportCode: "BOM", time: "08:00", date: "2026-09-02", day: "Wed" },
+    to: { city: "Mumbai", airportCode: "BOM", time: "08:00", date: "02-Sep-26", day: "Wed" },
 };
 const midday = seg("Vistara", 6000, 0, "2h 00m", "12:00"); // 12:00 → 12:00 same day
 
@@ -148,7 +148,7 @@ assert.strictEqual(badWindow.length, ALL.length, "an unreadable window filters n
 // disturb the others.
 const brokenTime: FlightSegment = {
     ...seg("SpiceJet", 4000, 0, "2h 00m", ""),
-    from: { city: "Delhi", airportCode: "DEL", time: "", date: "2026-09-01", day: "Tue" },
+    from: { city: "Delhi", airportCode: "DEL", time: "", date: "01-Sep-26", day: "Tue" },
 };
 const withBroken = FlightFilter.applyFilters(
     [...ALL, brokenTime],
@@ -222,4 +222,53 @@ assert.ok(compareTimes("", "06:00") > 0, "unreadable sorts after readable");
 assert.ok(compareTimes("06:00", "") < 0, "and readable before unreadable");
 assert.ok(!Number.isNaN(compareTimes("nope", "also-nope")), "compareTimes never returns NaN");
 
-console.log("OK — filter options and ranges survive an applied filter; time windows wrap, handle red-eyes and reject unreadable input; sorting tolerates it");
+// ── Dates and durations ──────────────────────────────────────────────────────
+// The same two failure shapes, in the two remaining parsers.
+
+// compareDates fed `new Date(y, monthMap[m], d)` with an unvalidated month, so
+// anything it did not recognise became an Invalid Date and NaN. Note "SEP":
+// the old map was case-sensitive, and only "Sep" was ever a key.
+assert.ok(compareDates("20-Sep-26", "21-Sep-26") < 0, "an earlier date sorts first");
+assert.strictEqual(compareDates("20-Sep-26", "20-Sep-26"), 0, "the same date compares equal");
+assert.ok(!Number.isNaN(compareDates("20-SEP-26", "21-Sep-26")), "a differently-cased month is not NaN");
+assert.ok(compareDates("20-SEP-26", "21-Sep-26") < 0, "and is read as the date it plainly is");
+assert.ok(compareDates("", "21-Sep-26") > 0, "an unreadable date sorts last");
+assert.ok(!Number.isNaN(compareDates("20-Xxx-26", "nonsense")), "two unreadable dates are not NaN");
+assert.strictEqual(dateToEpoch("31-Feb-26"), null, "a day the month does not have is refused, not rolled over");
+
+// durationToMinutes returned 0 for anything unparseable, which is a real
+// duration — `formatDuration` emits "0h 0m" — so a broken record read as the
+// shortest flight there is.
+assert.strictEqual(durationToMinutes("2h 30m"), 150, "a normal duration parses");
+assert.strictEqual(durationToMinutes("0h 0m"), 0, "and a genuine zero is still zero");
+assert.strictEqual(durationToMinutes("45m"), 45, "hours may be absent");
+assert.strictEqual(durationToMinutes("3h"), 180, "and so may minutes");
+assert.strictEqual(durationToMinutes(""), null, "but empty is unknown, not zero");
+assert.strictEqual(durationToMinutes("150"), null, "and a bare number is not a duration");
+assert.strictEqual(durationToMinutes(undefined as any), null, "a missing duration returns null instead of throwing");
+
+// The distinction that was lost: unknown must not read as the shortest flight.
+const shortestFirst = OnewayFlightSorter.sortFlights(
+    [flight("NoDuration", "08:00"), flight("Quick", "09:00"), flight("Slow", "10:00")].map((f, i) =>
+        ({ ...f, duration: ["", "1h 00m", "9h 00m"][i] })),
+    { field: "duration", order: "asc" },
+);
+assert.strictEqual(shortestFirst[0].airline, "Quick", "a flight with no duration must not head 'shortest first'");
+assert.strictEqual(shortestFirst[2].airline, "NoDuration", "it sorts last instead");
+
+// ...and must not drag the duration facet's minimum to zero.
+const durStats = FlightFilter.getFilterStats(
+    [...ALL, { ...seg("Broken", 5000, 0, "", "07:00") }],
+    ALL,
+);
+assert.deepStrictEqual(
+    durStats.durationRange,
+    { min: 130, max: 405 },
+    "an unreadable duration is skipped, not counted as 0 minutes",
+);
+
+// Nothing readable at all still yields a usable range rather than Infinity.
+const noneReadable = FlightFilter.getFilterStats([seg("Broken", 5000, 0, "", "07:00")], []);
+assert.deepStrictEqual(noneReadable.durationRange, { min: 0, max: 0 }, "Infinity never escapes the stats");
+
+console.log("OK — options and ranges survive filtering; times, dates and durations refuse unreadable input instead of reading it as NaN or zero");

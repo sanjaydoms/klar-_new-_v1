@@ -1,5 +1,5 @@
 import { Flight, SortField, SortOption } from "../../types/sort.types";
-import { compareTimes } from "./time.utils";
+import { compareTimes, compareDates, compareDurations } from "./time.utils";
 
 export class OnewayFlightSorter {
 
@@ -51,9 +51,7 @@ export class OnewayFlightSorter {
      * Compare by duration (convert "2h 30m" to minutes)
      */
     private static compareDuration(a: Flight, b: Flight): number {
-        const minutesA = this.durationToMinutes(a.duration);
-        const minutesB = this.durationToMinutes(b.duration);
-        return minutesA - minutesB;
+        return compareDurations(a.duration, b.duration);
     }
 
     /**
@@ -61,7 +59,7 @@ export class OnewayFlightSorter {
      */
     private static compareDepartureTime(a: Flight, b: Flight): number {
         const byTime = compareTimes(a.from.time, b.from.time);
-        return byTime !== 0 ? byTime : this.compareDates(a.from.date, b.from.date);
+        return byTime !== 0 ? byTime : compareDates(a.from.date, b.from.date);
     }
 
     /**
@@ -69,7 +67,7 @@ export class OnewayFlightSorter {
      */
     private static compareArrivalTime(a: Flight, b: Flight): number {
         const byTime = compareTimes(a.to.time, b.to.time);
-        return byTime !== 0 ? byTime : this.compareDates(a.to.date, b.to.date);
+        return byTime !== 0 ? byTime : compareDates(a.to.date, b.to.date);
     }
 
     /**
@@ -84,40 +82,6 @@ export class OnewayFlightSorter {
      */
     private static compareAirline(a: Flight, b: Flight): number {
         return a.airline.localeCompare(b.airline);
-    }
-
-    /**
-     * Convert duration string "2h 30m" to total minutes
-     */
-    private static durationToMinutes(duration: string): number {
-        const hoursMatch = duration.match(/(\d+)h/);
-        const minutesMatch = duration.match(/(\d+)m/);
-
-        const hours = hoursMatch ? parseInt(hoursMatch[1]) : 0;
-        const minutes = minutesMatch ? parseInt(minutesMatch[1]) : 0;
-
-        return (hours * 60) + minutes;
-    }
-
-    /**
-     * Compare dates in "DD-MMM-YY" format
-     */
-    private static compareDates(dateA: string, dateB: string): number {
-        const parseDate = (dateStr: string): Date => {
-            const [day, month, year] = dateStr.split('-');
-            const monthMap: { [key: string]: number } = {
-                'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
-                'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
-            };
-
-            const fullYear = 2000 + parseInt(year);
-            return new Date(fullYear, monthMap[month], parseInt(day));
-        };
-
-        const date1 = parseDate(dateA);
-        const date2 = parseDate(dateB);
-
-        return date1.getTime() - date2.getTime();
     }
 
     /**
