@@ -1,0 +1,31 @@
+{
+  "name": "klar-hotel-engine",
+  "version": "0.2.0",
+  "private": true,
+  "description": "KLAR supplier-agnostic hotel OTA engine",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "npm run typecheck && npm run test",
+    "start": "node --experimental-strip-types src/main.ts"
+  },
+  "//dependencies": "pg and ioredis are dependencies of the DEPLOYABLE only. The engine and its test suite build and run without either; src/main.ts imports each dynamically and fails loudly at boot if REDIS_URL/DATABASE_URL is set but the driver is missing.",
+  "optionalDependencies": {
+    "pg": "^8.13.1",
+    "ioredis": "^5.4.1"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.2.17",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "allowScripts": {
+    "esbuild@0.21.5": true
+  }
+}

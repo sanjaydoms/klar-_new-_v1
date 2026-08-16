@@ -1,0 +1,1155 @@
+<title>KLAR Hotel OTA — Phase 1 Teardown</title>
+<style>
+:root{
+  --ground:#eceff4; --surface:#ffffff; --surface-2:#f5f7fa;
+  --ink:#141821; --ink-2:#39424f; --muted:#5f6a7a;
+  --rule:#d3dae3; --rule-soft:#e3e8ef;
+  --accent:#2b4a8b; --accent-2:#43619e; --accent-soft:#e4ebf8;
+  --crit:#a3312b; --crit-soft:#f7e6e4;
+  --high:#8a5a10; --high-soft:#f8eeda;
+  --med:#4b5566; --med-soft:#e8ebf0;
+  --good:#2f6b4f; --good-soft:#e2efe8;
+  --shadow:0 1px 2px rgba(20,24,33,.05),0 8px 24px -16px rgba(20,24,33,.28);
+
+  --sans:ui-sans-serif,-apple-system,"Segoe UI Variable Display","Segoe UI",system-ui,"Helvetica Neue",sans-serif;
+  --serif:"Sitka Text","Charter","Bitstream Charter",Cambria,"Palatino Linotype",Georgia,serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono","Segoe UI Mono","Roboto Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0d1015; --surface:#161b23; --surface-2:#1b212a;
+    --ink:#e7ebf1; --ink-2:#c2cad6; --muted:#98a3b3;
+    --rule:#28303b; --rule-soft:#212932;
+    --accent:#87a8e9; --accent-2:#a3bdf0; --accent-soft:#1a2436;
+    --crit:#e6908a; --crit-soft:#2c1a19;
+    --high:#d9ac66; --high-soft:#2a2114;
+    --med:#9aa5b4; --med-soft:#222831;
+    --good:#7cc39c; --good-soft:#152318;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -16px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0d1015; --surface:#161b23; --surface-2:#1b212a;
+  --ink:#e7ebf1; --ink-2:#c2cad6; --muted:#98a3b3;
+  --rule:#28303b; --rule-soft:#212932;
+  --accent:#87a8e9; --accent-2:#a3bdf0; --accent-soft:#1a2436;
+  --crit:#e6908a; --crit-soft:#2c1a19;
+  --high:#d9ac66; --high-soft:#2a2114;
+  --med:#9aa5b4; --med-soft:#222831;
+  --good:#7cc39c; --good-soft:#152318;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -16px rgba(0,0,0,.7);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:var(--serif); font-size:16.5px; line-height:1.68;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── chrome ─────────────────────────────────────────── */
+.topbar{
+  position:sticky; top:0; z-index:20;
+  display:flex; align-items:center; gap:.75rem; flex-wrap:wrap;
+  padding:.6rem clamp(1rem,4vw,2.5rem);
+  background:var(--surface); border-bottom:1px solid var(--rule);
+  font-family:var(--sans); font-size:.72rem; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--muted);
+}
+.topbar b{color:var(--ink); font-weight:650; letter-spacing:.14em}
+.topbar .sep{color:var(--rule)}
+.topbar .phase{
+  margin-left:auto; color:var(--accent); background:var(--accent-soft);
+  border:1px solid var(--rule); border-radius:2px; padding:.15rem .5rem; letter-spacing:.08em;
+}
+
+.wrap{max-width:1240px; margin:0 auto; padding:0 clamp(1rem,4vw,2.5rem) 6rem}
+
+/* ── masthead ───────────────────────────────────────── */
+.masthead{padding:clamp(2.5rem,6vw,4.5rem) 0 2rem; border-bottom:2px solid var(--ink)}
+.eyebrow{
+  font-family:var(--mono); font-size:.72rem; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--accent); margin:0 0 1rem;
+}
+h1{
+  font-family:var(--sans); font-weight:700; letter-spacing:-.025em; text-wrap:balance;
+  font-size:clamp(2.1rem,5.4vw,3.4rem); line-height:1.06; margin:0 0 1rem; color:var(--ink);
+}
+.standfirst{
+  font-size:clamp(1.02rem,2vw,1.2rem); color:var(--ink-2); max-width:60ch; margin:0 0 2rem;
+}
+.factgrid{
+  display:grid; gap:1px; background:var(--rule);
+  grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+  border:1px solid var(--rule);
+}
+.fact{background:var(--surface); padding:.85rem 1rem}
+.fact dt{
+  font-family:var(--mono); font-size:.66rem; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--muted); margin:0 0 .3rem;
+}
+.fact dd{margin:0; font-family:var(--sans); font-size:.95rem; font-weight:600; color:var(--ink);
+  font-variant-numeric:tabular-nums}
+
+/* ── layout ─────────────────────────────────────────── */
+.shell{display:block}
+@media (min-width:1080px){
+  .shell{display:grid; grid-template-columns:206px minmax(0,1fr); gap:clamp(2rem,4vw,3.5rem); align-items:start}
+}
+nav.toc{margin:2rem 0 0}
+@media (min-width:1080px){
+  nav.toc{position:sticky; top:3.4rem; max-height:calc(100vh - 5rem); overflow-y:auto; padding-right:.5rem}
+}
+.toc-h{
+  font-family:var(--mono); font-size:.66rem; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--muted); padding-bottom:.6rem; border-bottom:1px solid var(--rule); margin-bottom:.6rem;
+}
+.toc ol{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.1rem}
+.toc a{
+  display:grid; grid-template-columns:1.6rem 1fr; gap:.3rem; align-items:baseline;
+  font-family:var(--sans); font-size:.83rem; line-height:1.35; text-decoration:none;
+  color:var(--ink-2); padding:.32rem .4rem; border-radius:3px;
+}
+.toc a span{font-family:var(--mono); font-size:.72rem; color:var(--muted)}
+.toc a:hover{background:var(--accent-soft); color:var(--accent)}
+.toc a:hover span{color:var(--accent)}
+.toc a:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+
+/* ── sections ───────────────────────────────────────── */
+main{min-width:0}
+section{padding-top:3.2rem; scroll-margin-top:3.6rem}
+h2{
+  font-family:var(--sans); font-weight:680; letter-spacing:-.018em; text-wrap:balance;
+  font-size:clamp(1.45rem,3vw,1.95rem); line-height:1.16; margin:0 0 1.1rem;
+  padding-bottom:.6rem; border-bottom:1px solid var(--rule); color:var(--ink);
+  display:grid; grid-template-columns:auto 1fr; gap:.7rem; align-items:baseline;
+}
+h2 .num{font-family:var(--mono); font-size:.8rem; font-weight:400; color:var(--accent); letter-spacing:0}
+h3{
+  font-family:var(--sans); font-weight:650; letter-spacing:-.01em; text-wrap:balance;
+  font-size:1.06rem; margin:2rem 0 .7rem; color:var(--ink);
+}
+h4{
+  font-family:var(--mono); font-weight:600; font-size:.74rem; letter-spacing:.11em; text-transform:uppercase;
+  color:var(--muted); margin:1.6rem 0 .6rem;
+}
+p{margin:0 0 1rem; max-width:70ch}
+ul,ol.body{margin:0 0 1rem; padding-left:1.15rem; max-width:70ch}
+li{margin-bottom:.42rem}
+a{color:var(--accent); text-underline-offset:2px}
+strong{font-weight:650; color:var(--ink)}
+code{
+  font-family:var(--mono); font-size:.855em; background:var(--surface-2);
+  border:1px solid var(--rule-soft); border-radius:3px; padding:.06em .32em; color:var(--ink-2);
+  overflow-wrap:break-word;
+}
+h3 code,li code,p code,td code{white-space:nowrap}
+
+/* ── blocks ─────────────────────────────────────────── */
+.scroller{overflow-x:auto; margin:0 0 1.3rem; border:1px solid var(--rule); background:var(--surface)}
+pre{
+  margin:0; padding:1rem 1.1rem; font-family:var(--mono); font-size:.775rem; line-height:1.6;
+  color:var(--ink-2); white-space:pre; tab-size:2;
+}
+table{border-collapse:collapse; width:100%; font-family:var(--sans); font-size:.845rem; background:var(--surface)}
+caption{
+  caption-side:top; text-align:left; font-family:var(--mono); font-size:.68rem;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--muted); padding:.7rem 1rem .55rem;
+  border-bottom:1px solid var(--rule-soft);
+}
+th,td{padding:.55rem .9rem; text-align:left; vertical-align:top; border-bottom:1px solid var(--rule-soft)}
+thead th{
+  font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted); font-weight:500; background:var(--surface-2);
+  border-bottom:1px solid var(--rule); white-space:nowrap;
+}
+tbody tr:last-child td{border-bottom:none}
+td.n{text-align:right; font-variant-numeric:tabular-nums; font-family:var(--mono); font-size:.8rem}
+
+blockquote{
+  margin:0 0 1.3rem; padding:.9rem 1.1rem; background:var(--accent-soft);
+  border-left:3px solid var(--accent); color:var(--ink-2); font-size:.95rem;
+}
+blockquote p:last-child{margin:0}
+
+/* ── verdict cards ──────────────────────────────────── */
+.verdicts{display:grid; gap:1rem; margin:0 0 1.6rem}
+@media (min-width:780px){.verdicts{grid-template-columns:repeat(3,1fr)}}
+.verdict{
+  background:var(--surface); border:1px solid var(--rule); border-top:3px solid var(--crit);
+  padding:1.1rem 1.15rem; box-shadow:var(--shadow);
+}
+.verdict .tag{
+  font-family:var(--mono); font-size:.68rem; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--crit); margin:0 0 .5rem;
+}
+.verdict h3{margin:0 0 .55rem; font-size:1rem}
+.verdict p{font-size:.885rem; margin:0; color:var(--ink-2); max-width:none}
+
+/* ── the D-1 diagram ────────────────────────────────── */
+figure{margin:0 0 1.5rem}
+.diagram{
+  background:var(--surface); border:1px solid var(--rule); padding:1.3rem 1.2rem;
+  display:grid; gap:1rem; box-shadow:var(--shadow);
+}
+@media (min-width:720px){.diagram{grid-template-columns:1fr auto 1fr; align-items:center}}
+.lane{display:flex; flex-direction:column; gap:.45rem}
+.lane .who{
+  font-family:var(--mono); font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);
+}
+.bar{display:flex; height:2.4rem; border:1px solid var(--rule); overflow:hidden; background:var(--surface-2)}
+.seg{
+  display:flex; align-items:center; justify-content:center; font-family:var(--mono);
+  font-size:.7rem; font-weight:600; color:var(--surface); white-space:nowrap; overflow:hidden;
+}
+.seg.net{background:var(--accent)}
+.seg.mk{background:var(--crit)}
+.seg.none{background:transparent; color:var(--muted); border-left:1px dashed var(--rule)}
+.lane .note{font-family:var(--sans); font-size:.8rem; color:var(--ink-2)}
+.vs{
+  font-family:var(--mono); font-size:.72rem; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--crit); text-align:center; padding:0 .3rem;
+}
+figcaption{
+  font-family:var(--sans); font-size:.83rem; color:var(--muted); margin-top:.6rem; max-width:70ch;
+}
+
+/* ── defect register ────────────────────────────────── */
+.sev-head{
+  display:flex; align-items:baseline; gap:.7rem; margin:2rem 0 .9rem;
+  font-family:var(--mono); font-size:.72rem; letter-spacing:.13em; text-transform:uppercase;
+}
+.sev-head .rule{flex:1; height:1px; background:var(--rule)}
+.sev-head.crit{color:var(--crit)} .sev-head.high{color:var(--high)} .sev-head.med{color:var(--med)}
+
+.defects{display:flex; flex-direction:column; gap:.8rem; margin-bottom:.6rem}
+.defect{
+  background:var(--surface); border:1px solid var(--rule); border-left:3px solid var(--med);
+  padding:.9rem 1.05rem;
+}
+.defect.c{border-left-color:var(--crit)} .defect.h{border-left-color:var(--high)}
+.defect > .hd{
+  display:flex; gap:.6rem; align-items:baseline; flex-wrap:wrap; margin-bottom:.45rem;
+}
+.did{
+  font-family:var(--mono); font-size:.72rem; font-weight:600; letter-spacing:.06em;
+  padding:.1rem .4rem; border-radius:2px; background:var(--med-soft); color:var(--med);
+}
+.defect.c .did{background:var(--crit-soft); color:var(--crit)}
+.defect.h .did{background:var(--high-soft); color:var(--high)}
+.defect .ttl{font-family:var(--sans); font-weight:640; font-size:.97rem; color:var(--ink)}
+.defect .loc{font-family:var(--mono); font-size:.72rem; color:var(--muted); margin-left:auto}
+.defect p{font-size:.9rem; margin:0 0 .6rem; color:var(--ink-2); max-width:none}
+.defect p:last-child{margin-bottom:0}
+.defect ul{font-size:.9rem; color:var(--ink-2); max-width:none; margin-bottom:0}
+
+/* ── keep list ──────────────────────────────────────── */
+.keep{
+  counter-reset:k; list-style:none; padding:0; margin:0 0 1.3rem;
+  display:grid; gap:.55rem;
+}
+@media (min-width:860px){.keep{grid-template-columns:1fr 1fr}}
+.keep li{
+  counter-increment:k; margin:0; padding:.7rem .9rem .7rem 2.6rem; position:relative;
+  background:var(--good-soft); border:1px solid var(--rule-soft); font-size:.88rem; color:var(--ink-2);
+}
+.keep li::before{
+  content:counter(k,decimal-leading-zero); position:absolute; left:.85rem; top:.72rem;
+  font-family:var(--mono); font-size:.7rem; font-weight:600; color:var(--good);
+}
+
+/* ── decisions ──────────────────────────────────────── */
+ol.decisions{counter-reset:d; list-style:none; padding:0; margin:0 0 1.3rem; display:flex; flex-direction:column; gap:.6rem}
+ol.decisions li{
+  counter-increment:d; margin:0; padding:.8rem 1rem .8rem 2.8rem; position:relative;
+  background:var(--surface); border:1px solid var(--rule); font-size:.9rem; color:var(--ink-2);
+}
+ol.decisions li::before{
+  content:"Q" counter(d); position:absolute; left:.9rem; top:.85rem;
+  font-family:var(--mono); font-size:.72rem; font-weight:600; color:var(--accent);
+}
+ol.decisions strong{color:var(--ink)}
+
+.alert{
+  background:var(--crit-soft); border:1px solid var(--crit); border-left-width:3px;
+  padding:.85rem 1.05rem; font-size:.92rem; color:var(--ink); margin:1.4rem 0 0;
+}
+.alert b{color:var(--crit); font-family:var(--sans)}
+
+.settled{
+  background:var(--surface); border:1px solid var(--rule); border-left:3px solid var(--good);
+  padding:.85rem 1.05rem; font-size:.92rem; color:var(--ink-2); margin:0 0 1.3rem;
+}
+.settled b{color:var(--good); font-family:var(--sans)}
+.settled ul{margin:.6rem 0 0; padding-left:1.1rem; display:flex; flex-direction:column; gap:.3rem}
+.settled em{color:var(--ink); font-style:normal; font-weight:600}
+
+.pill{
+  display:inline-block; font-family:var(--mono); font-size:.66rem; letter-spacing:.09em;
+  text-transform:uppercase; padding:.1rem .42rem; border-radius:2px; vertical-align:.08em;
+}
+.pill.done{background:var(--good-soft); color:var(--good)}
+.pill.now{background:var(--accent-soft); color:var(--accent)}
+
+footer{
+  margin-top:4rem; padding-top:1.4rem; border-top:1px solid var(--rule);
+  font-family:var(--mono); font-size:.72rem; color:var(--muted); display:flex; gap:.6rem; flex-wrap:wrap;
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+</style>
+
+<header class="topbar">
+  <b>KLAR</b><span class="sep">/</span><span>Hotel OTA Engine</span>
+  <span class="sep">/</span><span>Clean-room rebuild</span>
+  <span class="phase">Phase 1 · Teardown</span>
+</header>
+
+<div class="wrap">
+
+<div class="masthead">
+  <p class="eyebrow">Reverse-engineering &amp; target architecture</p>
+  <h1>The existing engine cannot show the lowest price — and not because of bugs.</h1>
+  <p class="standfirst">A structural teardown of KLAR&rsquo;s hotel search and booking services, the frontend contract they must keep serving, and the architecture that replaces them.</p>
+  <dl class="factgrid">
+    <div class="fact"><dt>hotel-search-service</dt><dd>11,209 LOC</dd></div>
+    <div class="fact"><dt>hotel-booking-service</dt><dd>9,595 LOC</dd></div>
+    <div class="fact"><dt>Suppliers live</dt><dd>TripJack · RateGain</dd></div>
+    <div class="fact"><dt>Defects logged</dt><dd>24 (5 critical)</dd></div>
+    <div class="fact"><dt>Code written at Phase 1</dt><dd>None — by design</dd></div>
+  </dl>
+
+  <div class="settled" style="margin-top:1.4rem">
+    <b>Where the rebuild is now — 14 August 2026.</b>
+    This document is the Phase&nbsp;1 teardown and is kept as written; everything
+    below describes the system as it <em>was</em>. The engine that replaces it now
+    runs end to end — search, hotel detail and rates, destination suggestions,
+    and <strong>booking: precheck, commit, confirm, cancel and refund</strong> —
+    served over HTTP against PostgreSQL through both supplier adapters, at
+    <strong>722 tests green</strong>.
+    <ul>
+      <li><em>Phases 1–8</em> <span class="pill done">done</span> — teardown, domain and contracts, supplier layer, search orchestrator, canonical catalogue, detail &amp; rates with the compatibility projection and the HTTP edge, revalidation, and supplier-neutral booking.</li>
+      <li><em>Booking is one code path.</em> The reference needed 1,013 lines of <code>#commitTripJack</code> and <code>#commitRateGain</code>, picked by a five-clause heuristic over the shape of whatever the browser sent. A test now books through TripJack and through RateGain with the same code, and the browser sends an opaque deal id and the names of the guests — no <code>BookReservation</code> envelope, no supplier protocol.</li>
+      <li><em>Seven audits</em> have run against the new engine, not only the old one — <strong>48 defects</strong> found and fixed in code that was already passing its own tests. The latest ten sit between "the card is charged" and "the room is held": a commit that was retried like a search, a timeout reported as a failure and refunded, a hold answered with a paid booking. Each carries a regression test verified to fail when the fix is reverted. All are listed in <em>docs/OPEN-ISSUES.md</em> §1.</li>
+      <li><em>Two things must not reach production unresolved</em> — no endpoint authenticates, and no payment gateway is configured. Both are listed in <em>docs/OPEN-ISSUES.md</em> §4.</li>
+    </ul>
+    The three structural failures below are closed by construction: adapters
+    return cost and cannot reach the pricing engine (A), identity is canonical and
+    tiered (B), and every alternative deal stays bookable with its own id (C).
+  </div>
+</div>
+
+<div class="shell">
+
+<nav class="toc" aria-label="Contents">
+  <div class="toc-h">Contents</div>
+  <ol>
+    <li><a href="#s0"><span>00</span>Summary</a></li>
+    <li><a href="#s1"><span>01</span>System map</a></li>
+    <li><a href="#s2"><span>02</span>Frontend contract</a></li>
+    <li><a href="#s3"><span>03</span>As-is flows</a></li>
+    <li><a href="#s4"><span>04</span>Data model</a></li>
+    <li><a href="#s5"><span>05</span>What to keep</a></li>
+    <li><a href="#s6"><span>06</span>Defect register</a></li>
+    <li><a href="#s7"><span>07</span>Target architecture</a></li>
+    <li><a href="#s8"><span>08</span>Compatibility</a></li>
+    <li><a href="#s9"><span>09</span>Delivery plan</a></li>
+    <li><a href="#s10"><span>10</span>Decisions needed</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- ═══ 0 ═══ -->
+<section id="s0">
+  <h2><span class="num">00</span>Executive summary</h2>
+
+  <p>The existing system is <strong>not</strong> a naive first attempt. It already contains a supplier registry, a common adapter interface, Redis and L1 caching, request coalescing, circuit breakers, stale-while-revalidate, and a genuinely careful markup and region model. Several files carry excellent reasoning in their comments. That work is worth reading before rebuilding.</p>
+
+  <p>But it <strong>cannot satisfy the core business requirement</strong> — one KLAR search across all suppliers, showing the genuinely lowest price — and it cannot satisfy it for structural reasons, not because of bugs that could be patched.</p>
+
+  <div class="verdicts">
+    <article class="verdict">
+      <p class="tag">Structural failure A</p>
+      <h3>Prices are not commensurable</h3>
+      <p>Platform markup is applied to TripJack and not to RateGain, at both search and detail. The &ldquo;cheapest supplier&rdquo; test compares <em>TJ net + markup</em> against <em>RG net</em>. The comparison lives inside a deduplicator fed by two adapters that each own their own pricing — there is no layer where a commensurable total exists.</p>
+    </article>
+    <article class="verdict">
+      <p class="tag">Structural failure B</p>
+      <h3>No canonical hotel identity</h3>
+      <p>The only catalogue is keyed by <code>tjHotelId</code> — a TripJack ID space. Supplier IDs <em>are</em> the identity, and prefixed strings like <code>"TJ:123"</code> travel into the frontend as <code>hotel.id</code>. Cross-supplier matching is 100&nbsp;m proximity plus a substring name test, per search, in O(n²), with no persisted mapping and no confidence level.</p>
+    </article>
+    <article class="verdict">
+      <p class="tag">Structural failure C</p>
+      <h3>The alternative deal is unbookable</h3>
+      <p>Merging keeps <code>altDeal: {source, price}</code> — a number and a label. The losing supplier&rsquo;s rate key, room, board and cancellation terms are discarded at merge time. The shape cannot be extended into a bookable alternative; it has to be replaced.</p>
+    </article>
+  </div>
+
+  <p>Everything else in the defect register is downstream of these three.</p>
+
+  <blockquote><p><strong>Recommendation:</strong> proceed with the clean-room rebuild. The reference implementation is worth mining for <em>domain knowledge</em> — supplier quirks, real measured latencies, the region and markup failure semantics — and worth discarding as <em>structure</em>.</p></blockquote>
+</section>
+
+<!-- ═══ 1 ═══ -->
+<section id="s1">
+  <h2><span class="num">01</span>As-is system map</h2>
+
+  <h3>Services in scope</h3>
+  <div class="scroller"><pre>hotel-search-service   :5012   search · suggest · destinations · products(rates)
+hotel-booking-service          precheck · commit · confirm · cancel · refund · amend · vouchers
+auth-service           :5010   JWT · agent markup rules · master markup config
+payment-service                Razorpay verify / refund
+email-service                  booking notifications</pre></div>
+  <p>Out of scope: flight, cabs, insurance, visa, passport, tour-package, cruise, charter.</p>
+
+  <h3>External dependencies</h3>
+  <div class="scroller"><table>
+    <thead><tr><th>Dependency</th><th>Used for</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>TripJack HMS v3</td><td><code>/hotel/listing</code>, <code>/hotel/pricing</code>, <code>/hotel/static-detail</code>, <code>/nationality-info</code></td><td>ID-list based search — you must supply candidate <code>hids</code></td></tr>
+      <tr><td>RateGain SmartDistribution</td><td><code>/bestproperties</code>, <code>/getproducts</code>, <code>/getDestinations</code></td><td>Destination-code or geofilter based, 20 properties/page</td></tr>
+      <tr><td>OpenCage Geocoding</td><td>destination text → lat/lng/bbox → radius</td><td><strong>API key hardcoded in source</strong> (D-14)</td></tr>
+      <tr><td>MongoDB</td><td>hotel catalogue (~1.6&nbsp;M docs), RG destinations, geo cache, bookings</td><td></td></tr>
+      <tr><td>Redis</td><td>search master-list cache, TJ hid cache, commit locks</td><td></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Layer inventory — the duplication problem, measured</h3>
+  <p>Ten files exist in <strong>both</strong> hotel services. Nine have <strong>diverged</strong>.</p>
+  <div class="scroller"><table>
+    <caption>Copy-pasted files across the two hotel services</caption>
+    <thead><tr><th>File</th><th>search LOC</th><th>booking LOC</th><th>Differing lines</th></tr></thead>
+    <tbody>
+      <tr><td><code>config/markup-config.ts</code></td><td class="n">177</td><td class="n">139</td><td class="n">82</td></tr>
+      <tr><td><code>utils/pricing.util.ts</code></td><td class="n">471</td><td class="n">116</td><td class="n">507</td></tr>
+      <tr><td><code>utils/region.util.ts</code></td><td class="n">78</td><td class="n">78</td><td class="n">0 — identical</td></tr>
+      <tr><td><code>clients/tripjack.client.ts</code></td><td class="n">25</td><td class="n">38</td><td class="n">35</td></tr>
+      <tr><td><code>clients/rategain.client.ts</code></td><td class="n">15</td><td class="n">13</td><td class="n">6</td></tr>
+      <tr><td><code>providers/tripjack.api.provider.ts</code></td><td class="n">622</td><td class="n">530</td><td class="n">1040</td></tr>
+      <tr><td><code>providers/rategain.api.provider.ts</code></td><td class="n">352</td><td class="n">448</td><td class="n">670</td></tr>
+      <tr><td><code>types/rategain.types.ts</code></td><td class="n">101</td><td class="n">101</td><td class="n">6</td></tr>
+      <tr><td><code>suppliers/registry.ts</code></td><td class="n">61</td><td class="n">20</td><td class="n">57</td></tr>
+      <tr><td><code>suppliers/types.ts</code></td><td class="n">51</td><td class="n">18</td><td class="n">57</td></tr>
+    </tbody>
+  </table></div>
+
+  <p><code>region.util.ts</code> carries a 20-line comment explaining that it is duplicated on purpose and <em>must</em> be edited in both places in the same commit. It is the only one that has held. <code>markup-config.ts</code> — the file that decides how much money is added to a price — has drifted 82 lines apart between the service that <strong>quotes</strong> and the service that <strong>charges</strong>.</p>
+
+  <p>Per supplier, the same logic is spread across five layers with no clear ownership:</p>
+  <div class="scroller"><pre>suppliers/tripjack/index.ts          ← registry descriptor (thin, correct)
+adapters/tripJackAdapter.ts          ← search: payload + response map + pricing + geo + DB enrich
+providers/tripjack.provider.ts       ← 2-line `new TripJackApiProvider()`   (no responsibility)
+providers/tripjack.api.provider.ts   ← detail/rates: payload + response map + pricing + static merge
+clients/tripjack.client.ts           ← axios instance</pre></div>
+</section>
+
+<!-- ═══ 2 ═══ -->
+<section id="s2">
+  <h2><span class="num">02</span>The frontend contract</h2>
+  <p>This is what the rebuild <strong>must</strong> keep serving. It was derived from the frontend source, not the backend, so it reflects what the UI actually reads.</p>
+
+  <h3>Search request</h3>
+  <div class="scroller"><pre>{
+  "destination":     "Goa",            // OR "TJ:100000001234" for a direct hotel search
+  "destinationCode": "12345",          // optional, RateGain destination code
+  "hotelId":         "TJ:1000...",     // optional, echoed
+  "checkin":  "2026-09-10",            // YYYY-MM-DD
+  "checkout": "2026-09-13",
+  "countryCode": "IN",
+  "currency":    "INR",
+  "pageNo": 1,
+  "providers": ["TJ","RG"],
+  "sortBy": "price_asc",               // price_asc | price_desc | rating_desc | price_rating
+  "filters": { ... },
+  "rooms": [ { "adults": 2, "children": 0, "childAges": [] } ]
+}</pre></div>
+  <p>The frontend overloads <code>destination</code> with a supplier-prefixed hotel ID for hotel-name search. The new API should accept this for compatibility but must not adopt it internally.</p>
+
+  <h3>Search response envelope</h3>
+  <div class="scroller"><pre>{
+  "results": [ /* Hotel[] — also mirrored to "body" and "hotels" */ ],
+  "total": 30,            // hotels on THIS page (misnamed)
+  "hasMore": true,        // authoritative next-page flag
+  "inventoryCount": 6179, // display only, "showing 40 of 6,179"
+  "facets": { ... },
+  "meta": { "tjCount": 118, "rgCount": 24 }
+}</pre></div>
+
+  <h4>Per-hotel fields the UI reads</h4>
+  <div class="scroller"><table>
+    <thead><tr><th>Field</th><th>Type</th><th>Consumed by</th></tr></thead>
+    <tbody>
+      <tr><td><code>hotelId</code></td><td><code>"TJ:…"</code> / <code>"RG:…"</code></td><td>primary key, routing to detail page</td></tr>
+      <tr><td><code>name</code> <code>address</code> <code>city</code> <code>country</code></td><td>string</td><td>HotelCard, map</td></tr>
+      <tr><td><code>starRating</code></td><td>number</td><td>card, filters</td></tr>
+      <tr><td><code>latitude</code> <code>longitude</code></td><td>number</td><td>HotelMapModal, InteractiveHotelMap</td></tr>
+      <tr><td><code>images[]</code></td><td>string[]</td><td>gallery — must be absolute URLs</td></tr>
+      <tr><td><code>amenities[]</code></td><td>string[]</td><td>card badges, filters</td></tr>
+      <tr><td><code>price</code></td><td>number</td><td><strong>the displayed total</strong> — markup-inclusive</td></tr>
+      <tr><td><code>basePrice</code> <code>taxAmount</code> <code>taxesIncluded</code></td><td>number/bool</td><td>per-night derivation, breakdown</td></tr>
+      <tr><td><code>pricing{}</code></td><td>object</td><td>HotelBookingSummary, review page</td></tr>
+      <tr><td><code>mealBasis</code></td><td>string</td><td>features chip</td></tr>
+      <tr><td><code>isRefundable</code> <code>refundableLabel</code> <code>freeCancellationUntil</code></td><td>bool/string</td><td>cancellation chip. <strong><code>undefined</code> = unknown</strong>, must not become &ldquo;Non-Refundable&rdquo;</td></tr>
+      <tr><td><code>source</code></td><td><code>"RG"｜"TJ"</code></td><td>provider filter, PDF export</td></tr>
+      <tr><td><code>altDeal</code></td><td><code>{source, price}</code></td><td>&ldquo;compare&rdquo; chip, <code>showOnlyAltDeals</code> filter</td></tr>
+      <tr><td><code>propertyCode</code> <code>brandCode</code> <code>correlationId</code></td><td>string</td><td>required by <code>/products</code></td></tr>
+      <tr><td><code>accTypeDesc</code> <code>accMultiDesc</code> <code>hotelSegment</code></td><td>string</td><td>property-type filter</td></tr>
+      <tr><td><code>onHoldAllowed</code></td><td>bool</td><td>hold flow</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Facets — rendered verbatim, client derives nothing</h3>
+  <p><code>starRatingCounts</code> · <code>propertyTypeCounts</code> · <code>mealTypeCounts</code> · <code>amenityCounts</code> (top 60) · <code>providerCounts</code> · <code>minPrice</code>/<code>maxPrice</code> · <code>topLocations</code> (top 10) · <code>priceBuckets</code> (6) · <code>totalHotels</code> · <code>altDealCount</code>.</p>
+  <p>Facets are <strong>cumulative across pages</strong> and computed on the geofenced-but-unfiltered set, so the panel only grows as the user scrolls. This behaviour is correct and must be preserved.</p>
+
+  <h3>The pricing block the UI trusts</h3>
+  <p><code>resolveRatePricing()</code> is the single place the frontend reads a price, and its doc comment records why: several competing totals existed and the detail page picked the pre-markup one, so the B2C margin silently vanished between the card and the review page. The invariant it depends on — <strong><code>basePrice + taxesAndFees === totalPrice</code></strong> — is guaranteed by <em>deriving</em> <code>taxesAndFees</code> rather than summing named parts. Keep both the invariant and the reason.</p>
+
+  <h3>Where the frontend contains supplier logic</h3>
+  <p>This is the compatibility problem, and it is extensive.</p>
+  <div class="scroller"><table>
+    <thead><tr><th>Location</th><th>Supplier logic</th></tr></thead>
+    <tbody>
+      <tr><td><code>HotelReviewBooking.tsx:862-978</code></td><td>Builds <strong>two entirely different booking payloads</strong>. The RateGain branch constructs a native <code>BookReservation</code> envelope — <code>ResStatus</code>, <code>DemandBookingId</code>, <code>EchoToken</code>, <code>RoomSelectionKey</code>, <code>RoomRate</code> as <em>price per room per night</em>, <code>Guest[].ProfileType</code>. Supplier protocol, in the browser.</td></tr>
+      <tr><td><code>HotelReviewBooking.tsx</code> ×10 more</td><td><code>hotelData.id.startsWith('TJ:')</code> gates postal-code validation, precheck shape, UI sections, provider label</td></tr>
+      <tr><td><code>HotelDetailPage.tsx</code> ×5</td><td>TJ/RG branching for products payload and ID normalisation</td></tr>
+      <tr><td><code>hotelBookingService.ts:52-74</code></td><td>Hardcoded <strong>RateGain error-code table</strong> (1999, 1001…1005) → user-facing copy</td></tr>
+      <tr><td><code>tripjackBookingService.ts</code></td><td>An entire second, TripJack-specific booking client</td></tr>
+      <tr><td><code>MyBookingsPage.tsx</code> ×12, <code>HotelVoucher.tsx</code></td><td>Reads <code>booking.rateGainRequest.BookReservation.RoomSelection[0].Property.Name</code> — the stored <strong>raw supplier request</strong> — to render room, guest, GST and cancellation info</td></tr>
+      <tr><td><code>SearchResultsPdfTemplate.tsx:43</code></td><td><code>isTJ ? 'TripJack' : 'RateGain'</code></td></tr>
+    </tbody>
+  </table></div>
+  <p>MyBookings reading the raw RateGain request is the worst of these: the booking record&rsquo;s <em>display</em> data is the supplier&rsquo;s wire format. Adding Supplier&nbsp;C breaks the bookings list.</p>
+</section>
+
+<!-- ═══ 3 ═══ -->
+<section id="s3">
+  <h2><span class="num">03</span>As-is flows</h2>
+
+  <h3>Search</h3>
+  <div class="scroller"><pre>POST /api/search/hotels/search
+  │
+  ├─ getClientType(req) / extractToken(req)                    hotels.controller.ts
+  ├─ deriveRegion(countryCode) → resolveMarkupRules(...)        hotels.service.ts:115
+  ├─ validate dates + rooms (else return empty)                 :130-156
+  ├─ resolveGeoCenter(payload)  ── OpenCage + GeoCache          :455-517
+  ├─ buildMasterKey(payload, clientType) → sha1                 :1193-1213
+  ├─ loadMaster: L1 (20 s) → Redis (900 s)                      :253-275
+  │     hit  → if age > 300 s, scheduleRefresh() in background
+  │     miss → coalesce(key, fetchMasterList(blockingPages=1))
+  │            then scheduleTopUp() to prefetchPages=3
+  ├─ if master.length &lt; pageNo*limit && providerHasMore
+  │     → extendMasterList (≤5 rounds, coalesced)               :752-787
+  └─ finalizeResponse(master, …)                                :889-1186
+        1. accumulateFacets (cumulative, cached per search)
+        2. apply filters   3. apply sort   4. slice page
+        5. apply markup, build pricing block</pre></div>
+
+  <div class="scroller"><pre>fetchOnePage(page)                                             :525-653
+  ├─ registry.getEnabled({mode, destination, requestedCodes})
+  ├─ one AbortController per page, signal threaded into axios
+  ├─ Promise.allSettled over supplier.search(...)
+  │     each .catch() → console.error, result SILENTLY DROPPED
+  ├─ soft window  = SEARCH_BLOCKING_TIMEOUT_MS (8 s)
+  │     ⚠ the "return as soon as we hold ≥1 hotel" line is COMMENTED OUT  :635-637
+  ├─ hard window  = soft + SEARCH_TIMEOUT_GRACE_MS (6 s) = 14 s
+  └─ abortController.abort()
+       ↓
+  deduplicateHotels(union)   ← price comparison &amp; altDeal happen HERE
+       ↓
+  geofence filter (drop beyond radiusKm)</pre></div>
+
+  <p><strong>TripJack search</strong> is fundamentally different from RateGain&rsquo;s: TripJack has no destination search. The adapter resolves the destination to candidate hotel IDs via a Mongo <code>$near</code> over the local catalogue, then <em>densifies</em> — each KLAR page maps to a fixed window of <code>TJ_HIDS_PER_PAGE=150</code> ids, split into chunks of 50, run 3 at a time, capped at 100 hotels. Yield is roughly <strong>1 bookable hotel per 20 candidate ids</strong>. The <code>total</code> returned is the candidate-id count (~6,179 for Goa), not a hotel count.</p>
+
+  <p><strong>RateGain search</strong> uses a geofilter (or destination code, with a fallback chain), 20 properties per API page, 4 pages fetched concurrently per KLAR page.</p>
+
+  <h3>Hotel detail / rates</h3>
+  <div class="scroller"><pre>POST /api/search/hotels/:propertyId/products
+  → productsService.getProducts                    products.service.ts (clean, 21 lines)
+  → supplierRegistry.resolveByPropertyId(id)       first-match; RG is catch-all
+  → supplier.getProducts(payload)</pre></div>
+  <p>This is the <strong>one place the abstraction is honoured</strong>. Twenty-one lines, no supplier knowledge, and adding a supplier requires no change to it. It is the model for the rebuild.</p>
+
+  <h3>Booking</h3>
+  <div class="scroller"><pre>POST /api/booking/precheck
+  → precheck.service.ts:12   if (propertyId.startsWith("TJ:")) tripJack else rateGain
+                             ⚠ hardcoded if/else — the registry exists but is not used
+
+POST /api/booking/commit
+  → RedisLockUtil.executeWithLock(commit_lock_…)
+  → isTripJack = propertyId.startsWith("TJ") || bookingId.startsWith("TJ")
+               || bookingId.startsWith("TG") || payload.type === "HOTEL"
+               || (!payload.BookReservation &amp;&amp; payload.bookingId)     commit.service.ts:189-194
+  → #commitTripJack | #commitRateGain     (1,013 lines, two parallel implementations)
+       PHASE 1  adapter.precheck() → ValidationEngine.validate(expected, fresh, {fixed:10, percent:0.5})
+                  ├ !available            → ROOM_SOLD_OUT
+                  ├ room name mismatch    → ROOM_CHANGED
+                  ├ meal plan mismatch    → MEAL_PLAN_CHANGED
+                  ├ policy hash mismatch  → POLICY_CHANGED
+                  ├ fresh &gt; expected+tol  → PRICE_CHANGED
+                  └ fresh &lt; expected      → pass saving to customer
+       PHASE 2  B2B: agent markup from wallet rules │ B2C: finalPrice = payload.sellingRate
+       PHASE 3  B2B: wallet debit │ B2C: Razorpay verify vs max(finalPrice, b2cPriceFloor(apiNet))
+       PHASE 4  supplier book
+       PHASE 5  TripJack async → poll every 5 s × 36 (180 s) → CONFIRMED | HELD | MANUAL_REVIEW</pre></div>
+  <p>Commit is the most mature part of the codebase: idempotency keys with a unique index, Redis locks, payment-reuse detection, a server-side B2C price floor so a tampered-low client price cannot book at cost, idempotent refund bookkeeping, and a reconciliation worker. <strong>This domain logic should be carried forward</strong> — it is the supplier <em>routing</em> around it that must be replaced.</p>
+</section>
+
+<!-- ═══ 4 ═══ -->
+<section id="s4">
+  <h2><span class="num">04</span>As-is data model</h2>
+  <div class="scroller"><pre>Hotel                (~1.6 M)   tjHotelId ⚠ UNIQUE KEY IS A SUPPLIER ID
+                                name, cityName, searchTokens[], countryName,
+                                starRating, address, location{Point}, images[]
+                     indexes:   tjHotelId(u), cityName, searchTokens, 2dsphere,
+                                text(cityName,name), (countryName,cityName)
+
+RGDestination                   destCode, destName, countryName   (+text index)
+GeoCache                        query("geo:lat,lng"), lat, lng, radiusKm
+PopularArea                     cityKey, name, description, tag
+Nationality                     TripJack nationality id map
+
+Booking                         klarBookingId, confirmationNumber, hotelConfirmationNumber,
+                                idempotencyKey(u), publicToken, reservationId, propertyId,
+                                provider: enum{rategain,tripjack}          ⚠ 2-VALUE ENUM
+                                status:   enum{CONFIRMED,CANCELLED,PENDING,FAILED,HELD,
+                                               PRECHECK_VALIDATED,PAYMENT_RESERVED,
+                                               SUPPLIER_PENDING,MANUAL_REVIEW,
+                                               CANCELLATION_PENDING}
+                                totalAmount / netAmount / markupAmount / currencyCode
+                                rateGainRequest / tripJackRequest / tripJackResponse
+                                                                           ⚠ RAW SUPPLIER BLOBS
+                                refund{status,method,kind,amount,…}
+BookingEvent                    append-only audit
+PrecheckResult                  PrecheckResultV1 + SupplierAdapter contract</pre></div>
+
+  <p>Two schema-level blockers for &ldquo;add Supplier&nbsp;C without a rewrite&rdquo;:</p>
+  <ul>
+    <li><code>BookingProvider</code> is a <strong>two-value enum</strong>. A third supplier requires a schema migration.</li>
+    <li>Supplier payloads live in <strong>named columns</strong> and are read directly by the frontend. A third supplier requires a new column <em>and</em> frontend changes.</li>
+  </ul>
+  <p>There is <strong>no</strong> canonical hotel table, <strong>no</strong> supplier-mapping table, <strong>no</strong> destination-mapping table beyond <code>RGDestination</code>, and <strong>no</strong> supplier-configuration table — all supplier behaviour is environment variables.</p>
+</section>
+
+<!-- ═══ 5 ═══ -->
+<section id="s5">
+  <h2><span class="num">05</span>What the reference gets right</h2>
+  <p>Recorded deliberately, because the rebuild should not lose it.</p>
+  <ol class="keep">
+    <li><code>products.service.ts</code> — 21 lines, zero supplier knowledge, pure registry dispatch. The target shape for every orchestrator.</li>
+    <li><code>buildPublicPricing()</code> derives <code>taxesAndFees</code> from <code>total − base</code>, so the breakdown <em>cannot</em> fail to add up.</li>
+    <li><code>ratePricing.ts</code> — one function, one place the client reads a price.</li>
+    <li><code>deriveRefundable()</code> distinguishes &ldquo;non-refundable&rdquo; from &ldquo;unknown&rdquo;, and adapters emit <code>undefined</code> rather than a fabricated <code>false</code>.</li>
+    <li>Markup config failure semantics: <em>fresh → live → stale → env</em>, never silently to zero, with &ldquo;configured off&rdquo; distinct from &ldquo;never configured&rdquo;.</li>
+    <li>Region-keyed markup snapshots rather than a module-level &ldquo;current region&rdquo;, with the concurrency corruption explained in the comment.</li>
+    <li>Facet accumulation — cumulative across pages, computed on the unfiltered set.</li>
+    <li>Commit-path safety: idempotency key + unique index, Redis lock, payment-reuse guard, <code>b2cPriceFloor</code>, idempotent refund claim, reconciliation worker.</li>
+    <li>Measured supplier latencies in comments: RateGain <code>bestproperties</code> ≈ 10.7&nbsp;s domestic, ≈ 14.2&nbsp;s international geofilter. Real operational knowledge — it should drive the new deadline budget.</li>
+    <li>Request coalescing for both master builds and master extensions.</li>
+  </ol>
+</section>
+
+<!-- ═══ 6 ═══ -->
+<section id="s6">
+  <h2><span class="num">06</span>Defect register</h2>
+  <p>Twenty-four findings, ordered by commercial impact. Locations refer to the extracted reference tree.</p>
+
+  <div class="sev-head crit"><span>Critical — money &amp; correctness</span><span class="rule"></span><span>5</span></div>
+
+  <figure>
+    <div class="diagram">
+      <div class="lane">
+        <span class="who">TripJack — search &amp; detail</span>
+        <div class="bar">
+          <div class="seg net" style="flex:0 0 82%">supplier net + taxes</div>
+          <div class="seg mk" style="flex:0 0 18%">+ platform markup</div>
+        </div>
+        <span class="note">Marked up at <code>tripJackAdapter.ts:278</code> and <code>tripjack.api.provider.ts:336</code>.</span>
+      </div>
+      <div class="vs">compared<br>against</div>
+      <div class="lane">
+        <span class="who">RateGain — search &amp; detail</span>
+        <div class="bar">
+          <div class="seg net" style="flex:0 0 82%">supplier net + taxes</div>
+          <div class="seg none" style="flex:0 0 18%">nothing</div>
+        </div>
+        <span class="note">Not marked up. <code>enrichRateGainPrice()</code> — the function that would — has <strong>zero callers</strong>.</span>
+      </div>
+    </div>
+    <figcaption>D-1 in one picture. The deduplicator picks a winner by comparing these two bars directly. With a 5% platform markup, RateGain wins every tie it should lose, by exactly 5%.</figcaption>
+  </figure>
+
+  <div class="defects">
+    <article class="defect c">
+      <div class="hd"><span class="did">D-1</span><span class="ttl">Platform markup applied to one supplier only</span><span class="loc">tripJackAdapter.ts:278 · rateGainAdapter.ts:474</span></div>
+      <p>Two consequences:</p>
+      <ul>
+        <li>The cheapest-deal comparison compares <em>TJ net + platform markup</em> against <em>RG net</em>.</li>
+        <li><code>hotel-booking-service</code> <strong>does</strong> apply platform markup to RateGain (<code>rategain.adapter.ts:117</code>). A RateGain booking is therefore quoted without the markup and validated with it — a systematic quote-vs-charge divergence on one supplier.</li>
+      </ul>
+    </article>
+
+    <article class="defect c">
+      <div class="hd"><span class="did">D-2</span><span class="ttl">Price comparison ignores rate equivalence</span><span class="loc">deduplicator.ts:89-92</span></div>
+      <p><code>currentPrice &lt; existingPrice</code> and nothing else. Meal plan, refundability, cancellation deadline, room type, occupancy and <code>taxesIncluded</code> are not consulted. A non-refundable room-only rate will beat a refundable breakfast-inclusive rate, and the customer will never know a comparison happened.</p>
+    </article>
+
+    <article class="defect c">
+      <div class="hd"><span class="did">D-3</span><span class="ttl">Contradictory <code>taxesIncluded</code> semantics</span><span class="loc">tripJackAdapter.ts:300-305 · rateGainAdapter.ts:445</span></div>
+      <p>The TripJack comment says <em>&ldquo;totalPrice already includes all taxes… taxesIncluded = true&rdquo;</em> and the next line sets <code>taxesIncluded: false</code>. RateGain infers it as <code>taxAmt === 0</code>, conflating &ldquo;tax-inclusive&rdquo; with &ldquo;tax field absent&rdquo;. Two suppliers with different, partly-wrong tax semantics feed one comparison.</p>
+    </article>
+
+    <article class="defect c">
+      <div class="hd"><span class="did">D-4</span><span class="ttl">The alternative deal is unbookable</span><span class="loc">deduplicator.ts:96,104</span></div>
+      <p><code>altDeal = { source, price }</code>. The loser&rsquo;s <code>rawPayload</code>, rate key, board, room and cancellation policy are discarded and cannot be recovered without re-searching.</p>
+    </article>
+
+    <article class="defect c">
+      <div class="hd"><span class="did">D-5</span><span class="ttl">Region is derived and then discarded</span><span class="loc">tripJackAdapter.ts:289 vs :278</span></div>
+      <p><code>deriveRegion(h.country)</code> is computed and stored as <code>markupRegion</code>, but <code>platformMarkupAmount(tjBase)</code> is called with <strong>no region argument</strong>, defaulting to <code>"ALL"</code>. The region-aware markup exists, is documented, is tested, and is not used at search time.</p>
+    </article>
+  </div>
+
+  <div class="sev-head high"><span>High — architecture &amp; scalability</span><span class="rule"></span><span>8</span></div>
+  <div class="defects">
+    <article class="defect h">
+      <div class="hd"><span class="did">D-6</span><span class="ttl">Supplier IDs are the identity, everywhere</span></div>
+      <p><code>"TJ:…"｜"RG:…"</code> is the frontend&rsquo;s primary key, the <code>/products</code> routing key, the precheck routing key and the commit routing key. No canonical layer exists.</p>
+    </article>
+    <article class="defect h">
+      <div class="hd"><span class="did">D-7</span><span class="ttl">Naive property matching</span><span class="loc">deduplicator.ts:22-137</span></div>
+      <p>O(n²) scan; merges on <code>latDiff &lt; 0.001 &amp;&amp; lngDiff &lt; 0.001</code> plus substring containment where the shorter name exceeds 5 characters. &ldquo;Marriott&rdquo; ⊂ &ldquo;Marriott Executive Apartments&rdquo; merges two different properties. No confidence level, no persisted mapping, recomputed on every search and every list extension.</p>
+    </article>
+    <article class="defect h">
+      <div class="hd"><span class="did">D-8</span><span class="ttl">Supplier failures are invisible</span><span class="loc">hotels.service.ts:586-588</span></div>
+      <p><code>.catch(err =&gt; console.error(...))</code>. No supplier status, error, timing or result count reaches the response. The frontend type declares <code>meta.errors[]</code>; the backend never sends it. A search where RateGain timed out is indistinguishable from one where RateGain had no inventory — while the UI still implies the displayed price is the cheapest.</p>
+    </article>
+    <article class="defect h">
+      <div class="hd"><span class="did">D-9</span><span class="ttl">Booking service does not use its own registry</span><span class="loc">precheck.service.ts:12 · commit.service.ts:189</span></div>
+      <p>Commit&rsquo;s supplier detection is a five-clause heuristic including <code>payload.type === "HOTEL"</code> and <code>(!payload.BookReservation &amp;&amp; payload.bookingId)</code> — it infers the supplier from the shape of the request the frontend happened to send.</p>
+    </article>
+    <article class="defect h">
+      <div class="hd"><span class="did">D-10</span><span class="ttl">Frontend speaks supplier protocol</span></div>
+      <p>See §02. Adding Supplier&nbsp;C requires frontend work today.</p>
+    </article>
+    <article class="defect h">
+      <div class="hd"><span class="did">D-11</span><span class="ttl">Cross-supplier ID-space collision</span><span class="loc">rateGainAdapter.ts:217</span></div>
+      <p><code>HotelModel.find({ tjHotelId: { $in: rgIds } })</code> — RateGain property IDs looked up in the TripJack ID column. Usually returns nothing (RG cards lose enrichment); where a numeric collision exists it silently attaches <strong>the wrong hotel&rsquo;s</strong> name, address, images and coordinates.</p>
+    </article>
+    <article class="defect h">
+      <div class="hd"><span class="did">D-12</span><span class="ttl">Filtered pagination can dead-end</span><span class="loc">hotels.service.ts:221 vs :1099</span></div>
+      <p>The list is extended against the <strong>unfiltered</strong> master but the page is sliced from the <strong>filtered</strong> list. Under a selective filter the slice can be empty, and <code>hasMore</code> is then <code>false</code> because it is gated on <code>pageItems.length &gt; 0</code>. The user is told there are no more hotels while suppliers still have inventory.</p>
+    </article>
+    <article class="defect h">
+      <div class="hd"><span class="did">D-13</span><span class="ttl">Double sorting</span><span class="loc">hotels.service.ts:1039 · HotelSearchPage.tsx:1550</span></div>
+      <p>Both sort. The frontend sorts the <em>accumulated</em> list across pages while the backend sorted each page against the master. Ordering is not stable across scroll.</p>
+    </article>
+  </div>
+
+  <div class="sev-head med"><span>Medium — security &amp; operability</span><span class="rule"></span><span>11</span></div>
+  <div class="defects">
+    <article class="defect">
+      <div class="hd"><span class="did">D-14</span><span class="ttl">Hardcoded API key</span><span class="loc">destinationResolver.ts:43,180,272</span></div>
+      <p><code>process.env.OPENCAGE_API_KEY || "ae11f…6323"</code> — a live credential in three places in source. <strong>Rotate before the new service ships.</strong></p>
+    </article>
+    <article class="defect">
+      <div class="hd"><span class="did">D-15</span><span class="ttl">Raw supplier errors leaked to the client</span><span class="loc">products.controller.ts:26-36</span></div>
+      <p><code>body: error.response?.data</code> returns the supplier&rsquo;s response verbatim. The search controller gets this right; the products controller does not.</p>
+    </article>
+    <article class="defect">
+      <div class="hd"><span class="did">D-16</span><span class="ttl">WAF-evasion headers</span><span class="loc">clients/tripjack.client.ts:12-24</span></div>
+      <p>The API key is sent under six header names with a spoofed Chrome <code>User-Agent</code>. Six copies of a credential on every request, and a spoofed UA that breaks the moment the supplier tightens its WAF.</p>
+    </article>
+    <article class="defect">
+      <div class="hd"><span class="did">D-17</span><span class="ttl">PII in logs</span><span class="loc">precheck.service.ts:16 · 247 console.log calls</span></div>
+      <p><code>JSON.stringify(payload, null, 2)</code> on payloads containing guest names, emails and phone numbers.</p>
+    </article>
+    <article class="defect">
+      <div class="hd"><span class="did">D-18</span><span class="ttl">Fabricated amenities</span><span class="loc">rateGainAdapter.ts:542-573</span></div>
+      <p>A 5-star hotel with no amenity data is given &ldquo;Swimming Pool, Fitness Center, Spa, Restaurant, Bar&rdquo;; any hotel with &ldquo;beach&rdquo; in its name gains a Spa. These invented facts then feed the <strong>amenity filter</strong>. <code>getTJFallbackAmenities</code> is the same function, duplicated, and never called.</p>
+    </article>
+    <article class="defect">
+      <div class="hd"><span class="did">D-19</span><span class="ttl">Environment sprawl</span></div>
+      <p>80 distinct <code>process.env.*</code> reads across the two hotel services; <code>config/env.ts</code> declares roughly 15. The rest are inline <code>process.env.X || default</code> inside business logic. None documented.</p>
+    </article>
+    <article class="defect">
+      <div class="hd"><span class="did">D-20</span><span class="ttl">Dead and debug code shipped</span></div>
+      <p><code>temp.json</code>, <code>test-rg.ts</code>, <code>test-static.js</code>, <code>test-live-static.js</code>, <code>test-sync-format.js</code>, <code>src/check-env.ts</code>, <code>src/test-fixed-client.ts</code>, <code>src/test_rategain_api.ts</code>, <code>test-tj.ts</code>, <code>verify.ts</code>, <code>src/check-db.ts</code>, <code>src/test-tripjack-cancel.ts</code>; <code>getOfficialCityCenterMatch()</code> always returns <code>null</code>; the frontend root holds <code>HotelCard.orig.tsx</code> and <code>HotelDetailPage_old.tsx</code>.</p>
+    </article>
+    <article class="defect">
+      <div class="hd"><span class="did">D-21</span><span class="ttl">Environment-specific hacks</span><span class="loc">destinationResolver.ts:672,722</span></div>
+      <p><code>isIndianQuery = q.includes("india") || q.includes("goa")</code>, then a filter excluding hotels whose country contains &ldquo;germany&rdquo; — inside generic destination resolution.</p>
+    </article>
+    <article class="defect">
+      <div class="hd"><span class="did">D-22</span><span class="ttl">Dynamic prices cached for 15 minutes</span><span class="loc">env.ts:32</span></div>
+      <p>The cached master holds fully-priced hotels; a user can be shown a 14-minute-old rate. The cache <em>key</em> is correct — destination, dates, rooms with child ages, currency, country, provider set — but the TTL does not distinguish static from dynamic data.</p>
+    </article>
+    <article class="defect">
+      <div class="hd"><span class="did">D-23</span><span class="ttl">Partial-return logic contains a disabled branch</span><span class="loc">hotels.service.ts:635-637</span></div>
+      <p>The soft window still exists in code and comments but no longer fires. The written policy and the actual policy have diverged. (The current <em>behaviour</em> is the correct one; the code should say so.)</p>
+    </article>
+    <article class="defect">
+      <div class="hd"><span class="did">D-24</span><span class="ttl">No search correlation ID</span></div>
+      <p>Only TripJack&rsquo;s own per-listing <code>correlationId</code> exists, and it leaks to the frontend as a hotel field.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ═══ 7 ═══ -->
+<section id="s7">
+  <h2><span class="num">07</span>Target architecture</h2>
+
+  <h3>Principles</h3>
+  <ol class="body">
+    <li><strong>One commensurable price object.</strong> No comparison ever happens on a number a supplier adapter produced. Adapters emit supplier <em>cost</em>; one pricing engine converts cost → customer price; only customer prices are compared.</li>
+    <li><strong>Canonical identity before merge.</strong> Hotels are matched to a persisted <code>klarHotelId</code> with an explicit confidence level. Unmatched is a valid, safe outcome — duplicates beat false merges.</li>
+    <li><strong>Deals, not prices.</strong> A merged hotel carries <code>deals[]</code> of complete, bookable offers. The winner is a selection over that set, not a mutation of it.</li>
+    <li><strong>Supplier code appears in exactly two places</strong> — inside <code>suppliers/&lt;code&gt;/</code>, and as an opaque string in persisted records. Nowhere in orchestration, the API contract, or the frontend.</li>
+    <li><strong>Honesty over optimism.</strong> If a supplier did not answer, the response says so and does not claim the price is the lowest available.</li>
+  </ol>
+
+  <h3>Module layout</h3>
+  <div class="scroller"><pre>apps/
+  hotel-api/                    HTTP edge: routing, validation, auth, error mapping
+  hotel-worker/                 sync jobs, cache warming, reconciliation
+
+modules/
+  search/         orchestrator · deadline budget · merge · rank · paginate
+  matching/       canonical identity resolution + confidence
+  pricing/        cost → customer price · markup · comparability rules
+  property/       canonical hotel catalogue + supplier mappings
+  destination/    canonical destinations + supplier destination mappings + geo
+  rate/           detail + room/rate normalisation
+  revalidation/   precheck / price-change handling
+  booking/        supplier-neutral book · confirm · cancel · refund
+  availability/   caching policy (static vs dynamic)
+
+suppliers/
+  contract/       HotelSupplier interface + shared DTOs + error taxonomy
+  tripjack/       client · request mapper · response mapper · config
+  rategain/       client · request mapper · response mapper · config
+  testing/        contract test-suite every supplier must pass
+
+domain/           canonical entities, value objects, invariants (no I/O)
+infrastructure/   db · cache · http · logging · metrics · config
+shared/           errors · result types · money · dates</pre></div>
+  <p>Each supplier folder is a <strong>vertical slice</strong>: one client, one request mapper, one response mapper, one config schema. The five-layer smear collapses to one.</p>
+
+  <h3>Canonical domain model</h3>
+  <div class="scroller"><pre>interface CanonicalHotel {
+  klarHotelId: string;              // KLAR-owned, stable, opaque
+  name: string;  normalizedName: string;
+  address?: string;  city?: string;  country?: string;   // ISO-2
+  location?: { lat: number; lng: number };
+  starRating?: number;  propertyType?: string;
+  brand?: string;  chainCode?: string;
+  images: HotelImage[];
+  amenities: Amenity[];             // normalised vocabulary, never fabricated
+  supplierMappings: SupplierPropertyMapping[];
+}
+
+type MatchConfidence =
+  | "EXACT_SUPPLIER_MAPPING"   // persisted, verified
+  | "HIGH_CONFIDENCE"          // multi-signal agreement
+  | "MEDIUM_CONFIDENCE"        // flagged, merged, auditable
+  | "LOW_CONFIDENCE"           // NOT merged; recorded for review
+  | "UNMATCHED";
+
+interface SupplierCost {              // what the SUPPLIER charges KLAR
+  base: Money;  taxes: Money;  fees: Money;
+  total: Money;                       // base + taxes + fees, always
+  taxesIncludedInBase: boolean;       // explicit, never inferred
+  commission?: Money;
+}
+
+interface CustomerPrice {             // what the CUSTOMER pays
+  currency: string;
+  supplierTotal: number;
+  platformMarkup: number;
+  channelMarkup: number;              // B2C margin / B2B agent margin
+  taxesAndFees: number;
+  total: number;                      // the ONLY comparable number
+  perNight: number;  nights: number;
+  breakdown: PriceLine[];             // audit trail, sums to total
+}
+
+interface SupplierDeal {
+  dealId: string;                     // KLAR-issued, opaque, resolvable
+  supplier: string;
+  klarHotelId: string;  supplierHotelId: string;
+  room:  { code?: string; name: string; bedConfig?: string };
+  board: { code: BoardCode; name: string };      // RO|BB|HB|FB|AI
+  occupancy: { rooms; adults; children; childAges };
+  cancellation: CancellationTerms;
+  refundable: Tristate;               // TRUE | FALSE | UNKNOWN — never guessed
+  cost: SupplierCost;
+  price: CustomerPrice;
+  rateToken: OpaqueRateToken;         // sealed supplier state
+  validUntil?: Date;  onHoldAllowed: boolean;
+}
+
+interface MergedHotel {
+  klarHotelId: string;
+  hotel: CanonicalHotel;
+  featuredDeal: SupplierDeal;         // a POINTER INTO deals[], not a copy
+  deals: SupplierDeal[];              // ALL deals, all suppliers, bookable
+  comparison: {
+    comparedAcross: string[];         // suppliers that actually answered
+    incompleteSuppliers: string[];    // did NOT answer
+    equivalenceClass: string;
+  };
+  matchConfidence: MatchConfidence;
+}</pre></div>
+  <p>Because <code>featuredDeal</code> points into <code>deals[]</code>, nothing is discarded at merge time — D-4 becomes structurally impossible.</p>
+
+  <h3>Supplier contract</h3>
+  <div class="scroller"><pre>interface HotelSupplier {
+  readonly code: string;
+  readonly capabilities: SupplierCapabilities;
+
+  search(req, ctx):          Promise&lt;SupplierSearchResult&gt;;
+  getHotelDetails(req, ctx): Promise&lt;SupplierHotelDetails&gt;;
+  getRates(req, ctx):        Promise&lt;SupplierRates&gt;;
+  precheck(req, ctx):        Promise&lt;PrecheckResult&gt;;
+  book(req, ctx):            Promise&lt;BookResult&gt;;
+  confirm?(req, ctx):        Promise&lt;BookResult&gt;;
+  cancel(req, ctx):          Promise&lt;CancelResult&gt;;
+}
+
+interface SupplierContext {
+  searchId: string;  correlationId: string;
+  deadline: Deadline;                 // ABSOLUTE, not a duration
+  signal: AbortSignal;  logger: Logger;
+}
+
+interface SupplierSearchResult {
+  supplier: string;
+  status: "SUCCESS"|"EMPTY"|"PARTIAL"|"ERROR"|"TIMEOUT"|"CIRCUIT_OPEN"|"DISABLED";
+  hotels: SupplierHotel[];            // cost only — NO customer price
+  pageInfo: { hasMore; cursor?; supplierPagesConsumed };
+  responseTimeMs: number;
+  error?: NormalizedSupplierError;
+}</pre></div>
+  <p>Two deliberate departures from the brief&rsquo;s sketch:</p>
+  <ul>
+    <li><strong><code>precheck</code>/<code>book</code>/<code>cancel</code> are required, not optional.</strong> A supplier that cannot be booked has no place in a search that promises the lowest bookable price. Capability variation belongs in <code>capabilities</code>, not in omitted methods.</li>
+    <li><strong>Adapters return <code>SupplierCost</code>, never <code>CustomerPrice</code>.</strong> This is the single change that makes D-1 impossible to reintroduce: there is no code path where an adapter can add markup.</li>
+  </ul>
+
+  <h3>Search pipeline</h3>
+  <div class="scroller"><pre>POST /api/search/hotels/search
+  ├─ 1  Validate &amp; canonicalise request
+  ├─ 2  Resolve destination → CanonicalDestination (+ per-supplier refs)
+  ├─ 3  Cache lookup (static/dynamic split)
+  ├─ 4  Select suppliers: registry + admin config + capability + coverage
+  ├─ 5  FAN OUT — Promise.allSettled under ONE absolute deadline
+  │        TripJack ──▶ cost-only SupplierHotel[]
+  │        RateGain ──▶ cost-only SupplierHotel[]
+  ├─ 6  Match      → klarHotelId + confidence          [modules/matching]
+  ├─ 7  Price      → SupplierCost → CustomerPrice      [modules/pricing]
+  ├─ 8  Merge      → MergedHotel { deals[] }
+  ├─ 9  Compare    → equivalence classes → featuredDeal
+  ├─ 10 Filter → Sort → Paginate (stable cursor)
+  └─ 11 Respond, including supplier health for this search</pre></div>
+  <p>Steps 6 and 7 are <strong>separate and ordered</strong>. Matching never sees a price; pricing never sees another supplier. Comparison is the only step that sees both, and by then every number is a <code>CustomerPrice.total</code> in the same currency.</p>
+
+  <h3>Deadline strategy</h3>
+  <ul>
+    <li>One <strong>absolute deadline</strong> per search, not per call, derived from measured latency — RateGain international geofilter ≈ 14.2&nbsp;s is the binding constraint.</li>
+    <li>Suppliers run concurrently and are <strong>not cancelled because another finished</strong>. A supplier is cancelled only when it exhausts its own budget or the search deadline passes.</li>
+    <li>On deadline, return what is held <strong>and label it</strong>:</li>
+  </ul>
+  <div class="scroller"><pre>"comparison": {
+  "comparedAcross":      ["TJ"],
+  "incompleteSuppliers": ["RG"],
+  "priceGuarantee":      "PARTIAL"     // BEST_AVAILABLE | PARTIAL
+}</pre></div>
+  <p>The UI can then say &ldquo;best of the suppliers that responded&rdquo; instead of implying a guarantee the system did not earn. Late supplier results are <strong>not discarded</strong> — they land in the cache, so the next request sees the complete picture.</p>
+
+  <h3>Rate tokens</h3>
+  <p>The frontend must never hold supplier state, and the backend must never re-search at booking time.</p>
+  <div class="scroller"><pre>dealId  →  Redis: sealed RateToken
+              { supplier, supplierHotelId, supplierRateRef,
+                correlationId, reviewHash, occupancy, board,
+                quotedCost, quotedPrice, pricingContext, issuedAt, expiresAt }</pre></div>
+  <p><code>dealId</code> is opaque, signed and short-lived. The client sends it to precheck and commit; the booking engine resolves it to the owning supplier and its native state. This kills D-6, D-9 and the frontend&rsquo;s <code>BookReservation</code> construction in one move — the client never learns which supplier it is booking.</p>
+
+  <h3>Matching</h3>
+  <div class="scroller"><table>
+    <caption>Ordered, short-circuiting; confidence recorded on every result</caption>
+    <thead><tr><th>Tier</th><th>Signal</th><th>Confidence</th><th>Merge?</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td>Persisted <code>SupplierPropertyMapping</code></td><td><code>EXACT_SUPPLIER_MAPPING</code></td><td>yes</td></tr>
+      <tr><td class="n">2</td><td>Shared external ID (GIATA / chain+property code)</td><td><code>EXACT_SUPPLIER_MAPPING</code></td><td>yes</td></tr>
+      <tr><td class="n">3</td><td>Name ≥ threshold <strong>AND</strong> ≤ 150 m <strong>AND</strong> address token overlap</td><td><code>HIGH_CONFIDENCE</code></td><td>yes, and persist</td></tr>
+      <tr><td class="n">4</td><td>Name ≥ threshold <strong>AND</strong> ≤ 500 m <strong>AND</strong> same city <strong>AND</strong> stars ±1</td><td><code>MEDIUM_CONFIDENCE</code></td><td>yes, flagged</td></tr>
+      <tr><td class="n">5</td><td>Anything weaker</td><td><code>LOW_CONFIDENCE</code></td><td><strong>no</strong> — queued for review</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li>Coordinates <strong>alone</strong> never merge. Name alone never merges. At least two independent signals are required.</li>
+    <li>Name normalisation strips chain prefixes, punctuation, diacritics and legal suffixes, then compares by token-set ratio — not substring containment, which is what makes D-7 wrong.</li>
+    <li>Matching runs against the <strong>persisted catalogue</strong>, not pairwise across the result set: O(n) lookups, not O(n²).</li>
+    <li>A confirmed tier-3/4 match is <strong>written back</strong>, so the second search for that destination is a tier-1 lookup.</li>
+  </ul>
+
+  <h3>Comparability — an explicit business rule, not an accident</h3>
+  <p>Deals are grouped into <strong>equivalence classes</strong> before a winner is chosen. Default class key:</p>
+  <div class="scroller"><pre>(occupancy, board.code, refundability tier, roomCategory)</pre></div>
+  <ol class="body">
+    <li>Group <code>deals[]</code> into equivalence classes.</li>
+    <li>Within each class, cheapest <code>CustomerPrice.total</code> wins.</li>
+    <li><code>featuredDeal</code> = the winner of the class matching the product&rsquo;s configured preference (default: the class the search requested; ties broken by refundable &gt; non-refundable, then supplier reliability).</li>
+    <li>All other class winners remain in <code>deals[]</code> and surface as &ldquo;other rates&rdquo;.</li>
+  </ol>
+  <p><code>ABSOLUTE_CHEAPEST</code> is available as a configured policy, not a silent default.</p>
+
+  <h3>Pricing engine</h3>
+  <div class="scroller"><pre>SupplierCost
+   → normalise currency (single FX source, rate + timestamp recorded)
+   → normalise tax semantics (taxesIncludedInBase made explicit per supplier)
+   → + platform markup      (region-aware, per supplier, from config)
+   → + channel markup       (B2C margin | B2B agent rules)
+   → + applicable fees
+   = CustomerPrice          ← the ONLY comparable number</pre></div>
+  <ul>
+    <li>Applied <strong>uniformly across all suppliers</strong> by one engine. No adapter may call it.</li>
+    <li><strong>Region passed explicitly</strong> through the whole chain, never defaulted.</li>
+    <li><code>base + taxesAndFees === total</code> enforced by construction and asserted in tests.</li>
+    <li>Every markup step recorded in <code>breakdown[]</code>, so any price can be explained after the fact.</li>
+  </ul>
+
+  <h3>Caching</h3>
+  <div class="scroller"><table>
+    <thead><tr><th>Layer</th><th>Contents</th><th>TTL</th></tr></thead>
+    <tbody>
+      <tr><td>Static property</td><td>name, address, images, stars, amenities, coordinates</td><td>days, background-refreshed</td></tr>
+      <tr><td>Destination / geo</td><td>canonical destinations, radii, supplier destination codes</td><td>days</td></tr>
+      <tr><td>Supplier candidate sets</td><td>TripJack hid lists per centre+radius</td><td>hours</td></tr>
+      <tr><td><strong>Dynamic availability</strong></td><td>rates, prices, cancellation terms, allotment</td><td><strong>60–180 s, never served as fresh past it</strong></td></tr>
+      <tr><td>Rate tokens</td><td>sealed supplier state per <code>dealId</code></td><td>minutes, ≤ supplier rate validity</td></tr>
+    </tbody>
+  </table></div>
+  <p>Dynamic cache key: <code>destination · checkin · checkout · rooms(with child ages) · nationality · currency · channel · supplierSet · markupConfigVersion</code>. The existing key is already close to this; the TTL is what must change.</p>
+
+  <h3>Persistence</h3>
+  <div class="scroller"><pre>canonical_hotel            klarHotelId(pk) · name · normalizedName · location(geo)
+                           address · city · countryCode · starRating · brand
+                           propertyType · amenities[] · images[] · updatedAt
+supplier_property_mapping  (supplier, supplierHotelId) UNIQUE
+                           → klarHotelId · confidence · matchedBy[] · verifiedAt
+match_candidate            unresolved/low-confidence pairs queued for ops review
+canonical_destination      klarDestinationId · name · type · countryCode
+                           centroid · radiusKm · aliases[]
+destination_mapping        (supplier, supplierDestCode) → klarDestinationId
+supplier_config            code · enabled · priority · timeouts · retry · concurrency
+                           circuitBreaker · markupOverrides · countries[] · maintenanceMode
+booking                    klarBookingId · supplierCode (STRING, not enum)
+                           supplierBookingRef · klarHotelId · dealSnapshot
+                           priceSnapshot · status · guests · payment · refund
+booking_supplier_payload   bookingId → supplierCode → request/response blob
+                           (audit only; NEVER read by any UI)
+booking_event              append-only audit</pre></div>
+  <p>Two changes unblock the Supplier&nbsp;C requirement directly: <code>supplierCode</code> is a <strong>string keyed to <code>supplier_config</code></strong>, not an enum; and raw supplier payloads move to a <strong>side table the UI cannot reach</strong>, replaced by a canonical <code>dealSnapshot</code> the voucher and bookings list render from.</p>
+
+  <h3>Adding Supplier C — the acceptance test for the whole design</h3>
+  <div class="scroller"><pre>1. mkdir suppliers/supplierc/     client · request mapper · response mapper · config schema
+2. supplierRegistry.register(supplierC)
+3. INSERT INTO supplier_config (...)
+4. Run the shared contract test-suite
+5. Seed / backfill supplier_property_mapping and destination_mapping</pre></div>
+  <p><strong>Zero changes</strong> to: search orchestrator · matching · pricing · comparison · filters · sort · pagination · booking engine · API contract · frontend · database schema.</p>
+</section>
+
+<!-- ═══ 8 ═══ -->
+<section id="s8">
+  <h2><span class="num">08</span>Compatibility strategy</h2>
+  <p>The frontend is out of scope for this rebuild, so the new API must serve the §02 shape unchanged while the internal model is canonical. A <strong>compatibility projection</strong> at the API edge — one module, explicitly named as legacy, with an expiry — maps canonical to legacy.</p>
+  <div class="scroller"><table>
+    <thead><tr><th>Legacy field</th><th>Canonical source</th></tr></thead>
+    <tbody>
+      <tr><td><code>hotelId: "TJ:123"</code></td><td><code>featuredDeal.supplier + ":" + featuredDeal.supplierHotelId</code></td></tr>
+      <tr><td><code>source: "TJ"</code></td><td><code>featuredDeal.supplier</code></td></tr>
+      <tr><td><code>price</code></td><td><code>featuredDeal.price.total</code></td></tr>
+      <tr><td><code>basePrice</code> / <code>taxAmount</code> / <code>taxesIncluded</code></td><td><code>featuredDeal.price</code> fields</td></tr>
+      <tr><td><code>pricing{}</code></td><td><code>buildPublicPricing</code>-equivalent over <code>CustomerPrice</code></td></tr>
+      <tr><td><code>altDeal: {source, price}</code></td><td>cheapest non-featured deal in <code>deals[]</code></td></tr>
+      <tr><td><code>isRefundable</code> / <code>refundableLabel</code></td><td><code>featuredDeal.refundable</code> (UNKNOWN → <code>undefined</code>)</td></tr>
+      <tr><td><code>propertyCode</code> / <code>brandCode</code> / <code>correlationId</code></td><td>from the deal&rsquo;s supplier mapping</td></tr>
+    </tbody>
+  </table></div>
+  <p>Alongside them, new canonical fields — <code>klarHotelId</code>, <code>dealId</code>, <code>deals[]</code>, <code>comparison{}</code>, <code>supplierHealth{}</code> — ship from day one. The frontend migrates field by field; the projection is deleted when the last legacy reader is gone.</p>
+  <p>For booking, the new API accepts <code>dealId</code> <strong>and</strong> the legacy <code>BookReservation</code> envelope during transition, with the legacy path logged and metered so its retirement is measurable.</p>
+</section>
+
+<!-- ═══ 9 ═══ -->
+<section id="s9">
+  <h2><span class="num">09</span>Delivery plan</h2>
+  <div class="scroller"><table>
+    <thead><tr><th>Phase</th><th>Output</th><th>Definition of done</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1 <span class="pill done">done</span></td><td>This document</td><td>Reviewed and signed off</td></tr>
+      <tr><td class="n">2 <span class="pill done">done</span></td><td>Domain model + contracts; ADRs 0000–0005 for assumptions, identity, comparability, deadlines, supplier contract, topology</td><td>Typecheck clean under <code>strict</code> + <code>noUncheckedIndexedAccess</code>; 136 tests green; domain purity enforced by test, not by convention</td></tr>
+      <tr><td class="n">3 <span class="pill done">done</span></td><td>Supplier layer: contract, registry, error taxonomy, TJ + RG adapters, shared contract test-suite</td><td>Both adapters pass 30 shared assertions each against recorded fixtures; 277 tests green</td></tr>
+      <tr><td class="n">4 <span class="pill done">done</span></td><td>Search orchestrator: fan-out, match, price, targeted enrichment, merge, compare, filter, sort, paginate</td><td>All seven §52 scenarios green end-to-end; 336 tests</td></tr>
+      <tr><td class="n">5 <span class="pill done">done</span></td><td>Canonical catalogue, supplier mappings, destination service, sync jobs</td><td>Schema + repositories verified against real PostgreSQL in-process; backfill idempotent; 431 tests</td></tr>
+      <tr><td class="n">6 <span class="pill done">done</span></td><td>Detail + rates; the compatibility projection; the HTTP edge and composition root</td><td>Detail page renders from the canonical model for both suppliers, and the detail price equals the search price under the same engine. Served over HTTP; 547 tests</td></tr>
+      <tr><td class="n">7 <span class="pill done">done</span></td><td>Revalidation / precheck with an explicit price-change contract</td><td>Price-increase path exercised end-to-end — <strong>met</strong>. The quote is sealed at issue and read back, never recomputed. The consent round-trip closed in Phase 8; TripJack's precheck still has no recorded payload</td></tr>
+      <tr><td class="n">8 <span class="pill done">done</span></td><td>Supplier-neutral booking, confirm, cancel, refund</td><td>Book via TJ and via RG through one code path — <strong>met</strong>, by a test that drives both real adapters through one <code>BookingService</code>. 722 tests. A retried commit is one booking; a supplier that does not answer is reconciled, not refunded; ten defects found in the booking and cancel paths before anything was built on them (ADR-0008). Outstanding: authentication, and a payment gateway</td></tr>
+      <tr><td class="n">9</td><td>Caching, coalescing, connection pooling, warmers</td><td>Latency budget met with correctness tests still green</td></tr>
+      <tr><td class="n">10</td><td>Observability, metrics, tracing, circuit breakers, rate limits, health, alerts</td><td>Every required field emitted; runbook written</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>Test matrix required before Phase 4 is done</h4>
+  <div class="scroller"><pre>TJ only · RG only · TJ+RG · TJ timeout · RG timeout
+TJ error + RG success · RG error + TJ success · both fail
+same hotel different prices · same hotel same price
+different hotels same coordinates · similar names near coordinates
+different supplier IDs same property · non-comparable rates
+
+TJ 12,000 / RG 11,500  →  11,500  winner RG
+TJ 10,900 / RG 11,500  →  10,900  winner TJ</pre></div>
+</section>
+
+<!-- ═══ 10 ═══ -->
+<section id="s10">
+  <h2><span class="num">10</span>Decisions needed before Phase 2</h2>
+  <p>These change the design, so they need answers rather than assumptions. Where there is a recommendation it is stated first.</p>
+
+  <div class="settled">
+    <b>All eight answered.</b> The questions are kept below as the record of what Phase&nbsp;1 asked. All eight were adopted as recommended defaults in <em>ADR-0000</em> so Phase&nbsp;2 could start, each with a stated cost to reverse. The three that were commercial rather than technical were then confirmed by KLAR on 13&nbsp;Aug&nbsp;2026 and promoted from assumption to decision in <em>ADR-0007</em>.
+    <ul>
+      <li><em>Q1 Comparability</em> <span class="pill done">confirmed</span> — compare within equivalence classes, as recommended. <code>ABSOLUTE_CHEAPEST</code> stays a configured policy, never a default.</li>
+      <li><em>Q2 RateGain markup</em> <span class="pill done">confirmed</span> — applied uniformly to every supplier, at search and at booking. This was the one live commercial risk on the page; D-1 is now closed by construction, since adapters return cost and cannot reach the pricing engine.</li>
+      <li><em>Q3 Partial results</em> <span class="pill done">confirmed</span> — the UI may say &ldquo;best of the suppliers that responded&rdquo;. The deadline stays a deadline.</li>
+      <li><em>Q4 Deadline</em> — 15&nbsp;s hard, 12&nbsp;s soft, 14&nbsp;s per supplier, from the measured RateGain figures above (ADR-0003).</li>
+      <li><em>Q5 Topology</em> · <em>Q6 Datastore</em> — one <code>hotel-api</code> deployable with in-repo module boundaries; PostgreSQL as system of record (ADR-0005).</li>
+      <li><em>Q7 Static content</em> — no neutral source licensed, so the catalogue stays TripJack-derived and match tier&nbsp;2 is inert. <code>externalIds</code> is reserved so it activates without a model change if that changes (ADR-0000&nbsp;§7). Still the highest-leverage open input to match quality.</li>
+      <li><em>Q8 B2B</em> — B2C first, but <code>Channel</code> is first-class in the domain from day one, so B2B is a pricing configuration rather than a second code path.</li>
+    </ul>
+  </div>
+
+  <ol class="decisions">
+    <li><strong>Comparability policy.</strong> Recommend: compare within equivalence classes, surface other classes as alternative rates. Confirm — or state that KLAR wants absolute cheapest regardless of board and refundability.</li>
+    <li><strong>RateGain platform markup (D-1).</strong> Search omits it; booking applies it. Which is the intended commercial behaviour? This determines whether live RateGain revenue is currently being under-collected or the bookings are over-charging.</li>
+    <li><strong>Partial-result honesty.</strong> Confirm the UI may show &ldquo;best of the suppliers that responded&rdquo;. If it must always claim a guarantee, the deadline becomes a hard wait and latency rises accordingly.</li>
+    <li><strong>Search deadline budget.</strong> Measured RateGain international geofilter ≈ 14.2&nbsp;s. What is the maximum acceptable time-to-first-result?</li>
+    <li><strong>Rebuild target.</strong> Single <code>hotel-api</code> service, or keep the search/booking split? Recommend a single deployable with internal module boundaries — the split is what produced the divergence in §01.</li>
+    <li><strong>Stack constraints.</strong> Node/TypeScript is given. Keep MongoDB, or move canonical identity and bookings to Postgres? Recommend Postgres for canonical/booking (relational integrity on mappings and money) with Mongo retained for the property catalogue — but this is a real operational decision.</li>
+    <li><strong>Static-data source.</strong> The catalogue is TripJack-derived. Is a supplier-neutral content source (GIATA or equivalent) available? It would move most matching to tiers 1–2 and is the single highest-leverage input to match quality.</li>
+    <li><strong>B2B scope.</strong> The reference carries a full B2B/agent-wallet path. Is B2B in scope for this rebuild, or B2C-only with B2B to follow?</li>
+  </ol>
+
+  <div class="alert"><b>Immediate action regardless of the above:</b> rotate the OpenCage key committed at <code>destinationResolver.ts:43,180,272</code> (D-14).</div>
+</section>
+
+<footer>
+  <span>KLAR Hotel OTA · Phase 1 teardown</span><span>·</span>
+  <span>24 defects · 5 critical</span><span>·</span>
+  <span>No production code written</span>
+</footer>
+
+</main>
+</div>
+</div>
