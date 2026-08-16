@@ -137,7 +137,7 @@ export const FromLocation: React.FC<LocationInputProps> = ({
   return (
     <div className="flex-1 min-w-0 text-left" ref={wrapperRef}>
       <div className="mb-1">
-        <span className="text-[11px] font-semibold tracking-[0.16em] uppercase text-gray-400">
+        <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">
           {label}
         </span>
       </div>
@@ -163,7 +163,7 @@ export const FromLocation: React.FC<LocationInputProps> = ({
                 search(searchQuery);
               }
             }}
-            className="bg-transparent outline-none text-sm font-semibold text-black placeholder-gray-400 w-full min-w-0 border-0 focus:ring-0 text-left"
+            className="w-full min-w-0 border-0 bg-transparent font-display text-lg font-medium text-primary outline-none placeholder:font-primary placeholder:text-base placeholder:font-normal placeholder:text-gray-400 focus:ring-0 text-left"
           />
           {searchQuery && isInputFocused && (
             <button onClick={handleClear} className="text-gray-400 hover:text-gray-600">
@@ -210,11 +210,11 @@ export const FromLocation: React.FC<LocationInputProps> = ({
 
       {hasData && (
         <div className="flex items-center gap-1 mt-0.5">
-          <span className="shrink-0 text-[11px] font-bold text-black uppercase">{displayCode}</span>
+          <span className="shrink-0 text-[11px] font-bold uppercase text-primary">{displayCode}</span>
           <span className="text-[11px] text-gray-300">|</span>
           {/* Two lines rather than one hard truncation: half a phone width at
               11px cut "Indira Gandhi International Airport" to "Indira Gand…" */}
-          <span className="line-clamp-2 text-[11px] font-medium text-black text-left">
+          <span className="line-clamp-2 text-left text-[11px] font-medium text-gray-500">
             {displayAirportName}
           </span>
         </div>
@@ -290,7 +290,7 @@ export const ToLocation: React.FC<LocationInputProps> = ({
   return (
     <div className="flex-1 min-w-0 text-left" ref={wrapperRef}>
       <div className="mb-1">
-        <span className="text-[11px] font-semibold tracking-[0.16em] uppercase text-gray-400">
+        <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">
           {label}
         </span>
       </div>
@@ -315,7 +315,7 @@ export const ToLocation: React.FC<LocationInputProps> = ({
                 search(searchQuery);
               }
             }}
-            className="bg-transparent outline-none text-sm font-semibold text-black placeholder-gray-400 w-full min-w-0 border-0 focus:ring-0 text-left"
+            className="w-full min-w-0 border-0 bg-transparent font-display text-lg font-medium text-primary outline-none placeholder:font-primary placeholder:text-base placeholder:font-normal placeholder:text-gray-400 focus:ring-0 text-left"
           />
           {searchQuery && isInputFocused && (
             <button onClick={handleClear} className="text-gray-400 hover:text-gray-600">
@@ -362,11 +362,11 @@ export const ToLocation: React.FC<LocationInputProps> = ({
 
       {hasData && (
         <div className="flex items-center gap-1 mt-0.5">
-          <span className="shrink-0 text-[11px] font-bold text-black uppercase">{displayCode}</span>
+          <span className="shrink-0 text-[11px] font-bold uppercase text-primary">{displayCode}</span>
           <span className="text-[11px] text-gray-300">|</span>
           {/* Two lines rather than one hard truncation: half a phone width at
               11px cut "Indira Gandhi International Airport" to "Indira Gand…" */}
-          <span className="line-clamp-2 text-[11px] font-medium text-black text-left">
+          <span className="line-clamp-2 text-left text-[11px] font-medium text-gray-500">
             {displayAirportName}
           </span>
         </div>
@@ -411,7 +411,7 @@ export const DateField: React.FC<DateFieldProps> = ({
 
   return (
     <div>
-      <label className="text-xs font-semibold tracking-[0.16em] uppercase text-gray-400">
+      <label className="text-xs font-semibold tracking-[0.14em] uppercase text-gray-400">
         {label}
       </label>
       {/* One handler here covers all three call sites of this shared field
@@ -612,7 +612,7 @@ export const TravellerField: React.FC<TravellerFieldProps> = ({
 
   return (
     <div className="relative traveller-dropdown">
-      <label className="text-xs font-semibold tracking-[0.16em] uppercase text-gray-400">
+      <label className="text-xs font-semibold tracking-[0.14em] uppercase text-gray-400">
         {label}
       </label>
 

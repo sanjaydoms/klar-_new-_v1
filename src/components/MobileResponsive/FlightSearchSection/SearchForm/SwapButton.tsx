@@ -23,9 +23,9 @@ export default function SwapButton({
       disabled={disabled}
       aria-label="Swap origin and destination"
       title="Swap origin and destination"
-      className="rounded-full border border-primary/10 bg-white p-2 transition-colors hover:bg-primary/20 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
+      className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-[0_4px_14px_-4px_rgba(224,36,47,0.6)] ring-1 ring-black/5 transition hover:bg-red-50 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-red)] disabled:cursor-not-allowed disabled:opacity-50"
     >
-      <ArrowRightLeft size={15} className="text-primary" aria-hidden="true" />
+      <ArrowRightLeft size={15} className="text-[var(--color-brand-red)]" aria-hidden="true" />
     </button>
   );
 }

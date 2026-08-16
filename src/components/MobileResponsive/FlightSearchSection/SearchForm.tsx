@@ -458,12 +458,9 @@ const SearchForm: React.FC<SearchFormProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-5 mb-6 border border-gray-100">
+    <div className="mb-6 rounded-3xl bg-white p-5 shadow-[0_30px_80px_-40px_rgba(15,30,77,0.55)]">
       {/* Trip Type Tabs */}
-      <div
-        className="flex gap-1 bg-white rounded-xl p-1 mb-5 border border-primary/30"
-        style={{ borderWidth: '0.6px' }}
-      >
+      <div className="mb-5 flex items-center justify-between gap-1">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -471,20 +468,19 @@ const SearchForm: React.FC<SearchFormProps> = ({
               console.log('🔄 Tab clicked:', tab.id);
               setTripType(tab.id as TripType);
             }}
-            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 ${propTripType === tab.id
-                ? 'bg-secondary text-primary border border-primary'
-                : 'text-gray-400 hover:bg-gray-100'
-              }`}
-            style={propTripType === tab.id ? { borderWidth: '0.6px' } : {}}
+            className={`flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2.5 text-[13px] font-medium transition-colors ${
+              propTripType === tab.id ? 'bg-primary text-white' : 'text-gray-600'
+            }`}
           >
-            <img
-              src={tab.icon}
-              alt={tab.label}
-              className={`w-4 h-4 object-contain ${propTripType === tab.id
-                  ? 'filter brightness-0 saturate-100 invert-[20%] sepia-[80%] saturate-[1000%] hue-rotate-[320deg]'
-                  : 'filter grayscale opacity-50'
-                }`}
-            />
+            {/* The radio dot the desktop pill uses, rather than a per-tab icon
+                recoloured with a stack of CSS filters. */}
+            <span
+              className={`flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 ${
+                propTripType === tab.id ? 'border-white' : 'border-gray-400'
+              }`}
+            >
+              {propTripType === tab.id && <span className="h-1 w-1 rounded-full bg-white" />}
+            </span>
             {tab.label}
           </button>
         ))}
@@ -521,10 +517,11 @@ const SearchForm: React.FC<SearchFormProps> = ({
       <button
         onClick={handleSearchClick}
         disabled={isLoading}
-        className={`w-full mt-5 py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-100 transition-colors duration-200 flex items-center justify-center gap-3 ${isLoading
-            ? 'bg-gray-400 text-white cursor-not-allowed'
-            : 'bg-primary text-white hover:bg-primary/90'
-          }`}
+        className={`mt-5 flex w-full items-center justify-center gap-3 rounded-xl py-4 text-[15px] font-semibold transition-colors ${
+          isLoading
+            ? 'cursor-not-allowed bg-gray-400 text-white'
+            : 'bg-[var(--color-brand-red)] text-white shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] hover:bg-[var(--color-brand-red)]/90'
+        }`}
       >
         {isLoading ? (
           <>
