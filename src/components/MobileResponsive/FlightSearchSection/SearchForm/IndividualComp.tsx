@@ -128,7 +128,7 @@ export const FromLocation: React.FC<LocationInputProps> = ({
   return (
     <div className="flex-1 min-w-0 text-left" ref={wrapperRef}>
       <div className="mb-1">
-        <span className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#b68d40]">
+        <span className="text-[11px] font-semibold tracking-[0.16em] uppercase text-gray-400">
           {label}
         </span>
       </div>
@@ -278,7 +278,7 @@ export const ToLocation: React.FC<LocationInputProps> = ({
   return (
     <div className="flex-1 min-w-0 text-left" ref={wrapperRef}>
       <div className="mb-1">
-        <span className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#b68d40]">
+        <span className="text-[11px] font-semibold tracking-[0.16em] uppercase text-gray-400">
           {label}
         </span>
       </div>
@@ -394,7 +394,7 @@ export const DateField: React.FC<DateFieldProps> = ({
 
   return (
     <div>
-      <label className="text-xs font-semibold tracking-[0.16em] uppercase text-[#b68d40]">
+      <label className="text-xs font-semibold tracking-[0.16em] uppercase text-gray-400">
         {label}
       </label>
       {/* One handler here covers all three call sites of this shared field
@@ -595,7 +595,7 @@ export const TravellerField: React.FC<TravellerFieldProps> = ({
 
   return (
     <div className="relative traveller-dropdown">
-      <label className="text-xs font-semibold tracking-[0.16em] uppercase text-[#b68d40]">
+      <label className="text-xs font-semibold tracking-[0.16em] uppercase text-gray-400">
         {label}
       </label>
 

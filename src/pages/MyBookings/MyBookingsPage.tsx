@@ -686,7 +686,7 @@ const HotelBookingCard = ({
           <button
             onClick={() => onViewDetails(booking)}
             className="w-full min-h-[44px] sm:min-h-[48px] rounded-[8px] flex items-center justify-center transition-opacity hover:opacity-90 active:scale-[0.98]"
-            style={{ background: 'linear-gradient(90deg, rgba(250, 197, 93, 0.375) 11.01%, rgba(203, 139, 12, 0.375) 59.57%)' }}
+            style={{ background: '#f8fafc' }}
           >
             <span
               className="text-[#1A1F4D]"

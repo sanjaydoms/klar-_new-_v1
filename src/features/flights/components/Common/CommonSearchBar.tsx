@@ -28,7 +28,7 @@ export const TripTypeField = ({ tripType, className = '' }: TripTypeFieldProps) 
       className={`flex-shrink-0 flex flex-col ${className}`}
       style={{ width: '8%', minWidth: '70px' }}
     >
-      <div className="text-[10px] sm:text-[11px] font-semibold tracking-[0.16em] text-[#b68d40] mb-0.5 sm:mb-1 uppercase leading-[14px] sm:leading-[15.77px]">
+      <div className="text-[10px] sm:text-[11px] font-semibold tracking-[0.16em] text-gray-400 mb-0.5 sm:mb-1 uppercase leading-[14px] sm:leading-[15.77px]">
         Trip Type
       </div>
       <div className="font-display text-[15px] sm:text-[16px] font-medium text-primary truncate leading-[19px] sm:leading-[22.08px]">
@@ -98,7 +98,7 @@ export const FromField = ({
           </div>
         ) : (
           <div className="flex flex-col w-full">
-            <div className="text-[10px] sm:text-[11px] font-semibold tracking-[0.16em] text-[#b68d40] uppercase leading-[14px] sm:leading-[15.77px]">
+            <div className="text-[10px] sm:text-[11px] font-semibold tracking-[0.16em] text-gray-400 uppercase leading-[14px] sm:leading-[15.77px]">
               From
             </div>
             <div className="font-display text-[15px] sm:text-[16px] font-medium text-primary truncate flex items-center gap-1.5 leading-[19px] sm:leading-[22.08px]">
@@ -186,7 +186,7 @@ export const ToField = ({ value, onChange, className = '', placeholder = 'To', d
           </div>
         ) : (
           <div className="flex flex-col w-full">
-            <div className="text-[10px] sm:text-[11px] font-semibold tracking-[0.16em] text-[#b68d40] uppercase leading-[14px] sm:leading-[15.77px]">
+            <div className="text-[10px] sm:text-[11px] font-semibold tracking-[0.16em] text-gray-400 uppercase leading-[14px] sm:leading-[15.77px]">
               To
             </div>
             <div className="font-display text-[15px] sm:text-[16px] font-medium text-primary truncate flex items-center gap-1.5 leading-[19px] sm:leading-[22.08px]">
@@ -269,7 +269,7 @@ export const DepartureDateField = ({
           </div>
         ) : (
           <div className="flex flex-col w-full">
-            <div className="text-[10px] sm:text-[11px] font-semibold tracking-[0.16em] text-[#b68d40] uppercase leading-[14px] sm:leading-[15.77px]">
+            <div className="text-[10px] sm:text-[11px] font-semibold tracking-[0.16em] text-gray-400 uppercase leading-[14px] sm:leading-[15.77px]">
               Depart
             </div>
             <div className="font-display text-[15px] sm:text-[16px] font-medium text-primary truncate flex items-center gap-1.5 leading-[19px] sm:leading-[22.08px]">
@@ -350,7 +350,7 @@ export const ReturnDateField = ({
           </div>
         ) : (
           <div className="flex flex-col w-full">
-            <div className="text-[10px] sm:text-[11px] font-semibold tracking-[0.16em] text-[#b68d40] uppercase leading-[14px] sm:leading-[15.77px]">
+            <div className="text-[10px] sm:text-[11px] font-semibold tracking-[0.16em] text-gray-400 uppercase leading-[14px] sm:leading-[15.77px]">
               Return
             </div>
             <div className="font-display text-[15px] sm:text-[16px] font-medium text-primary truncate flex items-center gap-1.5 leading-[19px] sm:leading-[22.08px]">
@@ -498,7 +498,7 @@ export const PassengerClassField = ({
         style={{ borderWidth: '0.79px', height: '44px' }}
         onClick={handleFieldClick}
       >
-        <div className="text-[10px] sm:text-[11px] font-semibold tracking-[0.16em] text-[#b68d40] uppercase leading-[14px] sm:leading-[15.77px]">
+        <div className="text-[10px] sm:text-[11px] font-semibold tracking-[0.16em] text-gray-400 uppercase leading-[14px] sm:leading-[15.77px]">
           Passenger & Class
         </div>
         <div className="font-display text-[15px] sm:text-[16px] font-medium text-primary truncate flex items-center gap-1.5 leading-[19px] sm:leading-[22.08px]">
@@ -613,10 +613,8 @@ export const SearchButton = ({
     <Button
       onClick={onClick}
       disabled={isLoading}
-      className={`flex-shrink-0 text-[#1A1A1A] font-bold text-[14px] sm:text-[16px] px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg transition-opacity flex items-center hover:opacity-80 ${className}`}
+      className={`flex-shrink-0 bg-accent font-bold text-[14px] text-white sm:text-[16px] px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg transition-opacity flex items-center hover:opacity-90 ${className}`}
       style={{
-        background:
-          'linear-gradient(90deg, rgba(248, 169, 13, 0.7) 0%, rgba(239, 194, 105, 0.7) 41.65%)',
         minWidth: '120px',
         width: 'auto',
         height: '44px',
@@ -940,7 +938,7 @@ export default function CommonSearchBarEnhanced({
                 }`}
               style={{ borderWidth: '0.79px', height: '44px' }}
             >
-              <div className="text-[10px] sm:text-[11px] font-semibold tracking-[0.16em] text-[#b68d40] uppercase leading-[14px] sm:leading-[15.77px]">
+              <div className="text-[10px] sm:text-[11px] font-semibold tracking-[0.16em] text-gray-400 uppercase leading-[14px] sm:leading-[15.77px]">
                 From
               </div>
               {editingSegmentIndex === index && editingSegmentField === 'from' && !isLoading ? (
@@ -973,7 +971,7 @@ export default function CommonSearchBarEnhanced({
                 }`}
               style={{ borderWidth: '0.79px', height: '44px' }}
             >
-              <div className="text-[10px] sm:text-[11px] font-semibold tracking-[0.16em] text-[#b68d40] uppercase leading-[14px] sm:leading-[15.77px]">
+              <div className="text-[10px] sm:text-[11px] font-semibold tracking-[0.16em] text-gray-400 uppercase leading-[14px] sm:leading-[15.77px]">
                 To
               </div>
               {editingSegmentIndex === index && editingSegmentField === 'to' && !isLoading ? (
@@ -1004,7 +1002,7 @@ export default function CommonSearchBarEnhanced({
                 }`}
               style={{ borderWidth: '0.79px', height: '44px' }}
             >
-              <div className="text-[10px] sm:text-[11px] font-semibold tracking-[0.16em] text-[#b68d40] uppercase leading-[14px] sm:leading-[15.77px]">
+              <div className="text-[10px] sm:text-[11px] font-semibold tracking-[0.16em] text-gray-400 uppercase leading-[14px] sm:leading-[15.77px]">
                 Depart
               </div>
               {editingSegmentIndex === index && editingSegmentField === 'date' && !isLoading ? (

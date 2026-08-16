@@ -192,10 +192,10 @@ const Hero: React.FC = () => {
                 verticalAlign: 'middle',
               }}
             >
-              Extraordinary <span className="text-[#b68d40]">Journeys</span>
+              Extraordinary <span className="text-gray-400">Journeys</span>
               <br />
               <span className="text-primary">
-                Unforgettable <em className="italic text-[#b68d40]">Luxury.</em>
+                Unforgettable <em className="italic text-gray-400">Luxury.</em>
               </span>
             </h1>
           </div>

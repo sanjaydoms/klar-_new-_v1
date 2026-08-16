@@ -8,6 +8,40 @@
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/geist';
 
+/*
+ * Brand palette, bound to the variable names the shadcn primitives read.
+ *
+ * `shadcn/tailwind.css` is imported after variables.css and re-maps the whole
+ * theme namespace to its own vars (`--color-primary: var(--primary)` and so
+ * on), so the values in variables.css never reached bg-primary / bg-accent /
+ * bg-card — those resolved to shadcn's default greys, and the brand look came
+ * from literal hexes scattered through the components. Setting shadcn's own
+ * names here, after its import, is what actually re-tones the primitives.
+ */
+/* `:root:root` on purpose — Tailwind emits shadcn's :root defaults AFTER this
+   file's rules, so a plain :root here loses the cascade by document order.
+   The doubled selector wins on specificity instead. */
+:root:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #1a1f4d;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #1a1f4d;
+  --muted: #f8fafc;
+  --muted-foreground: #64748b;
+  --accent: #e0242f;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --ring: #1a1f4d;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @layer utilities {

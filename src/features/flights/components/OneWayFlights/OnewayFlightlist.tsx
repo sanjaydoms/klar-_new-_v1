@@ -99,7 +99,7 @@ export default function OneWayFlightList({ flights = [] }: OneWayFlightListProps
       {cheapestOverall && fastestOverall && (
         <div className="flex flex-wrap gap-3">
           <div className="rounded-lg border border-accent/50 bg-card px-4 py-2 shadow-sm">
-            <span className="text-[10px] font-semibold tracking-[0.16em] uppercase text-[#b68d40]">
+            <span className="text-[10px] font-semibold tracking-[0.16em] uppercase text-gray-400">
               Cheapest
             </span>
             <p className="font-display text-sm font-medium text-primary">
@@ -107,7 +107,7 @@ export default function OneWayFlightList({ flights = [] }: OneWayFlightListProps
             </p>
           </div>
           <div className="rounded-lg border border-border bg-card px-4 py-2 shadow-sm">
-            <span className="text-[10px] font-semibold tracking-[0.16em] uppercase text-[#b68d40]">
+            <span className="text-[10px] font-semibold tracking-[0.16em] uppercase text-gray-400">
               Fastest
             </span>
             <p className="font-display text-sm font-medium text-primary">

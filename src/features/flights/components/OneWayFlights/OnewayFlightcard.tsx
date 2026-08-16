@@ -334,7 +334,7 @@ export default function OneWayFlightCard({
           {(arrivesNextDay || (typeof seatsLeft === 'number' && seatsLeft <= 6)) && (
             <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
               {arrivesNextDay && (
-                <span className="font-medium text-[#b68d40]">✈ Arrives next day</span>
+                <span className="font-medium text-gray-400">✈ Arrives next day</span>
               )}
               {typeof seatsLeft === 'number' && seatsLeft <= 6 && (
                 <span className="font-semibold text-destructive">Seats left: {seatsLeft}</span>

@@ -142,8 +142,7 @@ export default function TravellerInfoCard({
                   <div
                     className="px-5 py-3 border-b border-gray-200"
                     style={{
-                      background:
-                        'linear-gradient(90deg, rgba(250, 197, 93, 0.25) 11.01%, rgba(203, 139, 12, 0.25) 59.57%)',
+                      background: '#f8fafc',
                     }}
                   >
                     <div className="flex items-center justify-between">

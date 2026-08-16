@@ -10,22 +10,27 @@
    */
   --color-primary: #1a1f4d;
   --color-primary-foreground: #ffffff;
-  --color-secondary: #eae4da;
+  --color-secondary: #f1f5f9;
   --color-secondary-foreground: #1a1f4d;
-  --color-accent: #d4af37;
-  --color-accent-foreground: #1a1f4d;
-  --color-background: #f8f5ec;
+  /*
+   * Accent is the landing design's signal red, on white. It was the luxury
+   * gold (#d4af37 on navy) — every gold hairline, chip and money CTA in the
+   * funnel inherits this, which is what re-tones them in one place.
+   */
+  --color-accent: #e0242f;
+  --color-accent-foreground: #ffffff;
+  --color-background: #f8fafc;
   --color-foreground: #0f172a;
-  --color-muted: #f1ead9;
+  --color-muted: #f8fafc;
   --color-muted-foreground: #64748b;
-  --color-border: #e3d9c2;
-  --color-input: #e3d9c2;
+  --color-border: #e5e7eb;
+  --color-input: #e5e7eb;
   --color-ring: #1a1f4d;
   --color-destructive: #ef4444;
   --color-destructive-foreground: #ffffff;
-  --color-popover: #fffdf8;
+  --color-popover: #ffffff;
   --color-popover-foreground: #0f172a;
-  --color-card: #fffdf8;
+  --color-card: #ffffff;
   --color-card-foreground: #0f172a;
   /* Named brand colors pending consolidation into the palette above. */
   --color-brand-gold: #d4af37;

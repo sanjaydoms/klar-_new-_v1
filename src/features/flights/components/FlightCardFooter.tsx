@@ -66,9 +66,8 @@ export default function FlightCardFooter({
     <div
       className="mt-2 pb-2 pt-2 px-4 -mx-4 border-t flex items-center justify-between text-xs"
       style={{
-        borderTop: '1px solid rgba(203, 139, 12, 0.25)',
-        background:
-          'linear-gradient(90deg, rgba(250, 197, 93, 0.25) 11.01%, rgba(203, 139, 12, 0.25) 59.57%)',
+        borderTop: '1px solid #e5e7eb',
+        background: '#f8fafc',
       }}
     >
       <div className="flex items-center gap-6">

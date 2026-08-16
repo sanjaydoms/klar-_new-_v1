@@ -31,7 +31,7 @@ export default function PriceInfoCard({
     return (
       <div className="overflow-hidden rounded-lg border border-border border-t-2 border-t-accent bg-card shadow-lg">
         <div className="p-4">
-          <h3 className="mb-3 text-[11px] font-semibold tracking-[0.18em] uppercase text-[#b68d40]">Price Information</h3>
+          <h3 className="mb-3 text-[11px] font-semibold tracking-[0.18em] uppercase text-gray-400">Price Information</h3>
           <div className="text-center text-gray-500 py-4">
             <p className="text-sm">Price details will appear here</p>
           </div>
@@ -109,7 +109,7 @@ export default function PriceInfoCard({
   return (
     <div className="overflow-hidden rounded-lg border border-border border-t-2 border-t-accent bg-card shadow-lg">
       <div className="p-4">
-        <h3 className="mb-3 text-[11px] font-semibold tracking-[0.18em] uppercase text-[#b68d40]">Price Information</h3>
+        <h3 className="mb-3 text-[11px] font-semibold tracking-[0.18em] uppercase text-gray-400">Price Information</h3>
 
         <div className="space-y-2">
           <div className="flex justify-between text-sm">

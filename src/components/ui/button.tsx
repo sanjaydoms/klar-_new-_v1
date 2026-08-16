@@ -10,8 +10,8 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: 'border-accent/60 bg-primary text-primary-foreground hover:bg-primary/85',
-        accent:
-          'border-accent bg-gradient-to-br from-accent to-[#b68d40] font-semibold text-accent-foreground hover:opacity-90',
+        // The money CTA: the landing design's flat red, not the old gold gradient.
+        accent: 'border-accent bg-accent font-semibold text-accent-foreground hover:bg-accent/90',
         outline:
           'border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
         secondary:
