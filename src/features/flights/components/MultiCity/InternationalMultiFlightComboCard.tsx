@@ -1,6 +1,7 @@
 import { Plane, Loader2, AlertCircle, Clock } from 'lucide-react';
 import { InternationalItinerary, InternationalFlightLeg } from '../../types/types.multiCityFlight';
 import { useState } from 'react';
+import { agreedValue, formatBaggage, refundableTone } from '../FlightCardFooter';
 import { getMultiCityFareDetails } from '@/api/flightService.api';
 import InternationalMultiFareDetailsCard from './InternationalMultiFareDetailsCard';
 
@@ -202,18 +203,30 @@ const PriceAction = ({ price, isLoading, isSelected, onSelect }: PriceActionProp
 
 interface FooterInfoProps {
   legCount: number;
+  /** Agreed across the legs, or undefined when they differ — never guessed. */
+  refundable?: string | undefined;
+  baggage?: string | undefined;
   onViewDetails?: () => void;
 }
 
-const FooterInfo = ({ legCount, onViewDetails }: FooterInfoProps) => {
+const FooterInfo = ({ legCount, refundable, baggage, onViewDetails }: FooterInfoProps) => {
+  const tone = refundableTone(refundable);
   return (
     <div className="mt-2 pb-2 pt-2 px-4 -mx-4 border-t border-amber-200/60 flex items-center justify-between text-xs bg-gradient-to-r from-rose-50 to-amber-100">
       <div className="flex items-center gap-4">
-        <span className="text-green-600 font-medium">REFUNDABLE</span>
-        <span className="text-gray-400">|</span>
+        {tone && <span className={`font-medium uppercase ${tone}`}>{refundable}</span>}
+        {tone && <span className="text-gray-400">|</span>}
         <span className="text-gray-600">
           {legCount} Leg{legCount > 1 ? 's' : ''}
         </span>
+        {baggage && (
+          <>
+            <span className="text-gray-400">|</span>
+            <span className="text-gray-600" title="Check-in / cabin baggage">
+              {baggage}
+            </span>
+          </>
+        )}
       </div>
 
       <button
@@ -414,7 +427,15 @@ export default function InternationalMultiFlightComboCard({
           </div>
 
           {/* Footer with Refundable Row */}
-          <FooterInfo legCount={legs.length} onViewDetails={handleViewDetails} />
+          <FooterInfo
+            legCount={legs.length}
+            refundable={agreedValue(legs.map((l) => l.refundable))}
+            baggage={formatBaggage(
+              agreedValue(legs.map((l) => l.checkInBaggage)),
+              agreedValue(legs.map((l) => l.cabinBaggage)),
+            )}
+            onViewDetails={handleViewDetails}
+          />
         </div>
       </div>
 

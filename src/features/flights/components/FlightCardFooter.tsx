@@ -23,6 +23,32 @@ const TONE: Record<string, string> = {
   'non-refundable': 'text-destructive',
 };
 
+/** Colour for a label, or undefined for absent / "Unknown" — see above. */
+export function refundableTone(label?: string): string | undefined {
+  return label ? TONE[label.trim().toLowerCase()] : undefined;
+}
+
+/** "15 kg / 7 Kg", one side alone, or "" — never a default. */
+export function formatBaggage(checkInBaggage?: string, cabinBaggage?: string): string {
+  const checkIn = checkInBaggage?.trim();
+  const cabin = cabinBaggage?.trim();
+  if (checkIn && cabin) return `${checkIn} / ${cabin}`;
+  if (checkIn) return `${checkIn} check-in`;
+  if (cabin) return `${cabin} cabin`;
+  return '';
+}
+
+/**
+ * One value for a multi-leg itinerary, or undefined when the legs disagree.
+ * A combo is priced as one fare but its legs can carry different allowances;
+ * picking one leg's value to stand for the trip would be a guess.
+ */
+export function agreedValue(values: (string | undefined)[]): string | undefined {
+  const first = values[0]?.trim();
+  if (!first) return undefined;
+  return values.every((v) => v?.trim() === first) ? first : undefined;
+}
+
 export default function FlightCardFooter({
   refundable,
   checkInBaggage,
@@ -31,18 +57,8 @@ export default function FlightCardFooter({
   const label = refundable?.trim();
   // "Unknown" is the normalizer's way of saying the fare didn't state it —
   // showing it would be as misleading as the old hardcoded "REFUNDABLE".
-  const tone = label ? TONE[label.toLowerCase()] : undefined;
-
-  const checkIn = checkInBaggage?.trim();
-  const cabin = cabinBaggage?.trim();
-  const baggage =
-    checkIn && cabin
-      ? `${checkIn} / ${cabin}`
-      : checkIn
-        ? `${checkIn} check-in`
-        : cabin
-          ? `${cabin} cabin`
-          : '';
+  const tone = refundableTone(label);
+  const baggage = formatBaggage(checkInBaggage, cabinBaggage);
 
   if (!tone && !baggage) return null;
 

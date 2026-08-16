@@ -104,6 +104,10 @@ export interface SearchParams {
 }
 
 export interface PairedFlight {
+  /** Fare meta of the COMBO fare — one fare prices the whole round trip. */
+  refundable?: string;
+  checkInBaggage?: string;
+  cabinBaggage?: string;
   combinationId?: string;
   totalFare?: number;
   currency?: string;

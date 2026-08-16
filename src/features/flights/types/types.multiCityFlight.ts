@@ -173,6 +173,10 @@ export interface InternationalFlightLeg {
   stops: number;
   duration: string;
   price: number;
+  /** Fare meta of the combo's cheapest fare, per leg (mapSegmentsToLeg). */
+  refundable?: string;
+  checkInBaggage?: string;
+  cabinBaggage?: string;
 }
 
 export interface InternationalItinerary {

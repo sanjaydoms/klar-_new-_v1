@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import FlightCardFooter from './FlightCardFooter';
+import FlightCardFooter, { agreedValue, formatBaggage } from './FlightCardFooter';
 
 /**
  * These cards printed "REFUNDABLE" and "15 KG / 7 KG" as literals. On one live
@@ -29,5 +29,21 @@ describe('FlightCardFooter', () => {
   it('says nothing when the fare states neither', () => {
     const { container } = render(<FlightCardFooter refundable="Unknown" />);
     expect(container.firstChild).toBeNull();
+  });
+});
+
+describe('agreedValue', () => {
+  // A combo is one fare, but its legs can carry different allowances.
+  it('speaks only when every leg says the same thing', () => {
+    expect(agreedValue(['15 Kg', '15 Kg'])).toBe('15 Kg');
+    expect(agreedValue(['15 Kg', '30 Kg'])).toBeUndefined();
+    expect(agreedValue(['15 Kg', undefined])).toBeUndefined();
+    expect(agreedValue([])).toBeUndefined();
+  });
+
+  it('feeds formatBaggage, which drops what no leg agreed on', () => {
+    expect(formatBaggage(agreedValue(['15 Kg', '30 Kg']), agreedValue(['7 Kg', '7 Kg']))).toBe(
+      '7 Kg cabin',
+    );
   });
 });

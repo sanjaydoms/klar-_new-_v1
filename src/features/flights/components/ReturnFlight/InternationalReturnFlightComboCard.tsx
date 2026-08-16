@@ -1,8 +1,9 @@
-import { Plane, Loader2, AlertCircle, Clock, CheckCircle } from 'lucide-react';
+import { Plane, Loader2, AlertCircle, Clock } from 'lucide-react';
 import { PairedFlight } from '../../types/types.returnFlight';
 import { useState } from 'react';
 import { getReturnFareDetails } from '@/api/flightService.api';
 import InternationalReturnFlightFareDetailsCard from './InternationalReturnFlightFareDetailsCard';
+import FlightCardFooter from '../FlightCardFooter';
 
 interface InternationalReturnFlightComboCardProps {
   comboFlight: PairedFlight;
@@ -221,43 +222,6 @@ const PriceAction = ({
   );
 };
 
-interface FooterInfoProps {
-  baggageInfo?: string;
-  onViewDetails?: () => void;
-}
-
-const FooterInfo = ({ baggageInfo = '15 KG / 7 KG', onViewDetails }: FooterInfoProps) => {
-  return (
-    <div
-      className="mt-2 pb-2 pt-2 px-4 -mx-4 border-t flex items-center justify-between text-xs"
-      style={{
-        borderTop: '1px solid rgba(203, 139, 12, 0.25)',
-        background:
-          'linear-gradient(90deg, rgba(250, 197, 93, 0.25) 11.01%, rgba(203, 139, 12, 0.25) 59.57%)',
-      }}
-    >
-      <div className="flex items-center gap-25">
-        <div className="flex items-center gap-1">
-          <CheckCircle className="w-4 h-4 text-green-600" />
-          <span className="text-green-600 font-medium font-semibold">REFUNDABLE</span>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <img src="/logo/luggage.png" alt="Baggage" className="w-4 h-4 object-contain" />
-          <span className="text-gray-600">{baggageInfo}</span>
-        </div>
-      </div>
-
-      {/* <button
-                onClick={onViewDetails}
-                className="flex items-center gap-1 text-gray-900 hover:text-blue-800 hover:underline font-medium"
-            >
-                <span>Flight Details</span>
-                <ChevronDown className="w-4 h-4" />
-            </button> */}
-    </div>
-  );
-};
 
 /**
  * Main Component - MATCHING OneWay design
@@ -484,7 +448,11 @@ export default function InternationalReturnFlightComboCard({
           </div>
 
           {/* Footer - MATCHES OneWay exactly */}
-          <FooterInfo onViewDetails={handleViewDetails} />
+          <FlightCardFooter
+            refundable={comboFlight.refundable}
+            checkInBaggage={comboFlight.checkInBaggage}
+            cabinBaggage={comboFlight.cabinBaggage}
+          />
         </div>
       </div>
 

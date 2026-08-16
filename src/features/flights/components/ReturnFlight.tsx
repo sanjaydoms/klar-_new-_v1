@@ -348,6 +348,17 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
     };
   };
 
+  // Three call sites map roundTrips; all three used to drop the COMBO fare's
+  // meta, which lives on the trip rather than on either leg.
+  const toPairedFlight = (trip: any): PairedFlight => ({
+    onward: mapFlightData(trip.onward),
+    return: mapFlightData(trip.return),
+    totalPrice: trip.totalPrice,
+    refundable: trip.refundable,
+    checkInBaggage: trip.checkInBaggage,
+    cabinBaggage: trip.cabinBaggage,
+  });
+
   const getSortByField = (sort: string): string => {
     switch (sort) {
       case 'cheapest':
@@ -420,11 +431,7 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
         if (response && response.success !== false) {
           if (response?.data?.flights?.roundTrips && response.data.flights.roundTrips.length > 0) {
             const roundTripsData = response.data.flights.roundTrips;
-            const mappedRoundTrips: PairedFlight[] = roundTripsData.map((trip: any) => ({
-              onward: mapFlightData(trip.onward),
-              return: mapFlightData(trip.return),
-              totalPrice: trip.totalPrice,
-            }));
+            const mappedRoundTrips: PairedFlight[] = roundTripsData.map(toPairedFlight);
 
             setRoundTrips(mappedRoundTrips);
             setFlightType('international');
@@ -533,11 +540,7 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
         filteredFlightsData.data?.roundTrips || filteredFlightsData?.roundTrips;
 
       if (roundTripsData && Array.isArray(roundTripsData)) {
-        const mappedRoundTrips = roundTripsData.map((trip: any) => ({
-          onward: mapFlightData(trip.onward),
-          return: mapFlightData(trip.return),
-          totalPrice: trip.totalPrice,
-        }));
+        const mappedRoundTrips = roundTripsData.map(toPairedFlight);
         setRoundTrips(mappedRoundTrips);
         setFlightType('international');
         setIsFilterApplied(true);
@@ -547,11 +550,7 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
     }
 
     if (filteredFlightsData?.roundTrips && Array.isArray(filteredFlightsData.roundTrips)) {
-      const mappedRoundTrips = filteredFlightsData.roundTrips.map((trip: any) => ({
-        onward: mapFlightData(trip.onward),
-        return: mapFlightData(trip.return),
-        totalPrice: trip.totalPrice,
-      }));
+      const mappedRoundTrips = filteredFlightsData.roundTrips.map(toPairedFlight);
       setRoundTrips(mappedRoundTrips);
       setFlightType('international');
       setIsFilterApplied(true);
