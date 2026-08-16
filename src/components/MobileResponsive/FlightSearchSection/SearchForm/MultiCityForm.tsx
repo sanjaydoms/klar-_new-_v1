@@ -1,6 +1,7 @@
 import React from 'react';
-import { ArrowRightLeft, Plus, X } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { FromLocation, ToLocation, DateField } from './IndividualComp';
+import SwapButton from './SwapButton';
 
 export interface CitySegment {
   id: number;
@@ -35,6 +36,20 @@ const MultiCityForm: React.FC<MultiCityFormProps> = ({
   dateErrors = {},
   minDates = {},
 }) => {
+  /**
+   * Reverse one leg. Each segment carries its own city, code and airport name
+   * for both ends, and all six move together — swapping the cities alone would
+   * leave Dubai sitting above "Indira Gandhi International Airport".
+   */
+  const swapSegment = (segment: CitySegment) => {
+    onUpdateSegment(segment.id, 'from', segment.to);
+    onUpdateSegment(segment.id, 'fromCode', segment.toCode);
+    onUpdateSegment(segment.id, 'fromAirportName', segment.toAirportName);
+    onUpdateSegment(segment.id, 'to', segment.from);
+    onUpdateSegment(segment.id, 'toCode', segment.fromCode);
+    onUpdateSegment(segment.id, 'toAirportName', segment.fromAirportName);
+  };
+
   return (
     <div className="w-full space-y-4">
       {segments.map((segment, index) => (
@@ -65,9 +80,7 @@ const MultiCityForm: React.FC<MultiCityFormProps> = ({
               </div>
 
               <div className="flex-shrink-0">
-                <div className="border border-primary/10 rounded-full p-2 bg-white">
-                  <ArrowRightLeft size={15} className="text-primary" />
-                </div>
+                <SwapButton onSwap={() => swapSegment(segment)} />
               </div>
 
               <div className="flex-1 min-w-0">

@@ -120,10 +120,19 @@ export const FromLocation: React.FC<LocationInputProps> = ({
 
   // Determine what to show based on state
   const hasData = location && code && airportName;
-  const showPlaceholder = !hasData && !searchQuery && !isInputFocused;
-  const displayCity = hasData ? location : isInputFocused ? searchQuery : placeholder;
-  const displayCode = hasData ? code : isInputFocused ? '' : 'DEL';
-  const displayAirportName = hasData ? airportName : isInputFocused ? '' : 'Indira Gandhi Int...';
+  /**
+   * An unset field renders as unset.
+   *
+   * It used to put the PLACEHOLDER in `value` and pair it with a hardcoded
+   * 'DEL' and 'Indira Gandhi Int...', so an empty multi-city segment displayed
+   * a complete, plausible, entirely invented route — New Delhi (DEL) → Dubai
+   * (DXB) — that existed nowhere in state. The customer read that as filled in
+   * and the search then had nothing to search with. The `placeholder`
+   * attribute is what hints at an empty field; it does not belong in `value`.
+   */
+  const displayCity = hasData ? location : searchQuery;
+  const displayCode = hasData ? code : '';
+  const displayAirportName = hasData ? airportName : '';
 
   return (
     <div className="flex-1 min-w-0 text-left" ref={wrapperRef}>
@@ -136,7 +145,7 @@ export const FromLocation: React.FC<LocationInputProps> = ({
         <div className="flex items-center gap-1.5">
           <input
             type="text"
-            placeholder={showPlaceholder ? placeholder : ''}
+            placeholder={placeholder}
             value={displayCity}
             onChange={(e) => {
               handleSearch(e.target.value);
@@ -155,7 +164,6 @@ export const FromLocation: React.FC<LocationInputProps> = ({
               }
             }}
             className="bg-transparent outline-none text-sm font-semibold text-black placeholder-gray-400 w-full min-w-0 border-0 focus:ring-0 text-left"
-            style={{ color: showPlaceholder ? '#9CA3AF' : '#000000' }}
           />
           {searchQuery && isInputFocused && (
             <button onClick={handleClear} className="text-gray-400 hover:text-gray-600">
@@ -200,13 +208,17 @@ export const FromLocation: React.FC<LocationInputProps> = ({
         )}
       </div>
 
-      <div className="flex items-center gap-1 mt-0.5">
-        <span className="text-[11px] font-bold text-black uppercase">{displayCode}</span>
-        <span className="text-[11px] text-gray-300">|</span>
-        <span className="text-[11px] font-medium text-black truncate text-left">
-          {displayAirportName}
-        </span>
-      </div>
+      {hasData && (
+        <div className="flex items-center gap-1 mt-0.5">
+          <span className="shrink-0 text-[11px] font-bold text-black uppercase">{displayCode}</span>
+          <span className="text-[11px] text-gray-300">|</span>
+          {/* Two lines rather than one hard truncation: half a phone width at
+              11px cut "Indira Gandhi International Airport" to "Indira Gand…" */}
+          <span className="line-clamp-2 text-[11px] font-medium text-black text-left">
+            {displayAirportName}
+          </span>
+        </div>
+      )}
       {error && touched && <div className="text-red-500 text-xs mt-1">{error}</div>}
     </div>
   );
@@ -270,10 +282,10 @@ export const ToLocation: React.FC<LocationInputProps> = ({
 
   // Determine what to show based on state
   const hasData = location && code && airportName;
-  const showPlaceholder = !hasData && !searchQuery && !isInputFocused;
-  const displayCity = hasData ? location : isInputFocused ? searchQuery : placeholder;
-  const displayCode = hasData ? code : isInputFocused ? '' : 'DXB';
-  const displayAirportName = hasData ? airportName : isInputFocused ? '' : 'Dubai International...';
+  /** Same as FromLocation: empty is empty, never an invented airport. */
+  const displayCity = hasData ? location : searchQuery;
+  const displayCode = hasData ? code : '';
+  const displayAirportName = hasData ? airportName : '';
 
   return (
     <div className="flex-1 min-w-0 text-left" ref={wrapperRef}>
@@ -286,7 +298,7 @@ export const ToLocation: React.FC<LocationInputProps> = ({
         <div className="flex items-center gap-1.5">
           <input
             type="text"
-            placeholder={showPlaceholder ? placeholder : ''}
+            placeholder={placeholder}
             value={displayCity}
             onChange={(e) => {
               handleSearch(e.target.value);
@@ -304,7 +316,6 @@ export const ToLocation: React.FC<LocationInputProps> = ({
               }
             }}
             className="bg-transparent outline-none text-sm font-semibold text-black placeholder-gray-400 w-full min-w-0 border-0 focus:ring-0 text-left"
-            style={{ color: showPlaceholder ? '#9CA3AF' : '#000000' }}
           />
           {searchQuery && isInputFocused && (
             <button onClick={handleClear} className="text-gray-400 hover:text-gray-600">
@@ -349,13 +360,17 @@ export const ToLocation: React.FC<LocationInputProps> = ({
         )}
       </div>
 
-      <div className="flex items-center gap-1 mt-0.5">
-        <span className="text-[11px] font-bold text-black uppercase">{displayCode}</span>
-        <span className="text-[11px] text-gray-300">|</span>
-        <span className="text-[11px] font-medium text-black truncate text-left">
-          {displayAirportName}
-        </span>
-      </div>
+      {hasData && (
+        <div className="flex items-center gap-1 mt-0.5">
+          <span className="shrink-0 text-[11px] font-bold text-black uppercase">{displayCode}</span>
+          <span className="text-[11px] text-gray-300">|</span>
+          {/* Two lines rather than one hard truncation: half a phone width at
+              11px cut "Indira Gandhi International Airport" to "Indira Gand…" */}
+          <span className="line-clamp-2 text-[11px] font-medium text-black text-left">
+            {displayAirportName}
+          </span>
+        </div>
+      )}
       {error && touched && <div className="text-red-500 text-xs mt-1">{error}</div>}
     </div>
   );
@@ -387,7 +402,9 @@ export const DateField: React.FC<DateFieldProps> = ({
   disabled = false,
 }) => {
   const formatDate = (dateString: string) => {
-    if (!dateString) return 'dd-mm-yyyy';
+    // Empty renders nothing: the input's own placeholder already says
+    // dd/mm/yyyy, and echoing it underneath read as a second, filled field.
+    if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
   };

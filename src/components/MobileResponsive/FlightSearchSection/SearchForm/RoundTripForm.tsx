@@ -1,6 +1,6 @@
 import React from 'react';
-import { ArrowRightLeft } from 'lucide-react';
 import { FromLocation, ToLocation } from './IndividualComp';
+import SwapButton from './SwapButton';
 
 interface RoundTripFormProps {
   from: string;
@@ -45,12 +45,7 @@ const RoundTripForm: React.FC<RoundTripFormProps> = ({
         </div>
 
         <div className="flex-shrink-0">
-          <div
-            className="border border-primary/10 rounded-full p-2 hover:bg-primary/20 transition-colors cursor-pointer"
-            onClick={onSwap}
-          >
-            <ArrowRightLeft size={15} className="text-primary" />
-          </div>
+          <SwapButton onSwap={() => onSwap?.()} />
         </div>
 
         <div className="flex-1 min-w-0">

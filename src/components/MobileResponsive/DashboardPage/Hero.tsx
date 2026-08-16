@@ -77,7 +77,7 @@ const Hero: React.FC = () => {
       hoverIcon: whiteVisa,
     },
     {
-      label: 'CHARTESRS',
+      label: 'CHARTERS',
       path: '/mobile-charters-search',
       defaultIcon: ChartersIcon,
       hoverIcon: CharterWhiteIcon,
