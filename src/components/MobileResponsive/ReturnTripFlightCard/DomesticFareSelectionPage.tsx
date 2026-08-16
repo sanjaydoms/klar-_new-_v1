@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Star, ArrowLeft, Plane, Clock, Calendar } from 'lucide-react';
 import BottomNav from '@/components/MobileResponsive/DashboardPage/BottomNav';
 import FareSummary from '../FlightSearchSection/Oneway/OnewayFareCard/FareSummary';
+import {
+  cabinBaggageOf,
+  refundableLabelFromType,
+} from '@/features/flights/utils/flightDisplay';
 
 interface FareData {
   fareId: string;
@@ -19,6 +23,8 @@ interface FareData {
     AdultFare: {
       BaggageInfo: {
         CheckInBaggage: string;
+        /** cB under bI: cabin baggage. ClassCode is its legacy alias. */
+        CabinBaggage?: string;
         ClassCode: string;
       };
       CabinClass: string;
@@ -251,17 +257,26 @@ const DomesticFareSelectionPage: React.FC = () => {
     const features = [];
     const baggageInfo = fare.passengerBreakup?.AdultFare?.BaggageInfo;
 
-    if (baggageInfo?.ClassCode) {
-      features.push(`${baggageInfo.ClassCode} Cabin Baggage`);
+    const cabin = cabinBaggageOf(baggageInfo);
+    if (cabin) {
+      features.push(`${cabin} Cabin Baggage`);
     }
     if (baggageInfo?.CheckInBaggage) {
-      features.push(baggageInfo.CheckInBaggage);
+      features.push(`${baggageInfo.CheckInBaggage} Check-in`);
     }
 
+    // Refundability comes from RefundableType, the field that states it.
+    const refundable = refundableLabelFromType(fare.passengerBreakup?.AdultFare?.RefundableType);
+    if (refundable) {
+      features.push(refundable);
+    }
+
+    // The fare NAME still hints at perks, but it no longer decides
+    // refundability — "FLEXI" used to be the only way this said Refundable,
+    // so every refundable PUBLISHED fare read "No-Date-Change-Flexibility".
     const fareType = fare.FareIdentifierType || '';
     if (fareType.includes('FLEXI')) {
       features.push('Free Date Change');
-      features.push('Refundable');
     } else if (fareType.includes('PREMIUM')) {
       features.push('Free Seat Selection');
       features.push('Complimentary Meal');
@@ -269,10 +284,11 @@ const DomesticFareSelectionPage: React.FC = () => {
       features.push('Corporate Benefits');
     } else if (fareType.includes('SME')) {
       features.push('SME Benefits');
-    } else {
-      features.push('Standard Seat Selection');
-      features.push('No-Date-Change-Flexibility');
     }
+    // The old else-branch asserted 'Standard Seat Selection' and
+    // 'No-Date-Change-Flexibility' for every unnamed fare — restrictions
+    // invented from the absence of a keyword. The fare rules are a separate
+    // call; until something reads them, say nothing.
 
     return features;
   };

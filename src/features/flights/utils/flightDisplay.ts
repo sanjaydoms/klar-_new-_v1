@@ -22,3 +22,30 @@ export function formatAircraft(aircraftTypes?: string[]): string {
   const types = aircraftTypes.map((t) => t?.trim()).filter(Boolean);
   return types.length ? types.join(' · ') : '';
 }
+
+/**
+ * rT -> the same wording the search normalizer uses (`refundableLabel`).
+ * The fare-selection pages inferred refundability from the fare NAME instead
+ * ("FLEXI" meant refundable, everything else did not), while `RefundableType`
+ * was sitting in the same object. '' for an unstated value, so nothing is
+ * claimed either way.
+ */
+export function refundableLabelFromType(refundableType?: number): string {
+  if (refundableType === 1) return 'Refundable';
+  if (refundableType === 2) return 'Partially Refundable';
+  if (refundableType === 0) return 'Non-Refundable';
+  return '';
+}
+
+/**
+ * Cabin baggage out of a field-mapped BaggageInfo. `cB` under `bI` is cabin
+ * baggage and the backend emits it as `CabinBaggage`, with `ClassCode` kept
+ * only as a legacy alias that fieldMapper.core intends to drop — so prefer the
+ * corrected name and fall back.
+ */
+export function cabinBaggageOf(baggageInfo?: {
+  CabinBaggage?: string;
+  ClassCode?: string;
+}): string {
+  return (baggageInfo?.CabinBaggage || baggageInfo?.ClassCode || '').trim();
+}

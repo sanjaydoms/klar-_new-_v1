@@ -20,7 +20,12 @@ interface FlightHeaderProps {
   stopCities?: string[];
   stopAirports?: string[];
   duration?: string;
-  isRefundable?: boolean;
+  /**
+   * Normalizer wording ("Refundable" / "Partially Refundable" /
+   * "Non-Refundable"). Was a boolean, which forced the badge to claim one or
+   * the other even when the fare stated nothing.
+   */
+  refundable?: string;
   departureTerminal?: string;
   arrivalTerminal?: string;
   segments?: any[];
@@ -48,7 +53,7 @@ const FlightHeader: React.FC<FlightHeaderProps> = ({
   stopCities = [],
   stopAirports = [],
   duration = '',
-  isRefundable = false,
+  refundable = '',
   departureTerminal = '',
   arrivalTerminal = '',
   segments = [],
@@ -250,13 +255,17 @@ const getStopsDisplay = (stopsStr: string) => {
           Flights depart from {departureAirportName}{' '}
           {departureTerminal ? `(${departureTerminal})` : ''}
         </div>
-        {isRefundable ? (
-          <span className="text-[10px] sm:text-xs font-bold bg-green-100 text-green-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
-            REFUNDABLE
-          </span>
-        ) : (
-          <span className="text-[10px] sm:text-xs font-bold bg-red-100 text-red-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
-            NON-REFUNDABLE
+        {refundable && (
+          <span
+            className={`text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full ${
+              /non-refundable/i.test(refundable)
+                ? 'bg-red-100 text-red-700'
+                : /partially/i.test(refundable)
+                  ? 'bg-amber-100 text-amber-700'
+                  : 'bg-green-100 text-green-700'
+            }`}
+          >
+            {refundable.toUpperCase()}
           </span>
         )}
       </div>
@@ -420,22 +429,28 @@ const getStopsDisplay = (stopsStr: string) => {
 
 
 
-      <div className="flex justify-between items-center mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100">
-        <div>
-          <div className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wide">
-            BAGGAGE
-          </div>
-          <div className="text-xs sm:text-sm font-bold text-gray-700">{baggage || '7 Kg'}</div>
+      {/* The fallbacks here were '7 Kg' and '15 Kg (01 Piece only)' — shown for
+          fares that state no allowance at all. Each side is omitted instead. */}
+      {(baggage || checkIn) && (
+        <div className="flex justify-between items-center mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100">
+          {baggage && (
+            <div>
+              <div className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wide">
+                BAGGAGE
+              </div>
+              <div className="text-xs sm:text-sm font-bold text-gray-700">{baggage}</div>
+            </div>
+          )}
+          {checkIn && (
+            <div className="text-right">
+              <div className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wide">
+                CHECK-IN
+              </div>
+              <div className="text-xs sm:text-sm font-bold text-gray-700">{checkIn}</div>
+            </div>
+          )}
         </div>
-        <div className="text-right">
-          <div className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wide">
-            CHECK-IN
-          </div>
-          <div className="text-xs sm:text-sm font-bold text-gray-700">
-            {checkIn || '15 Kg (01 Piece only)'}
-          </div>
-        </div>
-      </div>
+      )}
 
       {arrivalTerminal && (
         <div className="mt-2 pt-2 border-t border-gray-100 text-[10px] sm:text-xs font-medium text-gray-600">

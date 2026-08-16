@@ -3,6 +3,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Star, ArrowLeft, Plane, Clock } from 'lucide-react';
 import BottomNav from '../../DashboardPage/BottomNav';
 import { getFareRule } from '@/api/flightService.api';
+import {
+  cabinBaggageOf,
+  refundableLabelFromType,
+} from '@/features/flights/utils/flightDisplay';
 
 interface FareData {
   fareId: string;
@@ -19,6 +23,8 @@ interface FareData {
     AdultFare: {
       BaggageInfo: {
         CheckInBaggage: string;
+        /** cB under bI: cabin baggage. ClassCode is its legacy alias. */
+        CabinBaggage?: string;
         ClassCode: string;
       };
       CabinClass: string;
@@ -226,19 +232,21 @@ const MultiCityFareSelectionPage: React.FC = () => {
     const features = [];
     const baggageInfo = fare.passengerBreakup?.AdultFare?.BaggageInfo;
 
-    if (baggageInfo?.ClassCode) {
-      features.push(`${baggageInfo.ClassCode} Cabin Baggage`);
+    const cabin = cabinBaggageOf(baggageInfo);
+    if (cabin) {
+      features.push(`${cabin} Cabin Baggage`);
     }
     if (baggageInfo?.CheckInBaggage) {
-      features.push(baggageInfo.CheckInBaggage);
+      features.push(`${baggageInfo.CheckInBaggage} Check-in`);
     }
     if (fare.FareIdentifierType) {
       features.push(fare.FareIdentifierType);
     }
-    if (fare.passengerBreakup?.AdultFare?.RefundableType !== undefined) {
-      features.push(
-        fare.passengerBreakup.AdultFare.RefundableType === 1 ? 'Refundable' : 'Non-Refundable',
-      );
+    // rT 2 is PARTIALLY refundable; this used to report it as Non-Refundable,
+    // and an unstated type as Non-Refundable too.
+    const refundable = refundableLabelFromType(fare.passengerBreakup?.AdultFare?.RefundableType);
+    if (refundable) {
+      features.push(refundable);
     }
 
     return features;

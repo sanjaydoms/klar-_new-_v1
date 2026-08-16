@@ -4,6 +4,10 @@ import { Star, ArrowLeft } from 'lucide-react';
 import FlightHeader from '../OnewayFareCard/FlightHeader';
 import FareSummary from './FareSummary';
 import BottomNav from '@/components/MobileResponsive/DashboardPage/BottomNav';
+import {
+  cabinBaggageOf,
+  refundableLabelFromType,
+} from '@/features/flights/utils/flightDisplay';
 
 interface FareData {
   fareId: string;
@@ -20,6 +24,8 @@ interface FareData {
     AdultFare: {
       BaggageInfo: {
         CheckInBaggage: string;
+        /** cB under bI: cabin baggage. ClassCode is its legacy alias. */
+        CabinBaggage?: string;
         ClassCode: string;
       };
       CabinClass: string;
@@ -170,11 +176,19 @@ if (firstSegment.DepartureAirport?.cityCode === lastSegment.ArrivalAirport?.Airl
                 stopCities: stopCities,
                 stopAirports: stopAirports,
                 duration: String(totalDuration),
-                isRefundable: firstSegment.IsRefundableSegment || false,
+                // NOT from IsRefundableSegment: that was the legacy alias of
+                // isRs ("is RETURN segment"), which fieldMapper.core stopped
+                // emitting precisely because it read as fare terms. The fare's
+                // own RefundableType is the answer.
+                refundable: refundableLabelFromType(
+                  firstFare?.passengerBreakup?.AdultFare?.RefundableType,
+                ),
                 departureTerminal: firstSegment.DepartureAirport?.terminal || '',
                 arrivalTerminal: lastSegment.ArrivalAirport?.terminal || '',
-                baggage: baggageInfo?.ClassCode || '7 Kg',
-                checkIn: baggageInfo?.CheckInBaggage || '15 Kg (01 Piece only)',
+                // No invented allowances: '7 Kg' and '15 Kg (01 Piece only)'
+                // were shown for fares that state neither.
+                baggage: cabinBaggageOf(baggageInfo),
+                checkIn: baggageInfo?.CheckInBaggage || '',
                 segments: segments,
                 departureAirportName: firstSegment.DepartureAirport?.AirlineName || '',
               };
@@ -200,7 +214,7 @@ if (firstSegment.DepartureAirport?.cityCode === lastSegment.ArrivalAirport?.Airl
             cabin: flight.cabin || 'Economy',
             stops: '0',
             duration: '',
-            isRefundable: flight.refundable || false,
+            refundable: typeof flight.refundable === 'string' ? flight.refundable : '',
             departureAirportName: flight.airline || '',
             stopCities: [],
             stopAirports: [],
@@ -253,17 +267,26 @@ if (firstSegment.DepartureAirport?.cityCode === lastSegment.ArrivalAirport?.Airl
     const features = [];
     const baggageInfo = fare.passengerBreakup?.AdultFare?.BaggageInfo;
 
-    if (baggageInfo?.ClassCode) {
-      features.push(`${baggageInfo.ClassCode} Cabin Baggage`);
+    const cabin = cabinBaggageOf(baggageInfo);
+    if (cabin) {
+      features.push(`${cabin} Cabin Baggage`);
     }
     if (baggageInfo?.CheckInBaggage) {
-      features.push(baggageInfo.CheckInBaggage);
+      features.push(`${baggageInfo.CheckInBaggage} Check-in`);
     }
 
+    // Refundability comes from RefundableType, the field that states it.
+    const refundable = refundableLabelFromType(fare.passengerBreakup?.AdultFare?.RefundableType);
+    if (refundable) {
+      features.push(refundable);
+    }
+
+    // The fare NAME still hints at perks, but it no longer decides
+    // refundability — "FLEXI" used to be the only way this said Refundable,
+    // so every refundable PUBLISHED fare read "No-Date-Change-Flexibility".
     const fareType = fare.FareIdentifierType || '';
     if (fareType.includes('FLEXI')) {
       features.push('Free Date Change');
-      features.push('Refundable');
     } else if (fareType.includes('PREMIUM')) {
       features.push('Free Seat Selection');
       features.push('Complimentary Meal');
@@ -271,10 +294,11 @@ if (firstSegment.DepartureAirport?.cityCode === lastSegment.ArrivalAirport?.Airl
       features.push('Corporate Benefits');
     } else if (fareType.includes('SME')) {
       features.push('SME Benefits');
-    } else {
-      features.push('Standard Seat Selection');
-      features.push('No-Date-Change-Flexibility');
     }
+    // The old else-branch asserted 'Standard Seat Selection' and
+    // 'No-Date-Change-Flexibility' for every unnamed fare — restrictions
+    // invented from the absence of a keyword. The fare rules are a separate
+    // call; until something reads them, say nothing.
 
     return features;
   };
