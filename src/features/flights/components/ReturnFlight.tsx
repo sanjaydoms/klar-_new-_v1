@@ -353,6 +353,7 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
       seatsRemaining: flight.seatsRemaining,
       checkInBaggage: flight.checkInBaggage,
       cabinBaggage: flight.cabinBaggage,
+      aircraftTypes: flight.aircraftTypes,
     };
   };
 

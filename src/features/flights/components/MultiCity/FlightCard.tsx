@@ -6,6 +6,7 @@ import { getMultiCityFareDetails } from '@/api/flightService.api';
 import { Button } from '@/components/ui/button';
 import FareVariantRows from '../FareVariantRows';
 import FlightCardFooter from '../FlightCardFooter';
+import { formatAircraft, formatTerminal } from '../../utils/flightDisplay';
 
 interface FlightCardProps {
   flight: FlightOption;
@@ -103,9 +104,16 @@ interface AirlineInfoProps {
   airlineCode: string;
   flightNumber: string;
   cabinClass: string;
+  aircraft?: string;
 }
 
-const AirlineInfo = ({ airline, airlineCode, flightNumber, cabinClass }: AirlineInfoProps) => {
+const AirlineInfo = ({
+  airline,
+  airlineCode,
+  flightNumber,
+  cabinClass,
+  aircraft,
+}: AirlineInfoProps) => {
   const airlineLogo = airlineCode ? `/airline-logos/${airlineCode}.png` : null;
   const cabinClassDisplay = getCabinClassDisplay(cabinClass);
 
@@ -132,6 +140,7 @@ const AirlineInfo = ({ airline, airlineCode, flightNumber, cabinClass }: Airline
         <p className="font-semibold text-sm">{airline || 'N/A'}</p>
         <p className="text-xs text-gray-500">{flightNumber || 'N/A'}</p>
         <p className="text-xs text-gray-500">{cabinClassDisplay}</p>
+        {aircraft && <p className="text-xs text-gray-400">Aircraft {aircraft}</p>}
       </div>
     </div>
   );
@@ -141,12 +150,16 @@ interface FlightPointProps {
   time: string;
   airportCode: string;
   date: string;
+  terminal?: string;
 }
 
-const FlightPoint = ({ time, airportCode, date }: FlightPointProps) => {
+const FlightPoint = ({ time, airportCode, date, terminal }: FlightPointProps) => {
   return (
     <div className="text-center">
-      <p className="text-lg font-bold">{airportCode || 'N/A'}</p>
+      <p className="text-lg font-bold">
+        {airportCode || 'N/A'}
+        {terminal && <span className="ml-1 text-xs font-medium text-gray-500">{terminal}</span>}
+      </p>
       <p className="text-sm font-medium">{formatTime(time)}</p>
       <p className="text-xs text-gray-500">{formatDateDisplay(date)}</p>
     </div>
@@ -309,6 +322,7 @@ export default function FlightCard({
                 airlineCode={flight.airline?.code || ''}
                 flightNumber={flight.flightNumber || ''}
                 cabinClass={flight.cabinClass || ''}
+                aircraft={formatAircraft(activeFare.aircraftTypes)}
               />
             </div>
 
@@ -318,6 +332,7 @@ export default function FlightCard({
                 time={flight.departure?.time}
                 airportCode={flight.departure?.airportCode}
                 date={flight.departure?.date}
+                terminal={formatTerminal(activeFare.departure?.terminal)}
               />
             </div>
 
@@ -332,6 +347,7 @@ export default function FlightCard({
                 time={flight.arrival?.time}
                 airportCode={flight.arrival?.airportCode}
                 date={flight.arrival?.date}
+                terminal={formatTerminal(activeFare.arrival?.terminal)}
               />
             </div>
 

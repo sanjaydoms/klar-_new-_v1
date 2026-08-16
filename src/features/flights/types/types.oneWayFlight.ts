@@ -20,6 +20,7 @@ export interface FlightData {
     date: string;
     day: string;
     time: string;
+    terminal?: string;
   };
   to: {
     airportCode: string;
@@ -27,10 +28,12 @@ export interface FlightData {
     date: string;
     day: string;
     time: string;
+    terminal?: string;
   };
   flightId?: string;
   segmentId?: string;
-  aircraftType?: string;
+  /** One aircraft code per segment — a connection carries one per leg. */
+  aircraftTypes?: string[];
   isInternational?: boolean;
   isOutbound?: boolean;
   isRedEye?: boolean;

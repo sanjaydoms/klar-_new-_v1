@@ -3,6 +3,7 @@ import { useState } from 'react';
 import ReturnFareDetailsCard from './ReturnFareDetailsCard';
 import FareVariantRows from '../FareVariantRows';
 import FlightCardFooter from '../FlightCardFooter';
+import { formatAircraft, formatTerminal } from '../../utils/flightDisplay';
 import { getReturnFareDetails } from '@/api/flightService.api';
 import { notifyError } from '@/utils/notify';
 import { Button } from '@/components/ui/button';
@@ -119,9 +120,16 @@ interface AirlineInfoProps {
   airlineCode: string;
   flightNumber: string;
   cabinClass: string;
+  aircraft?: string;
 }
 
-const AirlineInfo = ({ airline, airlineCode, flightNumber, cabinClass }: AirlineInfoProps) => {
+const AirlineInfo = ({
+  airline,
+  airlineCode,
+  flightNumber,
+  cabinClass,
+  aircraft,
+}: AirlineInfoProps) => {
   const airlineLogo = airlineCode ? `/airline-logos/${airlineCode}.png` : null;
   const cabinClassDisplay = getCabinClassDisplay(cabinClass);
 
@@ -150,6 +158,9 @@ const AirlineInfo = ({ airline, airlineCode, flightNumber, cabinClass }: Airline
           {flightNumber || 'N/A'}
         </p>
         <p className="text-[8px] sm:text-[10px] md:text-xs text-gray-500">{cabinClassDisplay}</p>
+        {aircraft && (
+          <p className="text-[8px] sm:text-[10px] md:text-xs text-gray-400">Aircraft {aircraft}</p>
+        )}
       </div>
     </div>
   );
@@ -159,12 +170,20 @@ interface FlightPointProps {
   time: string;
   airportCode: string;
   date: string;
+  terminal?: string;
 }
 
-const FlightPoint = ({ time, airportCode, date }: FlightPointProps) => {
+const FlightPoint = ({ time, airportCode, date, terminal }: FlightPointProps) => {
   return (
     <div className="text-center">
-      <p className="text-[8px] sm:text-[10px] md:text-sm font-bold">{airportCode || 'N/A'}</p>
+      <p className="text-[8px] sm:text-[10px] md:text-sm font-bold">
+        {airportCode || 'N/A'}
+        {terminal && (
+          <span className="ml-1 text-[7px] sm:text-[9px] md:text-xs font-medium text-gray-500">
+            {terminal}
+          </span>
+        )}
+      </p>
       <p className="text-[7px] sm:text-[9px] md:text-xs font-medium">{formatTime(time)}</p>
       <p className="text-xs text-gray-500">{formatDateDisplay(date)}</p>
     </div>
@@ -398,6 +417,7 @@ export default function FlightCard({
                 airlineCode={flight.airlineCode || ''}
                 flightNumber={flight.flightNumber || ''}
                 cabinClass={cabinClass || 'Economy'}
+                aircraft={formatAircraft(activeFare.aircraftTypes)}
               />
             </div>
 
@@ -406,6 +426,7 @@ export default function FlightCard({
                 time={departureTime}
                 airportCode={departureAirportCode}
                 date={departureDate}
+                terminal={formatTerminal(activeFare.departure?.terminal)}
               />
             </div>
 
@@ -417,7 +438,12 @@ export default function FlightCard({
             </div>
 
             <div className="flex-1">
-              <FlightPoint time={arrivalTime} airportCode={arrivalAirportCode} date={arrivalDate} />
+              <FlightPoint
+                time={arrivalTime}
+                airportCode={arrivalAirportCode}
+                date={arrivalDate}
+                terminal={formatTerminal(activeFare.arrival?.terminal)}
+              />
             </div>
 
             <div className="flex-1 flex justify-end">

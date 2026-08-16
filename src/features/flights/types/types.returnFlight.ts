@@ -55,6 +55,8 @@ export interface Flight {
   seatsRemaining?: number;
   checkInBaggage?: string;
   cabinBaggage?: string;
+  /** One aircraft code per segment — a connection carries one per leg. */
+  aircraftTypes?: string[];
   /** Other fare groups of the same physical flight, cheapest first. */
   variants?: Flight[];
 }

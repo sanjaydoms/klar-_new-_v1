@@ -538,12 +538,14 @@ export default function MultiCityFlight({ onBack, onBookNow }: MultiCityFlightPr
                     city: flight.from.city,
                     time: flight.from.time,
                     date: flight.from.date,
+                    terminal: flight.from.terminal,
                   },
                   arrival: {
                     airportCode: flight.to.airportCode,
                     city: flight.to.city,
                     time: flight.to.time,
                     date: flight.to.date,
+                    terminal: flight.to.terminal,
                   },
                   duration: parseDuration(flight.duration),
                   stops: flight.stops,
@@ -562,6 +564,7 @@ export default function MultiCityFlight({ onBack, onBookNow }: MultiCityFlightPr
                   seatsRemaining: flight.seatsRemaining,
                   checkInBaggage: flight.checkInBaggage,
                   cabinBaggage: flight.cabinBaggage,
+                  aircraftTypes: flight.aircraftTypes,
                 }));
 
                 newLegFlights.set(legIndex, mappedFlights);
@@ -1180,6 +1183,7 @@ export default function MultiCityFlight({ onBack, onBookNow }: MultiCityFlightPr
             time: flight.from?.time,
             date: flight.from?.date,
             day: flight.from?.day,
+            terminal: flight.from?.terminal,
           },
           arrival: {
             airportCode: flight.to?.airportCode,
@@ -1187,6 +1191,7 @@ export default function MultiCityFlight({ onBack, onBookNow }: MultiCityFlightPr
             time: flight.to?.time,
             date: flight.to?.date,
             day: flight.to?.day,
+            terminal: flight.to?.terminal,
           },
           duration:
             typeof flight.duration === 'string' ? parseDuration(flight.duration) : flight.duration,
@@ -1206,6 +1211,7 @@ export default function MultiCityFlight({ onBack, onBookNow }: MultiCityFlightPr
           seatsRemaining: flight.seatsRemaining,
           checkInBaggage: flight.checkInBaggage,
           cabinBaggage: flight.cabinBaggage,
+          aircraftTypes: flight.aircraftTypes,
         };
       });
     };

@@ -3,6 +3,7 @@ import FareDetailsCard from './FareDetailsCard';
 import FlightDetailsModal from '../FlightDetailsModal';
 import FareVariantRows from '../FareVariantRows';
 import FlightCardFooter from '../FlightCardFooter';
+import { formatAircraft, formatTerminal } from '../../utils/flightDisplay';
 import { FlightData } from '../../types/types.oneWayFlight';
 import { getOnewayFareDetails } from '@/api/flightService.api';
 import { notifyError } from '@/utils/notify';
@@ -97,9 +98,16 @@ interface AirlineInfoProps {
   airlineCode: string;
   flightNumber: string;
   cabinClass: string;
+  aircraft?: string;
 }
 
-const AirlineInfo = ({ airline, airlineCode, flightNumber, cabinClass }: AirlineInfoProps) => {
+const AirlineInfo = ({
+  airline,
+  airlineCode,
+  flightNumber,
+  cabinClass,
+  aircraft,
+}: AirlineInfoProps) => {
   const airlineLogo = airlineCode ? `/airline-logos/${airlineCode}.png` : null;
   const cabinClassDisplay = getCabinClassDisplay(cabinClass);
 
@@ -126,6 +134,7 @@ const AirlineInfo = ({ airline, airlineCode, flightNumber, cabinClass }: Airline
         <p className="font-semibold text-sm">{airline || 'N/A'}</p>
         <p className="text-xs text-gray-500">{flightNumber || 'N/A'}</p>
         <p className="text-xs text-gray-500">{cabinClassDisplay}</p>
+        {aircraft && <p className="text-xs text-gray-400">Aircraft {aircraft}</p>}
       </div>
     </div>
   );
@@ -135,12 +144,16 @@ interface FlightPointProps {
   time: string;
   airportCode: string;
   date: string;
+  terminal?: string;
 }
 
-const FlightPoint = ({ time, airportCode, date }: FlightPointProps) => {
+const FlightPoint = ({ time, airportCode, date, terminal }: FlightPointProps) => {
   return (
     <div className="text-center">
-      <p className="text-lg font-bold">{airportCode || 'N/A'}</p>
+      <p className="text-lg font-bold">
+        {airportCode || 'N/A'}
+        {terminal && <span className="ml-1 text-xs font-medium text-gray-500">{terminal}</span>}
+      </p>
       <p className="text-sm font-medium">{formatTime(time)}</p>
       <p className="text-xs text-gray-500">{formatDateDisplay(date)}</p>
     </div>
@@ -280,6 +293,7 @@ export default function OneWayFlightCard({
                 airlineCode={flight.airlineCode || ''}
                 flightNumber={flight.flightNumber}
                 cabinClass={flight.cabinClass}
+                aircraft={formatAircraft((flight as any).aircraftTypes)}
               />
             </div>
 
@@ -289,6 +303,7 @@ export default function OneWayFlightCard({
                 time={flight.from?.time}
                 airportCode={flight.from?.airportCode}
                 date={flight.from?.date}
+                terminal={formatTerminal(flight.from?.terminal)}
               />
             </div>
 
@@ -303,6 +318,7 @@ export default function OneWayFlightCard({
                 time={flight.to?.time}
                 airportCode={flight.to?.airportCode}
                 date={flight.to?.date}
+                terminal={formatTerminal(flight.to?.terminal)}
               />
             </div>
 
