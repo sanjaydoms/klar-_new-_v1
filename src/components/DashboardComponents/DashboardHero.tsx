@@ -1,3 +1,4 @@
+import { LANDING_RAIL } from './landingRail';
 import { Award, ChevronRight, Gem, Gift, Headphones, IndianRupee, ShieldCheck, Star, Tag } from 'lucide-react';
 
 /**
@@ -14,7 +15,7 @@ const TRUST = [
 
 export function DashboardHeroCopy() {
   return (
-    <div className="relative mx-auto max-w-[1400px] px-6 pt-10">
+    <div className={`relative ${LANDING_RAIL} pt-10`}>
       <div className="flex items-start justify-between gap-8">
         <div className="max-w-3xl">
           <p className="text-[11px] font-semibold tracking-[0.3em] text-primary/70 uppercase">
@@ -80,7 +81,7 @@ const PROMISES = [
 /** The navy promise strip that closes the hero. */
 export function DashboardHeroPromises() {
   return (
-    <div className="mx-auto mt-8 max-w-[1240px] px-6">
+    <div className={`${LANDING_RAIL} mt-8`}>
       <div className="flex flex-wrap items-center justify-between gap-6 rounded-2xl bg-primary px-8 py-5 text-white shadow-[0_20px_50px_-24px_rgba(15,30,77,0.9)]">
         {PROMISES.map(({ icon: Icon, title, sub }) => (
           <div key={title} className="flex items-center gap-3">

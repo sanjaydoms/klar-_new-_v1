@@ -1,4 +1,5 @@
 import FlightSearchSection from './FlightSearchSection';
+import { LANDING_RAIL } from '../landingRail';
 import HotelSearchSection from './HotelSearchSection';
 import VisaSearchSection from './VisaSearchSection';
 import InsuranceSearchSection from './InsuranceSearchSection';
@@ -28,7 +29,7 @@ export default function DashboardSearchCard({
   selectedPassportPlan,
 }: DashboardSearchCardProps) {
   return (
-    <div className="relative z-20 mx-auto w-full max-w-[1240px] px-6">
+    <div className={`relative z-20 ${LANDING_RAIL}`}>
       <div className="w-full rounded-3xl bg-white p-6 shadow-[0_30px_80px_-40px_rgba(15,30,77,0.55)]">
         {activeTab === 'flights' && <FlightSearchSection onFlightSearch={onFlightSearch} />}
         {activeTab === 'hotels' && <HotelSearchSection />}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Briefcase, ChevronDown, Grid3x3, Heart, User } from 'lucide-react';
 import { ROUTES } from '@/routes/routes.config';
+import { LANDING_RAIL } from './landingRail';
 
 /**
  * The floating nav bar from the new landing design: one white pill holding the
@@ -73,9 +74,15 @@ export default function DashboardTopNav({ activeTab, onTabChange, user }: Dashbo
   };
 
   return (
-    <nav className="relative z-50 px-6 pt-5">
-      <div className="mx-auto flex max-w-[1400px] items-center gap-4">
-        <img src="/logo/KLARBlue.png" alt="Klar Travels" className="h-11 w-auto shrink-0" />
+    <nav className="relative z-50 pt-5">
+      <div className={`${LANDING_RAIL} flex items-center gap-4`}>
+        {/* Every other cluster in this bar sits on a white pill; the logo alone
+            sat bare on the hero photograph, which is a different background on
+            every page load, so it read as floating and half-legible. Same
+            surface as its neighbours. */}
+        <span className="flex shrink-0 items-center rounded-2xl bg-white/90 px-4 py-2 shadow-[0_10px_30px_-12px_rgba(15,30,77,0.35)] backdrop-blur">
+          <img src="/logo/KLARBlue.png" alt="Klar Travels" className="h-11 w-auto" />
+        </span>
 
         <div className="flex items-center gap-1 rounded-2xl bg-white/90 p-1.5 shadow-[0_10px_30px_-12px_rgba(15,30,77,0.35)] backdrop-blur">
           {PRIMARY_TABS.map((t) => tabButton(t))}

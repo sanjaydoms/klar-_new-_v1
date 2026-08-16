@@ -523,7 +523,6 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
           <div className="border-border/70 px-4 py-3 md:border-r">
             <div className="mb-1">
               <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">Departure</span>
-              <span className="text-xs text-gray-400 ml-1">▼</span>
             </div>
             <div
               onClick={openDatePicker}
@@ -544,7 +543,7 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
                   markFieldAsTouched('departureDate');
                 }}
                 onBlur={() => markFieldAsTouched('departureDate')}
-                className="w-full font-display text-lg font-medium text-primary bg-transparent focus:outline-none cursor-pointer"
+                className="w-full font-display text-lg font-medium text-primary bg-transparent focus:outline-none cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
                 placeholder={departureDate ? formatDateWithMonthName(departureDate) : "19 Jul'26"}
               />
             </div>
@@ -560,7 +559,6 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
           <div className="px-3 py-2">
             <div className="mb-1">
               <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">Travellers</span>
-              <span className="text-xs text-gray-400 ml-1">▼</span>
             </div>
             <div className="relative">
               <div
@@ -779,7 +777,6 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
           <div className="border-r border-gray-300 px-2 py-2">
             <div className="mb-1">
               <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">Departure</span>
-              <span className="text-xs text-gray-400 ml-1">▼</span>
             </div>
             <div
               onClick={openDatePicker}
@@ -798,7 +795,7 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
                   markFieldAsTouched('departureDate');
                 }}
                 onBlur={() => markFieldAsTouched('departureDate')}
-                className="w-full font-display text-base font-medium text-primary bg-transparent focus:outline-none cursor-pointer"
+                className="w-full font-display text-base font-medium text-primary bg-transparent focus:outline-none cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
                 placeholder="19 Jul'26"
               />
             </div>
@@ -814,7 +811,6 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
           <div className="border-r border-gray-300 px-2 py-2">
             <div className="mb-1">
               <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">Return</span>
-              <span className="text-xs text-gray-400 ml-1">▼</span>
             </div>
             <div
               onClick={openDatePicker}
@@ -850,7 +846,7 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
                   setTouchedFields((prev) => new Set(prev).add('returnDate'));
                 }}
                 onBlur={() => markFieldAsTouched('returnDate')}
-                className="w-full font-display text-base font-medium text-primary bg-transparent focus:outline-none cursor-pointer"
+                className="w-full font-display text-base font-medium text-primary bg-transparent focus:outline-none cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
                 placeholder="Tap to add return"
               />
             </div>
@@ -866,7 +862,6 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
           <div className="px-2 py-2 relative">
             <div className="mb-1">
               <span className="text-[11px] font-semibold tracking-[0.14em] uppercase text-gray-400">Travellers</span>
-              <span className="text-xs text-gray-400 ml-1">▼</span>
             </div>
             <div className="relative">
               <div
@@ -1117,7 +1112,7 @@ export default function FlightSearchSection({ onFlightSearch }: FlightSearchSect
                     min={index === 0 ? today : multiCitySegments[index - 1]?.date}
                     onChange={(e) => updateMultiCitySegment(segment.id, 'date', e.target.value)}
                     onBlur={() => markFieldAsTouched(`segment_${index}_date`)}
-                    className="w-full text-base font-semibold text-gray-800 bg-transparent focus:outline-none cursor-pointer"
+                    className="w-full text-base font-semibold text-gray-800 bg-transparent focus:outline-none cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
                     placeholder="Depart"
                   />
                 </div>
