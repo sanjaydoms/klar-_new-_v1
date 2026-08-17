@@ -1,10 +1,17 @@
-# KLAR — Backend Services
+# KLAR
 
-The microservices behind KLAR's travel platform: flights, hotels, cabs, insurance,
-visas, passports, charters, tour packages, payments, transactional email and accounts.
+Clarity. Simplicity. Premium experiences.
 
-> **This repository is backend only.** The customer-facing applications live in
-> separate repositories — see [Where the frontend lives](#where-the-frontend-lives).
+KLAR's travel platform: the customer-facing web application and the
+microservices behind it — flights, hotels, cabs, insurance, visas, passports,
+charters, tour packages, payments, transactional email and accounts.
+
+```
+frontend/    the B2C web application (Vite + React)
+backend/     13 independent Express + TypeScript services
+docs/        how it all fits together
+scripts/     one command to install, diagnose and run the stack
+```
 
 ---
 
@@ -12,7 +19,8 @@ visas, passports, charters, tour packages, payments, transactional email and acc
 
 ```
                     ┌──────────────────────────┐
-                    │  B2C / B2B frontends     │   (separate repositories)
+                    │  frontend/  :5008        │
+                    │  B2C web application     │
                     └────────────┬─────────────┘
                                  │  HTTP, JWT bearer token
    ┌─────────────────────────────┼──────────────────────────────────┐
@@ -72,18 +80,18 @@ docker run -d -p 27017:27017 --name klar-mongo mongo:7 && docker run -d -p 6379:
 ## Installation
 
 ```bash
-git clone git@github.com:sanjaydoms/klar-new.git KLAR
+git clone https://github.com/sanjaydoms/klar-_new-_v1.git KLAR
 cd KLAR
 npm run setup
 ```
 
 `npm run setup` does three things: installs the root tooling, installs
-dependencies in all 13 services, and creates a `.env` in each service from its
-`.env.example`.
+dependencies in the frontend and all 13 backend services, and creates a `.env`
+in each from its `.env.example`.
 
-It does **not** invent credentials. Every service now has a `.env` with the
-right *keys*, and the supplier keys and secrets are blank. Fill them in before
-using the features that need them.
+It does **not** invent credentials. Everything now has a `.env` with the right
+*keys*, and the supplier keys and secrets are blank. Fill them in before using
+the features that need them.
 
 ---
 
@@ -125,31 +133,36 @@ Never commit a `.env`. `.gitignore` excludes them; only `.env.example` is tracke
 npm run dev
 ```
 
-Starts every service in watch mode in one terminal, with a coloured per-service
-log prefix:
+Starts the web application **and** every backend service in watch mode, in one
+terminal, with a coloured per-process log prefix:
 
 ```
+[web]          http://localhost:5008
 [auth]         listening on 5010
 [flight]       listening on 5011
 [hotel-search] listening on 5012
 ...
 ```
 
-A service that crashes does **not** take the others down — you can work on
+Open http://localhost:5008 and you have the whole stack.
+
+A process that crashes does **not** take the others down — you can work on
 flights while insurance is missing its API key.
 
 Start only what you need:
 
 ```bash
-npm run dev -- flight auth payment    # just these three
+npm run dev -- web auth flight        # just these three
+npm run dev -- --backend-only         # no web app
 npm run dev -- --list                 # what is available
-npm run dev:flight                    # single service, direct
+npm run dev:frontend                  # web app on its own
+npm run dev:flight                    # one service, direct
 ```
 
 ### Working on one service without the others
 
-`local-dev/collab-stubs.cjs` fakes auth, payment and email on ports 5910 / 5914 /
-5915 so a product service can be exercised end to end on its own:
+`backend/local-dev/collab-stubs.cjs` fakes auth, payment and email on ports
+5910 / 5914 / 5915 so a product service can be exercised end to end on its own:
 
 ```bash
 npm run stubs
@@ -163,17 +176,32 @@ the exact lines, commented out.
 ## Build, typecheck, test
 
 ```bash
-npm run build       # tsc in every service, pass/fail table at the end
-npm run typecheck   # tsc --noEmit, no output written
-npm run test        # only the services that define real tests
+npm run build       # frontend bundle + tsc in every service, pass/fail table
+npm run typecheck   # tsc --noEmit everywhere, no output written
+npm run test        # only the packages that define real tests
 ```
 
-These run across all services and report a summary rather than stopping at the
-first failure.
+These run across the frontend and all services and report a summary rather than
+stopping at the first failure.
 
-There is **no lint step.** ESLint is not installed or configured anywhere in
-this repository; the `lint` scripts that used to exist referenced a binary that
-was never a dependency. `npm run typecheck` is the real check.
+### Known red baselines
+
+Two of these are **expected to fail today**. Both predate the monorepo merge and
+neither is a regression — check against these numbers before assuming your change
+broke something:
+
+| Command | State | Why |
+|---|---|---|
+| `npm run typecheck` | `frontend` fails with **1363 errors** | Long-standing. Every backend service passes clean. |
+| `npm run test` | `frontend` fails **13 tests** | `frontend/src/__tests__/bug-exploration.test.ts` is written to fail on purpose: each failure documents a real, unfixed bug (stale filter closure, negative base price, `Math.random()` ratings, hardcoded `agentMarkup: 0`, unvalidated traveller fields). Its header says so. **Fix the source, not the tests.** |
+
+They are deliberately not suppressed. A green run should mean green.
+
+**Linting is frontend-only.** `frontend/` has ESLint installed with an
+`eslint.config.js`, so `npm --prefix ./frontend run lint` works. No backend
+service has ESLint as a dependency or a config — the `lint` scripts that used to
+sit in them referenced a binary that was never installed, and have been removed.
+For the backend, `npm run typecheck` is the check that must pass.
 
 ---
 
@@ -181,6 +209,7 @@ was never a dependency. `npm run typecheck` is the real check.
 
 | Port | Service | Mounts at |
 |---|---|---|
+| 5008 | **frontend** — B2C web application | |
 | 5010 | auth-service | `/user` |
 | 5011 | flight-service | `/api/flight` |
 | 5012 | hotel-search-service | `/api/search` |
@@ -194,7 +223,7 @@ was never a dependency. `npm run typecheck` is the real check.
 | 5020 | tour-package-service | `/api/tours` |
 | 5021 | passport-service | `/api/passport` |
 | 5030 | hotel-engine | not yet wired to any frontend |
-| 5910 / 5914 / 5915 | local-dev stubs for auth / payment / email | |
+| 5910 / 5914 / 5915 | backend/local-dev stubs for auth / payment / email | |
 
 Ports 5017 (insurance) and 5021 (passport) changed during the repository
 cleanup because their previous defaults collided with payment-service (5014)
@@ -207,28 +236,40 @@ and email-service (5000). See
 
 ```
 KLAR/
-├── auth-service/            accounts, JWT, wallet, markup master config
-├── flight-service/          flight search / booking / ticketing
-├── hotel-search-service/    hotel search, suggest, static content
-├── hotel-booking-service/   hotel pricing, booking, cancellation
-├── hotel-engine/            supplier-agnostic hotel engine (parallel rewrite)
-├── cabs-service/            airport transfers, intercity cabs
-├── insurance-service/       travel insurance
-├── visa-service/            visa products and applications
-├── passport-service/        passport assistance
-├── charter-service/         private charter enquiries
-├── tour-package-service/    tours and holiday packages
-├── payment-service/         Razorpay + Cashfree
-├── email-service/           transactional mail via BullMQ
+├── frontend/                    B2C web application (Vite + React), :5008
+│   ├── src/
+│   │   ├── pages/               one directory per route
+│   │   ├── components/          shared and feature components
+│   │   ├── api/                 one client module per backend service
+│   │   ├── config/              env parsing, backend base URLs
+│   │   ├── routes/              route definitions
+│   │   └── ...
+│   ├── .env.example
+│   └── package.json
 │
-├── docs/architecture/       how the system fits together
-├── local-dev/               stub servers and sample payloads
-├── scripts/                 repo-level tooling (dev, doctor, per-service runner)
-├── AGENTS.md                orientation for AI coding agents
-└── package.json             root orchestration only — no application code
+├── backend/
+│   ├── auth-service/            accounts, JWT, wallet, markup master config
+│   ├── flight-service/          flight search / booking / ticketing
+│   ├── hotel-search-service/    hotel search, suggest, static content
+│   ├── hotel-booking-service/   hotel pricing, booking, cancellation
+│   ├── hotel-engine/            supplier-agnostic hotel engine (parallel rewrite)
+│   ├── cabs-service/            airport transfers, intercity cabs
+│   ├── insurance-service/       travel insurance
+│   ├── visa-service/            visa products and applications
+│   ├── passport-service/        passport assistance
+│   ├── charter-service/         private charter enquiries
+│   ├── tour-package-service/    tours and holiday packages
+│   ├── payment-service/         Razorpay + Cashfree
+│   ├── email-service/           transactional mail via BullMQ
+│   └── local-dev/               stub servers and sample payloads
+│
+├── docs/architecture/           how the system fits together
+├── scripts/                     tooling (dev, doctor, per-package runner)
+├── AGENTS.md                    orientation for AI coding agents
+└── package.json                 orchestration only — no application code
 ```
 
-Inside a service the layout is consistent:
+Inside a backend service the layout is consistent:
 
 ```
 <service>/src/
@@ -277,16 +318,22 @@ with the provider layer. No business logic, controller or route should change.
 
 ---
 
-## Where the frontend lives
+## How the frontend reaches the backend
 
-| Repository | What it is |
-|---|---|
-| `sanjaydoms/klar-new` | this repository — all backend services |
-| `sanjaydoms/klar-b2c-frontend` | the customer-facing B2C application (Vite + React, dev server on `:5173`) |
+Directly over HTTP, one base URL per service. There is no API gateway and no
+BFF. `frontend/src/api/` holds one client module per backend service, and
+`frontend/src/config/` resolves each base URL from a `VITE_*` variable with a
+`localhost:501x` fallback — so a locally running stack needs no configuration.
 
-The frontends read backend URLs from `VITE_*` environment variables and fall
-back to the `localhost:501x` ports in the table above, so a locally running
-backend works with a locally running frontend with no extra configuration.
+**Every `VITE_*` variable is inlined into the browser bundle and is public.**
+Vite substitutes them at build time; anyone can read them with devtools. Nothing
+confidential belongs in `frontend/.env` — supplier keys and gateway secrets live
+in a backend service's `.env`, behind an API. See
+[frontend/.env.example](frontend/.env.example), which flags the two variables
+currently violating this.
+
+The B2B agent portal is still a separate working copy and is not in this
+repository.
 
 ---
 

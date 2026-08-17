@@ -11,7 +11,7 @@ import fs from 'node:fs';
 import net from 'node:net';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SERVICES } from './services.mjs';
+import { ALL as SERVICES } from './services.mjs';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const FIX = process.argv.includes('--fix');
@@ -22,8 +22,7 @@ const ok = (m) => console.log(`  ok    ${m}`);
 const bad = (m, hint) => { console.log(`  MISS  ${m}`); problems.push(hint ?? m); };
 const warn = (m) => { console.log(`  warn  ${m}`); notes.push(m); };
 
-/** Is something listening on this TCP port? */
-const probe = (port, host = '127.0.0.1') =>
+const connects = (port, host) =>
   new Promise((resolve) => {
     const sock = net.connect({ port, host });
     const done = (r) => { sock.destroy(); resolve(r); };
@@ -32,6 +31,15 @@ const probe = (port, host = '127.0.0.1') =>
     sock.once('timeout', () => done(false));
     sock.once('error', () => done(false));
   });
+
+/**
+ * Is something listening on this TCP port?
+ *
+ * Checks IPv4 and IPv6 separately: Vite binds `[::1]` only, so an IPv4-only
+ * probe reports the web app's port as free while it is plainly serving.
+ */
+const probe = async (port) =>
+  (await connects(port, '127.0.0.1')) || (await connects(port, '::1'));
 
 /**
  * Keys assigned in a dotenv-style file, ignoring comments and blanks.

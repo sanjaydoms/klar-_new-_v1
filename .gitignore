@@ -83,7 +83,8 @@ dump.rdb
 # =========================
 # Local scratch
 # =========================
-# Per-service scratch dirs for throwaway probes. Anything worth keeping
-# belongs in the service's scripts/ or local-dev/ directory instead.
-*/scratch/
-hotel-search-service/temp.json
+# Per-package scratch dirs for throwaway probes. Anything worth keeping
+# belongs in that package's scripts/ or local-dev/ directory instead.
+# Unanchored so they keep working wherever a package sits in the tree.
+**/scratch/
+**/temp.json

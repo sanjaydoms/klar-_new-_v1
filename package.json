@@ -1,8 +1,8 @@
 {
-  "name": "klar-backend-services",
+  "name": "klar",
   "version": "1.0.0",
   "private": true,
-  "description": "KLAR backend — the microservices behind the B2C and B2B travel platforms",
+  "description": "KLAR — the B2C travel web application and the microservices behind it",
   "engines": {
     "node": ">=20"
   },
@@ -14,25 +14,28 @@
 
     "dev": "node scripts/dev.mjs",
     "dev:list": "node scripts/dev.mjs --list",
-    "dev:auth": "npm --prefix ./auth-service run dev",
-    "dev:flight": "npm --prefix ./flight-service run dev",
-    "dev:hotel-search": "npm --prefix ./hotel-search-service run dev",
-    "dev:hotel-book": "npm --prefix ./hotel-booking-service run dev",
-    "dev:payment": "npm --prefix ./payment-service run dev",
-    "dev:email": "npm --prefix ./email-service run dev",
-    "dev:cabs": "npm --prefix ./cabs-service run dev",
-    "dev:insurance": "npm --prefix ./insurance-service run dev",
-    "dev:visa": "npm --prefix ./visa-service run dev",
-    "dev:charter": "npm --prefix ./charter-service run dev",
-    "dev:tour": "npm --prefix ./tour-package-service run dev",
-    "dev:passport": "npm --prefix ./passport-service run dev",
-    "dev:engine": "npm --prefix ./hotel-engine run build && npm --prefix ./hotel-engine start",
+    "dev:frontend": "npm --prefix ./frontend run dev",
+    "dev:backend": "node scripts/dev.mjs --backend-only",
+
+    "dev:auth": "npm --prefix ./backend/auth-service run dev",
+    "dev:flight": "npm --prefix ./backend/flight-service run dev",
+    "dev:hotel-search": "npm --prefix ./backend/hotel-search-service run dev",
+    "dev:hotel-book": "npm --prefix ./backend/hotel-booking-service run dev",
+    "dev:payment": "npm --prefix ./backend/payment-service run dev",
+    "dev:email": "npm --prefix ./backend/email-service run dev",
+    "dev:cabs": "npm --prefix ./backend/cabs-service run dev",
+    "dev:insurance": "npm --prefix ./backend/insurance-service run dev",
+    "dev:visa": "npm --prefix ./backend/visa-service run dev",
+    "dev:charter": "npm --prefix ./backend/charter-service run dev",
+    "dev:tour": "npm --prefix ./backend/tour-package-service run dev",
+    "dev:passport": "npm --prefix ./backend/passport-service run dev",
+    "dev:engine": "npm --prefix ./backend/hotel-engine run build && npm --prefix ./backend/hotel-engine start",
 
     "build": "node scripts/for-each-service.mjs run build",
     "typecheck": "node scripts/for-each-service.mjs run typecheck",
     "test": "node scripts/for-each-service.mjs run test",
 
-    "stubs": "node local-dev/collab-stubs.cjs"
+    "stubs": "node backend/local-dev/collab-stubs.cjs"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

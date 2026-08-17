@@ -12,14 +12,18 @@ responses into a single internal shape, applying KLAR's markup, and holding a
 booking together across a payment gateway and a supplier that can each fail
 independently.
 
-## Repository boundaries
+## Repository layout
 
-| Repository | Contents |
+| Directory | Contents |
 |---|---|
-| `sanjaydoms/klar-new` | **this repository** — all backend services |
-| `sanjaydoms/klar-b2c-frontend` | consumer web application (Vite + React) |
+| `frontend/` | B2C consumer web application (Vite + React), dev server `:5008` |
+| `backend/` | thirteen independent Express + TypeScript services |
 
-There is no frontend code in this repository.
+Both halves live in `sanjaydoms/klar-_new-_v1`. The frontend was merged in from
+`sanjaydoms/klar-b2c-frontend` with its history preserved; that repository is no
+longer the source of truth.
+
+The B2B agent portal is still a separate working copy and is not here.
 
 ## The services
 

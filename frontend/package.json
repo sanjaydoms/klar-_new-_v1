@@ -1,5 +1,5 @@
 {
-  "name": "vite-react-typescript-starter",
+  "name": "klar-b2c-frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -91,5 +91,9 @@
     "typescript-eslint": "^8.3.0",
     "vite": "^5.4.2",
     "vitest": "^4.1.9"
+  },
+  "description": "KLAR B2C customer web application",
+  "engines": {
+    "node": ">=20"
   }
 }

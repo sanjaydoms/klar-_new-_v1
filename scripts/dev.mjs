@@ -2,8 +2,9 @@
 /**
  * Starts services in watch mode with one labelled log stream per service.
  *
- *   npm run dev                     every service in the dev set
+ *   npm run dev                     the frontend and every service in the dev set
  *   npm run dev -- flight auth      only those two
+ *   npm run dev -- --backend-only   everything except the web app
  *   npm run dev -- --list           show what is available and exit
  *
  * A service that crashes does NOT take the others down — the whole point is
@@ -12,14 +13,14 @@
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { SERVICES, byName } from './services.mjs';
+import { ALL, byName } from './services.mjs';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const args = process.argv.slice(2);
 
 if (args.includes('--list')) {
-  for (const s of SERVICES) {
-    console.log(`  ${s.name.padEnd(14)} :${s.port}  ${s.dir.padEnd(24)} ${s.summary}`);
+  for (const s of ALL) {
+    console.log(`  ${s.name.padEnd(14)} :${s.port}  ${s.dir.padEnd(30)} ${s.summary}`);
   }
   process.exit(0);
 }
@@ -37,7 +38,8 @@ if (requested.length) {
     return svc;
   });
 } else {
-  selected = SERVICES.filter((s) => !s.excludeFromDevAll);
+  selected = ALL.filter((s) => !s.excludeFromDevAll)
+    .filter((s) => !(args.includes('--backend-only') && s.isFrontend));
 }
 
 console.log('Starting:');

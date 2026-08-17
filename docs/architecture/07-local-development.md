@@ -3,7 +3,7 @@
 ## From nothing to running
 
 ```bash
-git clone git@github.com:sanjaydoms/klar-new.git KLAR
+git clone https://github.com/sanjaydoms/klar-_new-_v1.git KLAR
 cd KLAR
 
 # Node 20+ (nvm picks up .nvmrc)
@@ -15,7 +15,7 @@ brew services start redis
 
 npm run setup     # root tooling + all 13 services + .env from every template
 npm run doctor    # what is still missing
-npm run dev       # everything, one terminal
+npm run dev       # frontend + backend, one terminal
 ```
 
 `npm run setup` is idempotent. Re-run it after pulling.
@@ -61,7 +61,7 @@ Starting all twelve is rarely what you want. Two narrower options:
 npm run dev -- hotel-search hotel-book auth
 ```
 
-**One service against stubs.** `local-dev/collab-stubs.cjs` fakes auth, payment
+**One service against stubs.** `backend/local-dev/collab-stubs.cjs` fakes auth, payment
 and email — enough to drive a booking end to end without real credentials or the
 other services:
 
@@ -93,7 +93,8 @@ TripJack UAT credentials, not production ones, are what you want locally.
 
 ## Working with the frontend
 
-The frontend is a separate repository. Run it on `:5173`; its `VITE_*` variables
+The frontend is `frontend/`, started by `npm run dev` along with everything
+else, or on its own with `npm run dev:frontend`. It serves on `:5008`; its `VITE_*` variables
 fall back to the `localhost:501x` ports these services use, so a locally running
 backend needs no extra configuration. Every service allows any localhost origin
 in non-production, so CORS is not in your way.
