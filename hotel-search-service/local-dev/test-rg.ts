@@ -1,4 +1,4 @@
-import { rateGainProvider } from "./src/providers/rategain.provider";
+import { rateGainProvider } from "../src/providers/rategain.provider";
 import dotenv from "dotenv";
 dotenv.config();
 

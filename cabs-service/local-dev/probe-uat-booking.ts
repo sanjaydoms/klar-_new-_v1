@@ -1,8 +1,8 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { tripJackCabsProvider } from "./providers/tripjack.cabs.provider";
-import { env } from "./config/env";
+import { tripJackCabsProvider } from "../src/providers/tripjack.cabs.provider";
+import { env } from "../src/config/env";
 
 /**
  * UAT-ONLY full supplier flow: quote -> booking -> payment -> details.

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { env } from "./config/env";
+import { env } from "../src/config/env";
 import dns from "node:dns/promises";
 dns.setServers(["1.1.1.1", "1.0.0.1"]);
 

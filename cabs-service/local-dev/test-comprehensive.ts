@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
-import { tripJackCabsProvider } from "./providers/tripjack.cabs.provider";
+import { tripJackCabsProvider } from "../src/providers/tripjack.cabs.provider";
 
 async function runComprehensiveTests() {
     console.log("🚀 Starting Comprehensive Cabs API Verification (20 Locations)...\n");

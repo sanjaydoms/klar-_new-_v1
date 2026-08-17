@@ -1,8 +1,8 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { resolveAddress } from "./utils/location.utils";
-import { searchService } from "./services/search.service";
+import { resolveAddress } from "../src/utils/location.utils";
+import { searchService } from "../src/services/search.service";
 
 /**
  * Read-only verification of dynamic address resolution + quotes.

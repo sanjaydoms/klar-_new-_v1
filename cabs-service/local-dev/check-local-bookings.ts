@@ -2,8 +2,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import mongoose from "mongoose";
-import { CabBookingModel } from "./models/CabBooking.model";
-import { env } from "./config/env";
+import { CabBookingModel } from "../src/models/CabBooking.model";
+import { env } from "../src/config/env";
 
 /** Read-only: print local booking + refund state for given booking ids (or the latest 5). */
 async function main() {

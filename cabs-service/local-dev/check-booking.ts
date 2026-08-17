@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { tripJackCabsProvider } from "./providers/tripjack.cabs.provider";
+import { tripJackCabsProvider } from "../src/providers/tripjack.cabs.provider";
 
 async function main() {
     const bookingId = process.argv[2] || "TJ8051903184042";

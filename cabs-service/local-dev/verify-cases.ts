@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
-import { tripJackCabsProvider } from "./providers/tripjack.cabs.provider";
+import { tripJackCabsProvider } from "../src/providers/tripjack.cabs.provider";
 import { v4 as uuidv4 } from "uuid";
 
 async function testCases() {

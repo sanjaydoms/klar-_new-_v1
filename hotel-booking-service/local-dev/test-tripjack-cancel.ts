@@ -1,5 +1,5 @@
 import axios from "axios";
-import { env } from "./config/env";
+import { env } from "../src/config/env";
 
 async function testUrls() {
   const bookingId = "TJS20990000003651";

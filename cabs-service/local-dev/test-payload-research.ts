@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
-import { tripJackCabsProvider } from "./providers/tripjack.cabs.provider";
+import { tripJackCabsProvider } from "../src/providers/tripjack.cabs.provider";
 
 async function testPayloadMinimal() {
     console.log("🚀 Testing MINIMAL payload for Dubai (Lat/Long only)...\n");
