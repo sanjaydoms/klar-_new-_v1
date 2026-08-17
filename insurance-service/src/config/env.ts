@@ -4,7 +4,7 @@ dotenv.config({ path: [".env.local", ".env"] });
 const isProduction = process.env.NODE_ENV === "production";
 
 export const env = {
-    port: Number(process.env.PORT) || 5014,
+    port: Number(process.env.PORT) || 5017,
     jwtSecret: process.env.JWT_SECRET || "your_super_secret_jwt_key_change_me_in_production",
     mongoUri: process.env.MONGODB_URI || "",
 

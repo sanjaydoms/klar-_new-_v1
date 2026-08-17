@@ -1,0 +1,25 @@
+{
+  // Emit config for `npm run build`. The base tsconfig sets noEmit and pulls in
+  // tests/, which is right for typechecking and vitest but cannot produce a
+  // runnable server.
+  //
+  // The source imports siblings with `.js` specifiers (correct TypeScript-ESM
+  // style, 859 of them). Node's type stripping does not rewrite those to `.ts`,
+  // which is why `node --experimental-strip-types src/main.ts` fails with
+  // ERR_MODULE_NOT_FOUND. Compiling with tsc makes the specifiers correct.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "dist",
+    "rootDir": "src",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "declaration": false,
+    "sourceMap": true
+  },
+  // Tests colocated under src/ import from tests/fixtures.ts, which sits
+  // outside rootDir — they are excluded here and still typechecked by
+  // `npm run typecheck` against the base config.
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "tests", "_reference", "src/**/*.test.ts"]
+}

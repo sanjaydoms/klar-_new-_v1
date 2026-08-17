@@ -29,7 +29,7 @@ const requiredEnv = (key: string, value?: string): string => {
 };
 
 export const envConfig: EnvConfig = {
-    PORT: Number(process.env.PORT) || 5000,
+    PORT: Number(process.env.PORT) || 5015,
     NODE_ENV: (process.env.NODE_ENV as EnvConfig["NODE_ENV"]) || "development",
 
     CORS_ORIGINS: requiredEnv("CORS_ORIGINS", process.env.CORS_ORIGINS)

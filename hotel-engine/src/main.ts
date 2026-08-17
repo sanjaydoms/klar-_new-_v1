@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
 import { countryCode } from './domain/shared/brand.js';
 import type { MarkupRule } from './domain/pricing/markup.js';
 import type { UnifiedHotelSearchRequest } from './domain/search/request.js';
@@ -227,7 +229,7 @@ async function openRedis(logger: Logger): Promise<KeyValueStore | undefined> {
 
 export async function main(): Promise<void> {
   const logger = createLogger({ service: 'hotel-api' });
-  const port = Number(optional('PORT') ?? 5012);
+  const port = Number(optional('PORT') ?? 5030);
 
   const rateLimit = readRateLimit();
   const db = await openDatabase(logger);
@@ -285,7 +287,15 @@ export async function main(): Promise<void> {
 }
 
 // Only when executed, never when imported by a test.
-if (process.argv[1] !== undefined && import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/'))) {
+//
+// Compare real filesystem paths, not a URL against a path: import.meta.url is
+// percent-encoded, so a repository checked out under a directory containing a
+// space (or any character a URL escapes) never matched, and `npm start` exited
+// zero having silently done nothing.
+if (
+  process.argv[1] !== undefined &&
+  fileURLToPath(import.meta.url) === resolve(process.argv[1])
+) {
   main().catch((error: unknown) => {
     process.stderr.write(
       `${JSON.stringify({

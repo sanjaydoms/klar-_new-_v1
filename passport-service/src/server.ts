@@ -12,7 +12,7 @@ const startServer = async () => {
     await connectDB();
     setupApp();
 
-    const PORT = process.env.PORT || 5000;
+    const PORT = process.env.PORT || 5021;
     app.listen(PORT, () => {
       console.log(`Passport Service running on port ${PORT}`);
     });
