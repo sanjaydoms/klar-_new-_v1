@@ -1,0 +1,78 @@
+@layer base {
+  /* Inter font is loaded via Google Fonts link in index.html */
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Playfair Display', serif;
+  }
+
+  h1 {
+    @apply text-4xl font-bold tracking-tight;
+  }
+
+  h2 {
+    @apply text-3xl font-semibold;
+  }
+
+  h3 {
+    @apply text-2xl font-semibold;
+  }
+
+  /* Custom scrollbar styles */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-secondary);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary);
+  }
+}
+
+/* In your global CSS file */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Thin scrollbar */
+.thin-scrollbar {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #cbd5e0 #f1f1f1; /* thumb track */
+}
+
+/* Chrome, Edge, Safari */
+.thin-scrollbar::-webkit-scrollbar {
+  height: 2px; /* Horizontal scrollbar height */
+}
+
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 5px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Klar Visual Directions</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f1f2f6; color: #0f172a; padding: 32px 16px 64px; }
+  .intro { max-width: 980px; margin: 0 auto 28px; }
+  .intro h1 { font-size: 22px; margin-bottom: 6px; }
+  .intro p { color: #64748b; font-size: 14px; line-height: 1.5; }
+  .direction { max-width: 980px; margin: 0 auto 48px; border-radius: 18px; overflow: hidden; box-shadow: 0 8px 30px rgb(0 0 0 / 0.10); }
+  .dir-label { padding: 14px 24px; font-size: 13px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: baseline; }
+  .dir-label small { font-weight: 400; letter-spacing: 0; text-transform: none; opacity: .75; font-size: 12px; }
+  .stage { padding: 36px 40px 44px; }
+  .row { display: flex; gap: 12px; align-items: stretch; }
+
+  /* ============ A — HERITAGE LUXURY ============ */
+  .a { background: #f6f1e7; }
+  .a .dir-label { background: #1a1f4d; color: #d4af37; }
+  .a .hero { text-align: center; margin-bottom: 30px; }
+  .a .hero .eyebrow { font-size: 11px; letter-spacing: .35em; text-transform: uppercase; color: #b68d40; margin-bottom: 10px; }
+  .a .hero h2 { font-family: Georgia, 'Times New Roman', serif; font-size: 34px; font-weight: 500; color: #1a1f4d; }
+  .a .hero h2 em { font-style: italic; color: #b68d40; }
+  .a .hero .rule { width: 64px; height: 2px; background: linear-gradient(90deg, transparent, #d4af37, transparent); margin: 14px auto 0; }
+  .a .search { background: #fffdf8; border: 1px solid #e3d9c2; border-radius: 14px; padding: 22px 24px; box-shadow: 0 10px 24px rgb(26 31 77 / 0.08); }
+  .a .trips { display: flex; gap: 18px; margin-bottom: 18px; }
+  .a .trip { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #8a8f9c; padding-bottom: 6px; }
+  .a .trip.active { color: #1a1f4d; font-weight: 700; border-bottom: 2px solid #d4af37; }
+  .a .field { flex: 1; background: #fff; border: 1px solid #e6ddc9; border-radius: 10px; padding: 10px 14px; }
+  .a .field .k { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #b68d40; margin-bottom: 3px; }
+  .a .field .v { font-family: Georgia, serif; font-size: 17px; color: #1a1f4d; }
+  .a .field .s { font-size: 11px; color: #8a8f9c; margin-top: 1px; }
+  .a .cta { background: #1a1f4d; color: #f6f1e7; border: 1px solid #d4af37; border-radius: 10px; padding: 0 30px; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; display: flex; align-items: center; white-space: nowrap; }
+  .a .flight { margin-top: 20px; background: #fffdf8; border: 1px solid #e3d9c2; border-left: 3px solid #d4af37; border-radius: 12px; padding: 18px 22px; display: grid; grid-template-columns: 1.3fr 2fr 1fr; gap: 18px; align-items: center; }
+  .a .al { display: flex; gap: 10px; align-items: center; }
+  .a .logo { width: 38px; height: 38px; border-radius: 50%; background: #1a1f4d; color: #d4af37; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+  .a .al .name { font-weight: 700; color: #1a1f4d; font-size: 14px; }
+  .a .al .num { font-size: 11px; color: #8a8f9c; }
+  .a .times { display: flex; align-items: center; gap: 14px; justify-content: center; }
+  .a .t { text-align: center; }
+  .a .t .tt { font-family: Georgia, serif; font-size: 19px; color: #1a1f4d; }
+  .a .t .tc { font-size: 10px; letter-spacing: .14em; color: #b68d40; }
+  .a .path { flex: 1; min-width: 90px; text-align: center; }
+  .a .path .dur { font-size: 11px; color: #8a8f9c; margin-bottom: 3px; }
+  .a .path .line { height: 1px; background: linear-gradient(90deg, transparent, #b68d40, transparent); position: relative; }
+  .a .path .nonstop { font-size: 10px; color: #1a7a4a; margin-top: 3px; letter-spacing: .1em; text-transform: uppercase; }
+  .a .buy { text-align: right; }
+  .a .price { font-family: Georgia, serif; font-size: 24px; color: #1a1f4d; }
+  .a .per { font-size: 10px; letter-spacing: .14em; color: #8a8f9c; text-transform: uppercase; margin-bottom: 8px; }
+  .a .select { display: inline-block; background: linear-gradient(135deg, #d4af37, #b68d40); color: #1a1f4d; font-weight: 700; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; border-radius: 8px; padding: 9px 26px; }
+
+  /* ============ B — MODERN MINIMAL ============ */
+  .b { background: #ffffff; }
+  .b .dir-label { background: #f4f5f9; color: #1a1f4d; border-bottom: 1px solid #e2e8f0; }
+  .b .hero { margin-bottom: 28px; }
+  .b .hero h2 { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; color: #0f172a; }
+  .b .hero h2 span { color: #1a1f4d; opacity: .45; }
+  .b .hero p { color: #64748b; font-size: 14px; margin-top: 6px; }
+  .b .search { border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; }
+  .b .trips { display: flex; gap: 8px; margin-bottom: 16px; }
+  .b .trip { font-size: 13px; color: #64748b; padding: 6px 14px; border-radius: 999px; border: 1px solid transparent; }
+  .b .trip.active { background: #1a1f4d; color: #fff; font-weight: 600; }
+  .b .field { flex: 1; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; }
+  .b .field .k { font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 2px; }
+  .b .field .v { font-size: 16px; font-weight: 700; color: #0f172a; letter-spacing: -0.01em; }
+  .b .field .s { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+  .b .cta { background: #1a1f4d; color: #fff; border-radius: 12px; padding: 0 28px; font-size: 14px; font-weight: 700; display: flex; align-items: center; white-space: nowrap; }
+  .b .flight { margin-top: 18px; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px 20px; display: grid; grid-template-columns: 1.3fr 2fr 1fr; gap: 18px; align-items: center; }
+  .b .al { display: flex; gap: 10px; align-items: center; }
+  .b .logo { width: 36px; height: 36px; border-radius: 10px; background: #f4f5f9; color: #1a1f4d; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
+  .b .al .name { font-weight: 700; font-size: 14px; }
+  .b .al .num { font-size: 11px; color: #94a3b8; }
+  .b .times { display: flex; align-items: center; gap: 14px; justify-content: center; }
+  .b .t { text-align: center; }
+  .b .t .tt { font-size: 19px; font-weight: 800; letter-spacing: -0.01em; }
+  .b .t .tc { font-size: 11px; color: #94a3b8; font-weight: 600; }
+  .b .path { flex: 1; min-width: 90px; text-align: center; }
+  .b .path .dur { font-size: 11px; color: #94a3b8; margin-bottom: 3px; }
+  .b .path .line { height: 2px; background: #e2e8f0; border-radius: 2px; position: relative; }
+  .b .path .line::after { content: ''; position: absolute; right: -1px; top: -2.2px; border-left: 6px solid #cbd5e1; border-top: 3.5px solid transparent; border-bottom: 3.5px solid transparent; }
+  .b .path .nonstop { font-size: 11px; color: #059669; font-weight: 600; margin-top: 3px; }
+  .b .buy { text-align: right; }
+  .b .price { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+  .b .per { font-size: 11px; color: #94a3b8; margin-bottom: 8px; }
+  .b .select { display: inline-block; background: #fff; color: #1a1f4d; border: 1.5px solid #1a1f4d; font-weight: 700; font-size: 13px; border-radius: 10px; padding: 8px 24px; }
+
+  /* ============ C — MIDNIGHT PREMIUM ============ */
+  .c { background: #0d1130; }
+  .c .dir-label { background: #090c24; color: #d4af37; }
+  .c .stage { background: radial-gradient(1200px 400px at 70% -10%, rgb(212 175 55 / 0.10), transparent 60%), #0d1130; }
+  .c .hero { margin-bottom: 28px; }
+  .c .hero h2 { font-size: 30px; font-weight: 700; color: #f4f5f9; letter-spacing: -0.01em; }
+  .c .hero h2 em { font-style: normal; background: linear-gradient(90deg, #d4af37, #f0d484); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .c .hero p { color: #8b90ad; font-size: 14px; margin-top: 6px; }
+  .c .search { background: rgb(255 255 255 / 0.05); border: 1px solid rgb(255 255 255 / 0.12); border-radius: 16px; padding: 20px; backdrop-filter: blur(8px); }
+  .c .trips { display: flex; gap: 8px; margin-bottom: 16px; }
+  .c .trip { font-size: 13px; color: #8b90ad; padding: 6px 14px; border-radius: 999px; }
+  .c .trip.active { background: rgb(212 175 55 / 0.15); color: #f0d484; font-weight: 600; border: 1px solid rgb(212 175 55 / 0.4); }
+  .c .field { flex: 1; background: rgb(255 255 255 / 0.06); border: 1px solid rgb(255 255 255 / 0.10); border-radius: 12px; padding: 10px 14px; }
+  .c .field .k { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #8b90ad; margin-bottom: 3px; }
+  .c .field .v { font-size: 16px; font-weight: 600; color: #f4f5f9; }
+  .c .field .s { font-size: 11px; color: #8b90ad; margin-top: 1px; }
+  .c .cta { background: linear-gradient(135deg, #d4af37, #b68d40); color: #14183c; border-radius: 12px; padding: 0 28px; font-size: 14px; font-weight: 800; display: flex; align-items: center; white-space: nowrap; }
+  .c .flight { margin-top: 18px; background: rgb(255 255 255 / 0.05); border: 1px solid rgb(255 255 255 / 0.10); border-radius: 16px; padding: 18px 20px; display: grid; grid-template-columns: 1.3fr 2fr 1fr; gap: 18px; align-items: center; }
+  .c .al { display: flex; gap: 10px; align-items: center; }
+  .c .logo { width: 36px; height: 36px; border-radius: 10px; background: rgb(212 175 55 / 0.15); color: #f0d484; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
+  .c .al .name { font-weight: 700; font-size: 14px; color: #f4f5f9; }
+  .c .al .num { font-size: 11px; color: #8b90ad; }
+  .c .times { display: flex; align-items: center; gap: 14px; justify-content: center; }
+  .c .t { text-align: center; }
+  .c .t .tt { font-size: 19px; font-weight: 700; color: #f4f5f9; }
+  .c .t .tc { font-size: 11px; color: #d4af37; font-weight: 600; }
+  .c .path { flex: 1; min-width: 90px; text-align: center; }
+  .c .path .dur { font-size: 11px; color: #8b90ad; margin-bottom: 3px; }
+  .c .path .line { height: 1px; background: linear-gradient(90deg, transparent, rgb(212 175 55 / 0.6), transparent); }
+  .c .path .nonstop { font-size: 11px; color: #4ade80; margin-top: 3px; }
+  .c .buy { text-align: right; }
+  .c .price { font-size: 22px; font-weight: 800; color: #f0d484; }
+  .c .per { font-size: 11px; color: #8b90ad; margin-bottom: 8px; }
+  .c .select { display: inline-block; background: transparent; color: #f0d484; border: 1.5px solid rgb(212 175 55 / 0.6); font-weight: 700; font-size: 13px; border-radius: 10px; padding: 8px 24px; }
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <h1>Klar Travels — three visual directions</h1>
+  <p>Same three surfaces in each (hero, search card, flight result), same content, same geometry — only the visual language changes. All three use the token system already in the codebase, so whichever wins is a token + component-style change, not a rebuild.</p>
+</div>
+
+<!-- ================= A ================= -->
+<section class="direction a">
+  <div class="dir-label">A · Heritage Luxury <small>serif display, cream &amp; navy, gold detailing — closest to the current brand's ambition</small></div>
+  <div class="stage">
+    <div class="hero">
+      <div class="eyebrow">Premium travel experiences since 2000</div>
+      <h2>Extraordinary Journeys, <em>Unforgettable Luxury</em></h2>
+      <div class="rule"></div>
+    </div>
+    <div class="search">
+      <div class="trips"><span class="trip active">One Way</span><span class="trip">Round Trip</span><span class="trip">Multi City</span></div>
+      <div class="row">
+        <div class="field"><div class="k">From</div><div class="v">Delhi</div><div class="s">DEL · Indira Gandhi Intl</div></div>
+        <div class="field"><div class="k">To</div><div class="v">Mumbai</div><div class="s">BOM · Chhatrapati Shivaji</div></div>
+        <div class="field"><div class="k">Departure</div><div class="v">28 Aug 2026</div><div class="s">Friday</div></div>
+        <div class="field"><div class="k">Travellers</div><div class="v">1 Adult</div><div class="s">Economy</div></div>
+        <div class="cta">Search Flights</div>
+      </div>
+    </div>
+    <div class="flight">
+      <div class="al"><div class="logo">SG</div><div><div class="name">SpiceJet</div><div class="num">SG-476 · Economy</div></div></div>
+      <div class="times">
+        <div class="t"><div class="tt">4:30 PM</div><div class="tc">DEL</div></div>
+        <div class="path"><div class="dur">2h 10m</div><div class="line"></div><div class="nonstop">Non-stop</div></div>
+        <div class="t"><div class="tt">6:40 PM</div><div class="tc">BOM</div></div>
+      </div>
+      <div class="buy"><div class="price">₹7,933</div><div class="per">per adult</div><span class="select">Select</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= B ================= -->
+<section class="direction b">
+  <div class="dir-label">B · Modern Minimal <small>airy, flat, hairline borders, navy as the single accent — biggest departure from today</small></div>
+  <div class="stage">
+    <div class="hero">
+      <h2>Where to next<span>?</span></h2>
+      <p>Flights, hotels and more — booked in minutes.</p>
+    </div>
+    <div class="search">
+      <div class="trips"><span class="trip active">One way</span><span class="trip">Round trip</span><span class="trip">Multi-city</span></div>
+      <div class="row">
+        <div class="field"><div class="k">From</div><div class="v">Delhi</div><div class="s">DEL · Indira Gandhi Intl</div></div>
+        <div class="field"><div class="k">To</div><div class="v">Mumbai</div><div class="s">BOM · Chhatrapati Shivaji</div></div>
+        <div class="field"><div class="k">Departure</div><div class="v">28 Aug 2026</div><div class="s">Friday</div></div>
+        <div class="field"><div class="k">Travellers</div><div class="v">1 Adult</div><div class="s">Economy</div></div>
+        <div class="cta">Search</div>
+      </div>
+    </div>
+    <div class="flight">
+      <div class="al"><div class="logo">SG</div><div><div class="name">SpiceJet</div><div class="num">SG-476 · Economy</div></div></div>
+      <div class="times">
+        <div class="t"><div class="tt">16:30</div><div class="tc">DEL</div></div>
+        <div class="path"><div class="dur">2h 10m</div><div class="line"></div><div class="nonstop">Non-stop</div></div>
+        <div class="t"><div class="tt">18:40</div><div class="tc">BOM</div></div>
+      </div>
+      <div class="buy"><div class="price">₹7,933</div><div class="per">per adult</div><span class="select">Select</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= C ================= -->
+<section class="direction c">
+  <div class="dir-label">C · Midnight Premium <small>dark navy surfaces, gold gradient CTAs, glass cards — boldest, most "luxury app"</small></div>
+  <div class="stage">
+    <div class="hero">
+      <h2>Extraordinary journeys, <em>unforgettable luxury</em></h2>
+      <p>Handpicked experiences, crafted around you.</p>
+    </div>
+    <div class="search">
+      <div class="trips"><span class="trip active">One Way</span><span class="trip">Round Trip</span><span class="trip">Multi City</span></div>
+      <div class="row">
+        <div class="field"><div class="k">From</div><div class="v">Delhi</div><div class="s">DEL · Indira Gandhi Intl</div></div>
+        <div class="field"><div class="k">To</div><div class="v">Mumbai</div><div class="s">BOM · Chhatrapati Shivaji</div></div>
+        <div class="field"><div class="k">Departure</div><div class="v">28 Aug 2026</div><div class="s">Friday</div></div>
+        <div class="field"><div class="k">Travellers</div><div class="v">1 Adult</div><div class="s">Economy</div></div>
+        <div class="cta">Search Flights</div>
+      </div>
+    </div>
+    <div class="flight">
+      <div class="al"><div class="logo">SG</div><div><div class="name">SpiceJet</div><div class="num">SG-476 · Economy</div></div></div>
+      <div class="times">
+        <div class="t"><div class="tt">4:30 PM</div><div class="tc">DEL</div></div>
+        <div class="path"><div class="dur">2h 10m</div><div class="line"></div><div class="nonstop">Non-stop</div></div>
+        <div class="t"><div class="tt">6:40 PM</div><div class="tc">BOM</div></div>
+      </div>
+      <div class="buy"><div class="price">₹7,933</div><div class="per">per adult</div><span class="select">Select</span></div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
