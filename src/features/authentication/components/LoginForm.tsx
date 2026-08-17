@@ -1,5 +1,6 @@
 // src/features/authentication/components/Login.tsx
 import React, { useState, useEffect } from "react";
+import BoardingPass from './BoardingPass';
 import { Mail, Lock, Eye, EyeOff, Phone, Smartphone, CheckCircle, User, ArrowLeft } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
 import { login, clearMessages, clearLoginResult, logout as reduxLogout, b2cLoginVerify, b2cGoogleLogin } from '../authSlice';
@@ -919,13 +920,9 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
           className="absolute inset-0 w-full h-full object-cover opacity-80"
         />
 
-        {/* Overlay Image */}
-        <div className="absolute inset-0 z-10 flex items-center justify-center">
-          <img
-            src="/images/OverlayImage.jpg"
-            alt="Overlay"
-            className="w-[70%] rounded-2xl"
-          />
+        {/* Boarding pass — markup, not the old raster. See BoardingPass.tsx. */}
+        <div className="absolute inset-0 z-10 flex items-center justify-center p-8">
+          <BoardingPass className="w-full max-w-[420px]" />
         </div>
       </div>
 
