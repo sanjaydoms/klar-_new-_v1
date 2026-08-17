@@ -2,7 +2,7 @@
   "name": "email-service",
   "version": "1.0.0",
   "description": "",
-  "main": "main.ts",
+  "main": "dist/main.js",
   "scripts": {
     "dev": "nodemon --exec ts-node src/main.ts",
     "clean": "rm -rf dist",
@@ -14,7 +14,8 @@
     "stop:pm2": "pm2 stop email-service",
     "delete:pm2": "pm2 delete email-service",
     "logs:pm2": "pm2 logs email-service",
-    "deploy": "git pull && npm install && npm run build && pm2 reload email-service"
+    "deploy": "git pull && npm install && npm run build && pm2 reload email-service",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",
@@ -36,5 +37,8 @@
     "express": "^5.2.1",
     "ioredis": "^5.11.1",
     "nodemailer": "^8.0.5"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

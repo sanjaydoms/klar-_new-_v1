@@ -8,8 +8,6 @@
     "build": "rimraf dist && tsc",
     "start": "node dist/server.js",
     "clean": "rimraf node_modules dist",
-    "lint": "eslint .",
-    "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "pm2:start": "pm2 start dist/server.js --name tour-package-service",
     "pm2:stop": "pm2 stop tour-package-service",
@@ -38,5 +36,8 @@
     "express": "^5.2.1",
     "mongoose": "^9.4.1",
     "zod": "^4.3.6"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

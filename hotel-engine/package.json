@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check": "npm run typecheck && npm run test",
-    "start": "node --experimental-strip-types src/main.ts"
+    "start": "node dist/main.js",
+    "build": "tsc --project tsconfig.build.json"
   },
   "//dependencies": "pg and ioredis are dependencies of the DEPLOYABLE only. The engine and its test suite build and run without either; src/main.ts imports each dynamically and fails loudly at boot if REDIS_URL/DATABASE_URL is set but the driver is missing.",
   "optionalDependencies": {

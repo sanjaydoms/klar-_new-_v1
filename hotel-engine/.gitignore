@@ -1,24 +1,8 @@
-node_modules/
-dist/
-coverage/
-*.tsbuildinfo
+# Everything else this service needs ignored is covered by the repository-root
+# .gitignore. Keep this file limited to rules that are genuinely specific to
+# hotel-engine — a nested rule that duplicates the root one silently overrides
+# it, which is how this service's package.json went untracked.
 
-# Local environment. Supplier credentials come from configuration management,
-# never from a committed file — see docs/adr/0004-supplier-contract.md.
-.env
-.env.*
-!.env.example
-
-# The reference implementation, extracted for Phase 1 analysis only. Nothing in
-# src/ imports from it and it is not part of the build.
+# Vendored copy of the previous implementation, kept locally for reference
+# while the engine is reverse-engineered. Also excluded in tsconfig.json.
 _reference/
-
-.DS_Store
-Thumbs.db
-
-# Local Claude Code session config (permission allowlists, etc.) — not project source.
-.claude/
-
-# The repo root ignores `*.md` (audit-file cleanup). This engine's README and
-# docs/adr are hand-written design rationale, not audit output — keep them.
-!*.md

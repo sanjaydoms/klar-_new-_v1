@@ -9,8 +9,6 @@
     "build": "rimraf dist && tsc",
     "start": "node dist/server.js",
     "clean": "rimraf node_modules dist",
-    "lint": "eslint .",
-    "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "pm2:start": "pm2 start dist/server.js --name charter-service",
     "pm2:stop": "pm2 stop charter-service",
@@ -42,5 +40,8 @@
     "node-cron": "^4.2.1",
     "uuid": "^13.0.0",
     "zod": "^4.3.6"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
