@@ -2,11 +2,14 @@
 # Node.js
 # =========================
 node_modules/
+
+# Lockfiles ARE committed — they are what makes `npm ci` reproducible
+# on another machine. Do not add package-lock.json here.
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-package-lock.json
 
 # =========================
 # TypeScript build output
@@ -19,6 +22,7 @@ coverage/
 # =========================
 # Environment variables
 # =========================
+# Real secrets never get committed; the .env.example templates always do.
 .env
 .env.*
 !.env.example
@@ -51,21 +55,17 @@ temp/
 .cache/
 
 # =========================
-# MongoDB local files (if any)
+# Databases / runtime dumps
 # =========================
-data/
-!**/src/data/
+# Only ignore the top-level Mongo data dir, not src/data or flight-service/data,
+# both of which hold checked-in reference data (e.g. airports.json).
+/data/
 *.db
-
-# =========================
-# Docker (optional)
-# =========================
-docker-compose.override.yml
+dump.rdb
 
 # =========================
 # Test artifacts
 # =========================
-coverage/
 .nyc_output/
 
 # =========================
@@ -76,23 +76,14 @@ coverage/
 *.tgz
 
 # =========================
-# Custom / Local Tools
+# Local agent / tool state
 # =========================
 .claude/
-.claude
-hotel-booking-service/test-db.js
 
-
-# Audit files
-CABS_MODULE_AUDIT.md
-HOTEL_MODULE_AUDIT.md
-*AUDIT.md
-*.md
-
-flight-service/scratch/
-flight-service/test_flight.js
-flight-service/tripjack_raw.json**/node_modules/
-**/dist/
-**/.env
-*.log
-**/dump.rdb
+# =========================
+# Local scratch
+# =========================
+# Per-service scratch dirs for throwaway probes. Anything worth keeping
+# belongs in the service's scripts/ or local-dev/ directory instead.
+*/scratch/
+hotel-search-service/temp.json
