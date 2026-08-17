@@ -1820,14 +1820,6 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
             </div>
           )}
 
-          {/* Security Notice - Only show when not in forgot password mode */}
-          {!showForgotPassword && (
-            <div className="mt-6 bg-secondary border border-border rounded-lg p-4">
-              <p className="text-sm text-gray-700">
-                <span className="font-semibold">Security Notice:</span> Your account security is our priority. Please contact support for any sign-in assistance.
-              </p>
-            </div>
-          )}
         </div>
       </div>
     </div>
