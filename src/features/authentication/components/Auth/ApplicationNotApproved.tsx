@@ -54,7 +54,7 @@ export default function ApplicationNotApproved({
         <div>
           <button
             onClick={() => setShowFeedback(!showFeedback)}
-            className="w-full flex items-center justify-between p-4 bg-white border border-gray-100 rounded-xl shadow-sm group transition-all hover:border-blue-200"
+            className="w-full flex items-center justify-between p-4 bg-white border border-gray-100 rounded-xl shadow-sm group transition-all hover:border-border"
           >
             <span className="font-bold text-gray-800 text-sm">Detailed Feedback</span>
             <ChevronDown
@@ -102,7 +102,7 @@ export default function ApplicationNotApproved({
             },
           ].map((step, index) => (
             <div key={index} className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-8 h-8 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold ring-4 ring-blue-50/50">
+              <div className="flex-shrink-0 w-8 h-8 bg-secondary text-primary rounded-full flex items-center justify-center text-sm font-bold ring-4 ring-primary/10/50">
                 {index + 1}
               </div>
               <div>

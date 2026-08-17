@@ -911,7 +911,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
   return (
     <div className="min-h-screen flex">
       {/* Left side image */}
-      <div className="hidden md:block md:w-1/2 relative bg-blue-900">
+      <div className="hidden md:block md:w-1/2 relative bg-primary">
         {/* Background Image */}
         <img
           src="/images/login_background.png"
@@ -946,8 +946,14 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
 
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to KLAR World</h1>
-            <p className="text-gray-600">Your gateway to seamless travel bookings</p>
+            {/* The landing's headline signature: navy serif with the accent
+                word in signal red. */}
+            <h1 className="font-display mb-2 text-[34px] leading-[1.12] font-medium text-primary">
+              Welcome to <span className="text-[var(--color-brand-red)]">KLAR World</span>
+            </h1>
+            <p className="text-[15px] leading-relaxed text-gray-600">
+              Your gateway to seamless travel bookings
+            </p>
           </div>
 
           {/* Forgot Password Form - Inline */}
@@ -963,7 +969,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
               </button>
 
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Reset Password</h2>
+                <h2 className="font-display mb-2 text-[26px] leading-[1.12] font-medium text-primary">Reset <span className="text-[var(--color-brand-red)]">Password</span></h2>
                 <p className="text-sm text-gray-600">
                   Enter your registered email and mobile number to reset your password.
                 </p>
@@ -982,7 +988,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                         value={resetEmail}
                         onChange={(e) => setResetEmail(e.target.value)}
                         placeholder="Enter your registered email"
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition duration-200"
                         required
                         autoComplete="email"
                       />
@@ -1000,7 +1006,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                         value={resetMobile}
                         onChange={(e) => setResetMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
                         placeholder="Enter 10-digit mobile number"
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition duration-200"
                         required
                         autoComplete="tel"
                       />
@@ -1011,7 +1017,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                     type="button"
                     onClick={handleSendResetOTP}
                     disabled={resetOtpLoading || !resetEmail || !resetMobile || resetMobile.length !== 10}
-                    className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="w-full bg-[var(--color-brand-red)] text-white py-3 rounded-xl font-semibold hover:bg-[var(--color-brand-red)]/90 shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                   >
                     {resetOtpLoading ? (
                       <span className="flex items-center justify-center">
@@ -1028,8 +1034,8 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-sm text-blue-700">
+                  <div className="bg-secondary border border-border rounded-lg p-3">
+                    <p className="text-sm text-primary">
                       ✓ OTP has been sent to your email: <strong>{resetEmail}</strong>
                     </p>
                   </div>
@@ -1039,13 +1045,13 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                       Enter OTP <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <CheckCircle className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500 w-5 h-5" />
+                      <CheckCircle className="absolute left-3 top-1/2 -translate-y-1/2 text-primary w-5 h-5" />
                       <input
                         type="text"
                         value={resetOtp}
                         onChange={(e) => setResetOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                         placeholder="Enter 6-digit OTP"
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition duration-200"
                         required
                         disabled={otpVerified}
                       />
@@ -1068,7 +1074,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                           type="button"
                           onClick={handleSendResetOTP}
                           disabled={resetCountdown > 0 || resetOtpLoading}
-                          className="text-sm text-blue-700 hover:text-blue-800 hover:underline focus:outline-none disabled:opacity-50"
+                          className="text-sm text-primary hover:text-primary hover:underline focus:outline-none disabled:opacity-50"
                         >
                           {resetCountdown > 0 ? `Resend OTP in ${resetCountdown}s` : 'Resend OTP'}
                         </button>
@@ -1096,7 +1102,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="Enter new password (min. 6 characters)"
-                        className="w-full pl-10 pr-20 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                        className="w-full pl-10 pr-20 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition duration-200"
                         required
                       />
                       <button
@@ -1120,7 +1126,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                         value={confirmNewPassword}
                         onChange={(e) => setConfirmNewPassword(e.target.value)}
                         placeholder="Confirm your new password"
-                        className="w-full pl-10 pr-20 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                        className="w-full pl-10 pr-20 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition duration-200"
                         required
                       />
                       <button
@@ -1135,7 +1141,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
 
                   <button
                     type="submit"
-                    className="w-full bg-blue-900 text-white py-3 rounded-lg font-medium hover:bg-blue-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="w-full bg-[var(--color-brand-red)] text-white py-3 rounded-xl font-semibold hover:bg-[var(--color-brand-red)]/90 shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                   >
                     Reset Password
                   </button>
@@ -1155,7 +1161,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                         setError('');
                       }}
                       className={`py-2 px-4 rounded-lg font-medium transition-all duration-200 ${loginMethod === 'google'
-                        ? 'bg-blue-900 text-white shadow-md'
+                        ? 'bg-primary text-white shadow-md'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                     >
@@ -1189,7 +1195,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                         setOtp('');
                       }}
                       className={`py-2 px-4 rounded-lg font-medium transition-all duration-200 ${loginMethod === 'mobile'
-                        ? 'bg-blue-900 text-white shadow-md'
+                        ? 'bg-primary text-white shadow-md'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                     >
@@ -1207,7 +1213,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                         setOtp('');
                       }}
                       className={`py-2 px-4 rounded-lg font-medium transition-all duration-200 ${loginMethod === 'email'
-                        ? 'bg-blue-900 text-white shadow-md'
+                        ? 'bg-primary text-white shadow-md'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                     >
@@ -1221,8 +1227,8 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
               {/* Google Login */}
               {loginMethod === 'google' && (
                 <div className="space-y-6">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-sm text-blue-700 flex items-center gap-2">
+                  <div className="bg-secondary border border-border rounded-lg p-3">
+                    <p className="text-sm text-primary flex items-center gap-2">
                       <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm0 13c-2.33 0-4.31-1.46-5.11-3.5h10.22c-.8 2.04-2.78 3.5-5.11 3.5z" />
                       </svg>
@@ -1267,7 +1273,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                           setEmailOtpSent(false);
                           setEmailOtp('');
                         }}
-                        className="text-blue-700 font-medium hover:text-blue-800 hover:underline focus:outline-none"
+                        className="text-primary font-medium hover:text-primary hover:underline focus:outline-none"
                       >
                         Create New Account
                       </button>
@@ -1291,7 +1297,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                           value={mobileNumber}
                           onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                           placeholder="Enter 10-digit mobile number"
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition duration-200"
                           required
                           disabled={isLoading || otpSent}
                           autoComplete="tel"
@@ -1304,7 +1310,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                         type="button"
                         onClick={handleSendOTP}
                         disabled={otpLoading || !mobileNumber || mobileNumber.length !== 10}
-                        className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        className="w-full bg-[var(--color-brand-red)] text-white py-3 rounded-xl font-semibold hover:bg-[var(--color-brand-red)]/90 shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                       >
                         {otpLoading ? (
                           <span className="flex items-center justify-center">
@@ -1333,7 +1339,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                               value={otp}
                               onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                               placeholder="Enter 6-digit OTP"
-                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition duration-200"
                               required
                               disabled={isLoading}
                               autoComplete="one-time-code"
@@ -1347,7 +1353,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                             type="button"
                             onClick={handleSendOTP}
                             disabled={countdown > 0 || otpLoading}
-                            className="text-sm text-blue-700 hover:text-blue-800 hover:underline focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="text-sm text-primary hover:text-primary hover:underline focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {countdown > 0 ? `Resend OTP in ${countdown}s` : 'Resend OTP'}
                           </button>
@@ -1356,7 +1362,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                         <button
                           type="submit"
                           disabled={isLoading || !otp || otp.length !== 6}
-                          className="w-full bg-blue-900 text-white py-3 rounded-lg font-medium hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          className="w-full bg-[var(--color-brand-red)] text-white py-3 rounded-xl font-semibold hover:bg-[var(--color-brand-red)]/90 shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                         >
                           {isLoading ? (
                             <span className="flex items-center justify-center">
@@ -1393,7 +1399,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                           setOtpSent(false);
                           setOtp('');
                         }}
-                        className="text-blue-700 font-medium hover:text-blue-800 hover:underline focus:outline-none"
+                        className="text-primary font-medium hover:text-primary hover:underline focus:outline-none"
                       >
                         Create New Account
                       </button>
@@ -1419,7 +1425,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                             if (emailOtpSent) handleResetEmailLogin();
                           }}
                           placeholder="Enter your email address"
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition duration-200"
                           required
                           disabled={isLoading}
                           autoComplete="email"
@@ -1438,7 +1444,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="Enter your password"
-                          className="w-full pl-10 pr-20 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                          className="w-full pl-10 pr-20 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition duration-200"
                           required
                           disabled={isLoading || emailOtpSent}
                           autoComplete="current-password"
@@ -1462,7 +1468,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                               type="checkbox"
                               checked={rememberMe}
                               onChange={(e) => setRememberMe(e.target.checked)}
-                              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                              className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary cursor-pointer"
                               disabled={isLoading}
                             />
                             <span className="ml-2 text-sm text-gray-700">Remember me</span>
@@ -1470,7 +1476,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                           <button
                             type="button"
                             onClick={handleForgotPassword}
-                            className="text-sm text-blue-700 hover:text-blue-800 hover:underline focus:outline-none"
+                            className="text-sm text-primary hover:text-primary hover:underline focus:outline-none"
                             disabled={isLoading}
                           >
                             Forgot password?
@@ -1480,7 +1486,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                         <button
                           type="submit"
                           disabled={isLoading || !email || !password}
-                          className="w-full bg-blue-900 text-white py-3 rounded-lg font-medium hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          className="w-full bg-[var(--color-brand-red)] text-white py-3 rounded-xl font-semibold hover:bg-[var(--color-brand-red)]/90 shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                         >
                           {emailOtpLoading ? (
                             <span className="flex items-center justify-center">
@@ -1497,8 +1503,8 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                       </>
                     ) : (
                       <>
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                          <p className="text-sm text-blue-700">
+                        <div className="bg-secondary border border-border rounded-lg p-3">
+                          <p className="text-sm text-primary">
                             ✓ OTP has been sent to your email: <strong>{email}</strong>
                           </p>
                         </div>
@@ -1514,7 +1520,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                               value={emailOtp}
                               onChange={(e) => setEmailOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                               placeholder="Enter 6-digit OTP"
-                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition duration-200"
                               required
                               disabled={isLoading}
                               autoComplete="one-time-code"
@@ -1527,7 +1533,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                             type="button"
                             onClick={handleSendEmailLoginOTP}
                             disabled={emailOtpCountdown > 0 || emailOtpLoading}
-                            className="text-sm text-blue-700 hover:text-blue-800 hover:underline focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="text-sm text-primary hover:text-primary hover:underline focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {emailOtpCountdown > 0 ? `Resend OTP in ${emailOtpCountdown}s` : 'Resend OTP'}
                           </button>
@@ -1536,7 +1542,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                         <button
                           type="submit"
                           disabled={isLoading || !emailOtp || emailOtp.length !== 6}
-                          className="w-full bg-blue-900 text-white py-3 rounded-lg font-medium hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          className="w-full bg-[var(--color-brand-red)] text-white py-3 rounded-xl font-semibold hover:bg-[var(--color-brand-red)]/90 shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                         >
                           {isLoading ? (
                             <span className="flex items-center justify-center">
@@ -1571,7 +1577,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                           setEmailOtpSent(false);
                           setEmailOtp('');
                         }}
-                        className="text-blue-700 font-medium hover:text-blue-800 hover:underline focus:outline-none"
+                        className="text-primary font-medium hover:text-primary hover:underline focus:outline-none"
                       >
                         Create New Account
                       </button>
@@ -1613,7 +1619,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                               value={fullName}
                               onChange={(e) => setFullName(e.target.value)}
                               placeholder="Enter your full name"
-                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition duration-200"
                               required
                               disabled={isLoading || signupOtpSent}
                               autoComplete="name"
@@ -1632,7 +1638,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                               value={email}
                               onChange={(e) => setEmail(e.target.value)}
                               placeholder="Enter your email address"
-                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition duration-200"
                               required
                               disabled={isLoading || signupOtpSent}
                               autoComplete="email"
@@ -1651,7 +1657,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                               value={mobileNumberSignup}
                               onChange={(e) => setMobileNumberSignup(e.target.value.replace(/\D/g, '').slice(0, 10))}
                               placeholder="Enter 10-digit mobile number"
-                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition duration-200"
                               required
                               disabled={isLoading || signupOtpSent}
                               autoComplete="tel"
@@ -1670,7 +1676,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                               value={password}
                               onChange={(e) => setPassword(e.target.value)}
                               placeholder="Create a password (min. 6 characters)"
-                              className="w-full pl-10 pr-20 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                              className="w-full pl-10 pr-20 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition duration-200"
                               required
                               disabled={isLoading || signupOtpSent}
                               autoComplete="new-password"
@@ -1697,7 +1703,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                               value={confirmPassword}
                               onChange={(e) => setConfirmPassword(e.target.value)}
                               placeholder="Confirm your password"
-                              className="w-full pl-10 pr-20 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                              className="w-full pl-10 pr-20 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition duration-200"
                               required
                               disabled={isLoading || signupOtpSent}
                               autoComplete="new-password"
@@ -1717,7 +1723,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                           type="button"
                           onClick={handleSendSignupOTP}
                           disabled={signupOtpLoading || !fullName || !email || !mobileNumberSignup || mobileNumberSignup.length !== 10 || !password || !confirmPassword}
-                          className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          className="w-full bg-[var(--color-brand-red)] text-white py-3 rounded-xl font-semibold hover:bg-[var(--color-brand-red)]/90 shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                         >
                           {signupOtpLoading ? (
                             <span className="flex items-center justify-center">
@@ -1735,8 +1741,8 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                     ) : (
                       <>
                         {/* OTP Verification Fields */}
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                          <p className="text-sm text-blue-700">
+                        <div className="bg-secondary border border-border rounded-lg p-3">
+                          <p className="text-sm text-primary">
                             ✓ OTP has been sent to your email: <strong>{email}</strong>
                           </p>
                         </div>
@@ -1752,7 +1758,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                               value={signupOtp}
                               onChange={(e) => setSignupOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                               placeholder="Enter 6-digit OTP"
-                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition duration-200"
                               required
                               disabled={isLoading}
                               autoComplete="one-time-code"
@@ -1765,7 +1771,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                             type="button"
                             onClick={handleResendSignupOTP}
                             disabled={signupCountdown > 0 || signupOtpLoading}
-                            className="text-sm text-blue-700 hover:text-blue-800 hover:underline focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="text-sm text-primary hover:text-primary hover:underline focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {signupCountdown > 0 ? `Resend OTP in ${signupCountdown}s` : 'Resend OTP'}
                           </button>
@@ -1774,7 +1780,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
                         <button
                           type="submit"
                           disabled={isLoading || !signupOtp || signupOtp.length !== 6}
-                          className="w-full bg-blue-900 text-white py-3 rounded-lg font-medium hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          className="w-full bg-[var(--color-brand-red)] text-white py-3 rounded-xl font-semibold hover:bg-[var(--color-brand-red)]/90 shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                         >
                           {isLoading ? (
                             <span className="flex items-center justify-center">
@@ -1819,7 +1825,7 @@ export default function Login({ onNavigateToSignup, onLoginResult, disableRedire
 
           {/* Security Notice - Only show when not in forgot password mode */}
           {!showForgotPassword && (
-            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="mt-6 bg-secondary border border-border rounded-lg p-4">
               <p className="text-sm text-gray-700">
                 <span className="font-semibold">Security Notice:</span> Your account security is our priority. Please contact support for any sign-in assistance.
               </p>

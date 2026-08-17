@@ -51,9 +51,9 @@ export default function CongratulationsApproved({
           {features.map((feature, index) => (
             <div
               key={index}
-              className="p-4 border border-gray-100 bg-white rounded-2xl shadow-sm hover:border-blue-200 transition-all flex items-start gap-4 group"
+              className="p-4 border border-gray-100 bg-white rounded-2xl shadow-sm hover:border-border transition-all flex items-start gap-4 group"
             >
-              <div className="flex-shrink-0 w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center transition-colors group-hover:bg-[#234977] group-hover:text-white">
+              <div className="flex-shrink-0 w-10 h-10 bg-secondary text-primary rounded-xl flex items-center justify-center transition-colors group-hover:bg-[#234977] group-hover:text-white">
                 <feature.icon className="h-5 w-5" strokeWidth={1.5} />
               </div>
               <div>
@@ -71,13 +71,13 @@ export default function CongratulationsApproved({
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-4">
             <Zap className="h-4 w-4 text-amber-400 fill-amber-400" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-blue-200">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-white/70">
               Exclusive Welcome Bonus
             </span>
           </div>
 
           <h3 className="text-3xl font-bold mb-1">10% Commission</h3>
-          <p className="text-sm text-blue-100 border-l-2 border-blue-400/30 pl-3 py-1">
+          <p className="text-sm text-white/70 border-l-2 border-primary/30 pl-3 py-1">
             On your first 5 bookings! Start earning today.
           </p>
 
@@ -96,7 +96,7 @@ export default function CongratulationsApproved({
           Need help getting started?{' '}
           <button
             onClick={onContactSupport}
-            className="text-[#234977] hover:text-blue-900 font-bold underline underline-offset-4"
+            className="text-[#234977] hover:text-primary font-bold underline underline-offset-4"
           >
             Contact Support
           </button>

@@ -71,7 +71,7 @@ export default function CreateBusinessAccount({
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none">
               <Building2
-                className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors"
+                className="h-5 w-5 text-gray-400 group-focus-within:text-primary transition-colors"
                 strokeWidth={1.5}
               />
             </div>
@@ -81,7 +81,7 @@ export default function CreateBusinessAccount({
               value={formData.businessName}
               onChange={handleChange}
               placeholder="Enter business name"
-              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-blue-600 focus:outline-none transition-colors placeholder-gray-400 bg-transparent"
+              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-primary focus:outline-none transition-colors placeholder-gray-400 bg-transparent"
               required
             />
           </div>
@@ -94,7 +94,7 @@ export default function CreateBusinessAccount({
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none">
               <Briefcase
-                className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors"
+                className="h-5 w-5 text-gray-400 group-focus-within:text-primary transition-colors"
                 strokeWidth={1.5}
               />
             </div>
@@ -102,7 +102,7 @@ export default function CreateBusinessAccount({
               name="businessType"
               value={formData.businessType}
               onChange={handleChange}
-              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-blue-600 focus:outline-none transition-colors bg-transparent appearance-none cursor-pointer"
+              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-primary focus:outline-none transition-colors bg-transparent appearance-none cursor-pointer"
               required
             >
               <option value="Travel Agency">Travel Agency</option>
@@ -130,7 +130,7 @@ export default function CreateBusinessAccount({
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none">
               <Users
-                className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors"
+                className="h-5 w-5 text-gray-400 group-focus-within:text-primary transition-colors"
                 strokeWidth={1.5}
               />
             </div>
@@ -140,7 +140,7 @@ export default function CreateBusinessAccount({
               value={formData.contactPersonName}
               onChange={handleChange}
               placeholder="Enter admin name"
-              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-blue-600 focus:outline-none transition-colors placeholder-gray-400 bg-transparent"
+              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-primary focus:outline-none transition-colors placeholder-gray-400 bg-transparent"
               required
             />
           </div>
@@ -153,7 +153,7 @@ export default function CreateBusinessAccount({
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none">
               <Mail
-                className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors"
+                className="h-5 w-5 text-gray-400 group-focus-within:text-primary transition-colors"
                 strokeWidth={1.5}
               />
             </div>
@@ -163,7 +163,7 @@ export default function CreateBusinessAccount({
               value={formData.businessEmail}
               onChange={handleChange}
               placeholder="Enter business email"
-              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-blue-600 focus:outline-none transition-colors placeholder-gray-400 bg-transparent"
+              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-primary focus:outline-none transition-colors placeholder-gray-400 bg-transparent"
               required
             />
           </div>
@@ -176,7 +176,7 @@ export default function CreateBusinessAccount({
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none">
               <Phone
-                className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors"
+                className="h-5 w-5 text-gray-400 group-focus-within:text-primary transition-colors"
                 strokeWidth={1.5}
               />
             </div>
@@ -186,7 +186,7 @@ export default function CreateBusinessAccount({
               value={formData.businessMobile}
               onChange={handleChange}
               placeholder="Enter mobile number"
-              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-blue-600 focus:outline-none transition-colors placeholder-gray-400 bg-transparent"
+              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-primary focus:outline-none transition-colors placeholder-gray-400 bg-transparent"
               required
             />
           </div>
@@ -199,7 +199,7 @@ export default function CreateBusinessAccount({
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none">
               <Lock
-                className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors"
+                className="h-5 w-5 text-gray-400 group-focus-within:text-primary transition-colors"
                 strokeWidth={1.5}
               />
             </div>
@@ -209,7 +209,7 @@ export default function CreateBusinessAccount({
               value={formData.password}
               onChange={handleChange}
               placeholder="Create password"
-              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-blue-600 focus:outline-none transition-colors placeholder-gray-400 bg-transparent"
+              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-primary focus:outline-none transition-colors placeholder-gray-400 bg-transparent"
               required
             />
           </div>
@@ -222,7 +222,7 @@ export default function CreateBusinessAccount({
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none">
               <Lock
-                className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors"
+                className="h-5 w-5 text-gray-400 group-focus-within:text-primary transition-colors"
                 strokeWidth={1.5}
               />
             </div>
@@ -232,7 +232,7 @@ export default function CreateBusinessAccount({
               value={formData.confirmPassword}
               onChange={handleChange}
               placeholder="Confirm password"
-              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-blue-600 focus:outline-none transition-colors placeholder-gray-400 bg-transparent"
+              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-primary focus:outline-none transition-colors placeholder-gray-400 bg-transparent"
               required
             />
           </div>
@@ -250,7 +250,7 @@ export default function CreateBusinessAccount({
         <p className="text-gray-500 text-sm font-nunito">Already have an account?</p>
         <button
           onClick={onLoginClick}
-          className="text-[#234977] hover:text-blue-900 font-bold text-lg"
+          className="text-[#234977] hover:text-primary font-bold text-lg"
         >
           Login Now
         </button>

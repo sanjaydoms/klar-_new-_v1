@@ -270,7 +270,7 @@ export default function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
       <div className="flex items-center justify-center mb-8">
         <div className="flex items-center">
           <div
-            className={`flex items-center justify-center w-8 h-8 rounded-full ${step === 'request' ? 'bg-blue-900 text-white' : 'bg-green-500 text-white'}`}
+            className={`flex items-center justify-center w-8 h-8 rounded-full ${step === 'request' ? 'bg-primary text-white' : 'bg-green-500 text-white'}`}
           >
             {step === 'request' ? '1' : <CheckCircle className="w-5 h-5" />}
           </div>
@@ -278,13 +278,13 @@ export default function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
             className={`w-12 h-0.5 ${step !== 'request' ? 'bg-green-500' : 'bg-gray-300'}`}
           ></div>
           <div
-            className={`flex items-center justify-center w-8 h-8 rounded-full ${step === 'verify' ? 'bg-blue-900 text-white' : step === 'reset' ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600'}`}
+            className={`flex items-center justify-center w-8 h-8 rounded-full ${step === 'verify' ? 'bg-primary text-white' : step === 'reset' ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600'}`}
           >
             {step === 'reset' ? <CheckCircle className="w-5 h-5" /> : '2'}
           </div>
           <div className={`w-12 h-0.5 ${step === 'reset' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
           <div
-            className={`flex items-center justify-center w-8 h-8 rounded-full ${step === 'reset' ? 'bg-blue-900 text-white' : 'bg-gray-300 text-gray-600'}`}
+            className={`flex items-center justify-center w-8 h-8 rounded-full ${step === 'reset' ? 'bg-primary text-white' : 'bg-gray-300 text-gray-600'}`}
           >
             3
           </div>
@@ -294,11 +294,11 @@ export default function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-secondary to-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Reset Password</h1>
+          <h1 className="font-display mb-2 text-[34px] leading-[1.12] font-medium text-primary">Reset <span className="text-[var(--color-brand-red)]">Password</span></h1>
           <p className="text-gray-600">
             {step === 'request' && 'Enter your registered email and mobile number'}
             {step === 'verify' && 'Enter the verification code sent to your email'}
@@ -337,7 +337,7 @@ export default function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your registered email"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition duration-200"
                   required
                   disabled={isLoading}
                   autoComplete="email"
@@ -359,7 +359,7 @@ export default function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
                     setMobile(formattedValue);
                   }}
                   placeholder="9876543210 or +919876543210"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition duration-200"
                   required
                   disabled={isLoading}
                   autoComplete="tel"
@@ -373,7 +373,7 @@ export default function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-900 text-white py-3 rounded-lg font-medium hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="w-full bg-[var(--color-brand-red)] text-white py-3 rounded-xl font-semibold hover:bg-[var(--color-brand-red)]/90 shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
               style={{ backgroundColor: '#234977' }}
             >
               {isLoading ? (
@@ -439,7 +439,7 @@ export default function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
                   }}
                   placeholder="Enter 6-digit OTP"
                   maxLength={6}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200 text-center text-lg tracking-wider"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition duration-200 text-center text-lg tracking-wider"
                   required
                   disabled={isLoading}
                   autoFocus
@@ -453,7 +453,7 @@ export default function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
             <button
               type="submit"
               disabled={isLoading || !otp}
-              className="w-full bg-blue-900 text-white py-3 rounded-lg font-medium hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="w-full bg-[var(--color-brand-red)] text-white py-3 rounded-xl font-semibold hover:bg-[var(--color-brand-red)]/90 shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">
@@ -502,7 +502,7 @@ export default function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
               <button
                 type="button"
                 onClick={handleRequestOTP}
-                className="text-sm text-blue-700 hover:text-blue-800 hover:underline focus:outline-none"
+                className="text-sm text-primary hover:text-primary hover:underline focus:outline-none"
                 disabled={isLoading}
               >
                 Resend OTP
@@ -539,7 +539,7 @@ export default function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Enter new password"
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition duration-200"
                   required
                   disabled={isLoading}
                 />
@@ -604,7 +604,7 @@ export default function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm new password"
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition duration-200"
                   required
                   disabled={isLoading}
                 />
@@ -646,7 +646,7 @@ export default function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
             <button
               type="submit"
               disabled={isLoading || !newPassword || !confirmPassword}
-              className="w-full bg-blue-900 text-white py-3 rounded-lg font-medium hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="w-full bg-[var(--color-brand-red)] text-white py-3 rounded-xl font-semibold hover:bg-[var(--color-brand-red)]/90 shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">

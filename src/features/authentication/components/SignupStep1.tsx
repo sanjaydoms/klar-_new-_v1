@@ -78,7 +78,7 @@ export default function SignupStep1({ onNext, onNavigateToLogin }: SignupStep1Pr
       <div className="w-full md:w-1/2 flex items-center justify-center p-8 bg-white">
         <div className="max-w-md w-full">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Business Account</h1>
+            <h1 className="font-display mb-2 text-[34px] leading-[1.12] font-medium text-primary">Create Business <span className="text-[var(--color-brand-red)]">Account</span></h1>
             <p className="text-gray-600">Register as a B2B travel partner</p>
           </div>
 
@@ -101,7 +101,7 @@ export default function SignupStep1({ onNext, onNavigateToLogin }: SignupStep1Pr
                   value={formData.businessName}
                   onChange={(e) => updateField('businessName', e.target.value)}
                   placeholder="Enter business name"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
                   required
                 />
               </div>
@@ -116,7 +116,7 @@ export default function SignupStep1({ onNext, onNavigateToLogin }: SignupStep1Pr
                 <select
                   value={formData.businessType}
                   onChange={(e) => updateField('businessType', e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none appearance-none bg-white"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none appearance-none bg-white"
                   required
                 >
                   <option value="">Select business type</option>
@@ -155,7 +155,7 @@ export default function SignupStep1({ onNext, onNavigateToLogin }: SignupStep1Pr
                   value={formData.contactPersonName}
                   onChange={(e) => updateField('contactPersonName', e.target.value)}
                   placeholder="Enter name"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
                   required
                 />
               </div>
@@ -172,7 +172,7 @@ export default function SignupStep1({ onNext, onNavigateToLogin }: SignupStep1Pr
                   value={formData.businessEmail}
                   onChange={(e) => updateField('businessEmail', e.target.value)}
                   placeholder="business@example.com"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
                   required
                 />
               </div>
@@ -189,7 +189,7 @@ export default function SignupStep1({ onNext, onNavigateToLogin }: SignupStep1Pr
                   value={formData.businessMobile}
                   onChange={(e) => updateField('businessMobile', e.target.value)}
                   placeholder="+91 1234567890"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
                   required
                 />
               </div>
@@ -206,7 +206,7 @@ export default function SignupStep1({ onNext, onNavigateToLogin }: SignupStep1Pr
                   value={formData.password}
                   onChange={(e) => updateField('password', e.target.value)}
                   placeholder="Create password"
-                  className="w-full pl-10 pr-20 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full pl-10 pr-20 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
                   required
                 />
                 <button
@@ -230,7 +230,7 @@ export default function SignupStep1({ onNext, onNavigateToLogin }: SignupStep1Pr
                   value={formData.confirmPassword}
                   onChange={(e) => updateField('confirmPassword', e.target.value)}
                   placeholder="Confirm password"
-                  className="w-full pl-10 pr-20 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full pl-10 pr-20 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
                   required
                 />
                 <button
@@ -259,7 +259,7 @@ export default function SignupStep1({ onNext, onNavigateToLogin }: SignupStep1Pr
 
             <button
               type="submit"
-              className="w-full bg-blue-900 text-white py-3 rounded-lg font-medium hover:bg-blue-800 transition-colors"
+              className="w-full bg-[var(--color-brand-red)] text-white py-3 rounded-xl font-semibold hover:bg-[var(--color-brand-red)]/90 shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] transition-colors"
             >
               Next
             </button>
@@ -270,7 +270,7 @@ export default function SignupStep1({ onNext, onNavigateToLogin }: SignupStep1Pr
                 <button
                   type="button"
                   onClick={onNavigateToLogin}
-                  className="text-blue-700 font-medium hover:underline"
+                  className="text-primary font-medium hover:underline"
                 >
                   Login
                 </button>

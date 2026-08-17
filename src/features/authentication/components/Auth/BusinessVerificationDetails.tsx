@@ -72,7 +72,7 @@ export default function BusinessVerificationDetails({
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none">
               <FileText
-                className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors"
+                className="h-5 w-5 text-gray-400 group-focus-within:text-primary transition-colors"
                 strokeWidth={1.5}
               />
             </div>
@@ -82,7 +82,7 @@ export default function BusinessVerificationDetails({
               value={formData.gstNumber}
               onChange={handleChange}
               placeholder="22AAAAA0000A125"
-              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-blue-600 focus:outline-none transition-colors placeholder-gray-400 bg-transparent"
+              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-primary focus:outline-none transition-colors placeholder-gray-400 bg-transparent"
             />
           </div>
           <p className="text-[10px] text-gray-400 mt-1">15-Character GST identification number</p>
@@ -95,7 +95,7 @@ export default function BusinessVerificationDetails({
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none">
               <CreditCard
-                className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors"
+                className="h-5 w-5 text-gray-400 group-focus-within:text-primary transition-colors"
                 strokeWidth={1.5}
               />
             </div>
@@ -105,7 +105,7 @@ export default function BusinessVerificationDetails({
               value={formData.panNumber}
               onChange={handleChange}
               placeholder="ABCDE1234F"
-              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-blue-600 focus:outline-none transition-colors placeholder-gray-400 bg-transparent"
+              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-primary focus:outline-none transition-colors placeholder-gray-400 bg-transparent"
             />
           </div>
           <p className="text-[10px] text-gray-400 mt-1">10-Character alphanumeric PAN</p>
@@ -118,7 +118,7 @@ export default function BusinessVerificationDetails({
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none">
               <MapPin
-                className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors"
+                className="h-5 w-5 text-gray-400 group-focus-within:text-primary transition-colors"
                 strokeWidth={1.5}
               />
             </div>
@@ -128,7 +128,7 @@ export default function BusinessVerificationDetails({
               value={formData.businessAddress}
               onChange={handleChange}
               placeholder="Enter complete business address"
-              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-blue-600 focus:outline-none transition-colors placeholder-gray-400 bg-transparent"
+              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-primary focus:outline-none transition-colors placeholder-gray-400 bg-transparent"
               required
             />
           </div>
@@ -141,7 +141,7 @@ export default function BusinessVerificationDetails({
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none">
               <Building2
-                className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors"
+                className="h-5 w-5 text-gray-400 group-focus-within:text-primary transition-colors"
                 strokeWidth={1.5}
               />
             </div>
@@ -151,7 +151,7 @@ export default function BusinessVerificationDetails({
               value={formData.city}
               onChange={handleChange}
               placeholder="Enter city"
-              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-blue-600 focus:outline-none transition-colors placeholder-gray-400 bg-transparent"
+              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-primary focus:outline-none transition-colors placeholder-gray-400 bg-transparent"
               required
             />
           </div>
@@ -164,7 +164,7 @@ export default function BusinessVerificationDetails({
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none">
               <Globe
-                className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors"
+                className="h-5 w-5 text-gray-400 group-focus-within:text-primary transition-colors"
                 strokeWidth={1.5}
               />
             </div>
@@ -172,7 +172,7 @@ export default function BusinessVerificationDetails({
               name="country"
               value={formData.country}
               onChange={handleChange}
-              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-blue-600 focus:outline-none transition-colors bg-transparent appearance-none cursor-pointer"
+              className="block w-full pl-9 pr-3 py-2 border-b border-gray-200 focus:border-primary focus:outline-none transition-colors bg-transparent appearance-none cursor-pointer"
               required
             >
               <option value="">Select Country</option>
@@ -195,9 +195,9 @@ export default function BusinessVerificationDetails({
           </div>
         </div>
 
-        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mt-8">
-          <h3 className="font-bold text-blue-900 text-sm mb-1">Verification Process</h3>
-          <p className="text-xs leading-relaxed text-blue-800/80">
+        <div className="bg-secondary border border-border rounded-lg p-4 mt-8">
+          <h3 className="font-bold text-primary text-sm mb-1">Verification Process</h3>
+          <p className="text-xs leading-relaxed text-primary/80">
             Our team will verify your business details within 24-48 hours. You'll receive an email
             notification once your account is approved.
           </p>

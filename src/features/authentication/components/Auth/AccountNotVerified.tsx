@@ -44,7 +44,7 @@ export default function AccountNotVerified({
           Verification Email Sent To
         </span>
         <div className="flex items-center gap-3">
-          <Mail className="w-5 h-5 text-blue-500" strokeWidth={1.5} />
+          <Mail className="w-5 h-5 text-primary" strokeWidth={1.5} />
           <span className="text-gray-800 font-bold tracking-tight">{email}</span>
         </div>
       </div>
@@ -75,7 +75,7 @@ export default function AccountNotVerified({
           </div>
           <button
             onClick={onContactSupport}
-            className="text-[#234977] hover:text-blue-900 font-bold underline underline-offset-4 text-sm"
+            className="text-[#234977] hover:text-primary font-bold underline underline-offset-4 text-sm"
           >
             Contact Support Team
           </button>

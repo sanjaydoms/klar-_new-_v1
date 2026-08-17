@@ -78,7 +78,7 @@ export default function SignupStep2({ step1Data, onSuccess }: SignupStep2Props) 
       <div className="w-full md:w-1/2 flex items-center justify-center p-8 bg-white">
         <div className="max-w-md w-full">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Business Verification Details</h1>
+            <h1 className="font-display mb-2 text-[34px] leading-[1.12] font-medium text-primary">Business Verification <span className="text-[var(--color-brand-red)]">Details</span></h1>
             <p className="text-gray-600">Provide your business information for verification</p>
           </div>
 
@@ -95,7 +95,7 @@ export default function SignupStep2({ step1Data, onSuccess }: SignupStep2Props) 
                   onChange={(e) => updateField('gstNumber', e.target.value)}
                   placeholder="22AAAAA0000A1Z5"
                   maxLength={15}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">15-character GST identification number</p>
@@ -113,7 +113,7 @@ export default function SignupStep2({ step1Data, onSuccess }: SignupStep2Props) 
                   onChange={(e) => updateField('panNumber', e.target.value.toUpperCase())}
                   placeholder="ABCDE1234F"
                   maxLength={10}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">10-character alphanumeric PAN</p>
@@ -131,7 +131,7 @@ export default function SignupStep2({ step1Data, onSuccess }: SignupStep2Props) 
                   placeholder="Enter complete business address"
                   rows={3}
                   required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none"
                 />
               </div>
             </div>
@@ -148,7 +148,7 @@ export default function SignupStep2({ step1Data, onSuccess }: SignupStep2Props) 
                   onChange={(e) => updateField('city', e.target.value)}
                   placeholder="Enter city"
                   required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
                 />
               </div>
             </div>
@@ -163,7 +163,7 @@ export default function SignupStep2({ step1Data, onSuccess }: SignupStep2Props) 
                   value={formData.country}
                   onChange={(e) => updateField('country', e.target.value)}
                   required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none appearance-none bg-white"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none appearance-none bg-white"
                 >
                   <option value="">Select Country</option>
                   {countries.map((country) => (
@@ -190,9 +190,9 @@ export default function SignupStep2({ step1Data, onSuccess }: SignupStep2Props) 
               </div>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-blue-900 mb-2">Verification Process</h3>
-              <p className="text-sm text-blue-800">
+            <div className="bg-secondary border border-border rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-primary mb-2">Verification Process</h3>
+              <p className="text-sm text-primary">
                 Our team will verify your business details within 24-48 hours. You'll receive an
                 email notification once your account is approved.
               </p>
@@ -207,7 +207,7 @@ export default function SignupStep2({ step1Data, onSuccess }: SignupStep2Props) 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-900 text-white py-3 rounded-lg font-medium hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[var(--color-brand-red)] text-white py-3 rounded-xl font-semibold hover:bg-[var(--color-brand-red)]/90 shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Submitting...' : 'Submit for Verification'}
             </button>
