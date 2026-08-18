@@ -1,20 +1,15 @@
 import { useState } from 'react';
-import {
-  X,
-  Clock,
-  AlertCircle,
-  Check,
-  XCircle,
-  CalendarX,
-  Clock4,
-  Ban,
-  RefreshCw,
-  Armchair,
-  Loader2,
-} from 'lucide-react';
-import { getReviewDetails } from '@/api/flightService.api';
+import { AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+import { getReviewDetails } from '@/api/flightService.api';
 import { storeReviewData } from '@/utils/reviewSession';
+import {
+  FareRulesHeader,
+  FareRulesFooter,
+  FareRulesPanel,
+  type FareRulesTfr,
+} from '@/features/flights/components/FareRules/fareRulesShared';
 
 interface InternationalReturnFlightFareRuleCardProps {
   isOpen: boolean;
@@ -28,20 +23,26 @@ interface InternationalReturnFlightFareRuleCardProps {
   refundable?: string;
 }
 
+/** "DEL-BOM" / "DEL_BOM" -> "DEL → BOM"; anything else is shown as-is. */
+const formatRouteKey = (key: string) => {
+  const match = key.match(/^([A-Za-z]{3})[-_]([A-Za-z]{3})$/);
+  return match ? `${(match[1] || '').toUpperCase()} → ${(match[2] || '').toUpperCase()}` : key;
+};
+
+const legLabel = (index: number, count: number) => {
+  if (count === 2) return index === 0 ? 'Onward' : 'Return';
+  return `Leg ${index + 1}`;
+};
+
 export default function InternationalReturnFlightFareRuleCard({
   refundable = '',
   isOpen,
   onClose,
   fareRuleData,
   onConfirm,
-  fareType,
-  currency = 'INR',
   selectedFareId,
 }: InternationalReturnFlightFareRuleCardProps) {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'cancellation' | 'dateChange' | 'noShow' | 'seat'>(
-    'cancellation',
-  );
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,14 +50,14 @@ export default function InternationalReturnFlightFareRuleCard({
 
   if (!fareRuleData?.fareRule || Object.keys(fareRuleData.fareRule).length === 0) {
     return (
-      <div className="fixed inset-0 bg-black/30 backdrop-blur-[2px] flex items-center justify-center z-[60]">
-        <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-8">
+      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]">
+        <div className="w-full max-w-2xl rounded-2xl bg-white p-8 shadow-2xl">
           <div className="flex flex-col items-center justify-center">
-            <AlertCircle className="w-12 h-12 text-yellow-500 mb-4" />
-            <p className="text-gray-600 text-center">Fare rules not available for this option.</p>
+            <AlertCircle className="mb-4 h-12 w-12 text-yellow-500" />
+            <p className="text-center text-gray-600">Fare rules not available for this option.</p>
             <button
               onClick={onClose}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="bg-primary hover:bg-primary/90 mt-4 rounded-lg px-4 py-2 text-white transition-colors"
             >
               Close
             </button>
@@ -67,77 +68,16 @@ export default function InternationalReturnFlightFareRuleCard({
   }
 
   const fareRuleObj = fareRuleData.fareRule;
-  const firstRouteKey = Object.keys(fareRuleObj)[0];
-  const routeData = fareRuleObj[firstRouteKey];
-  const fareRules = routeData?.tfr;
+  // The TripJack fare-rule block is keyed by route. International round-trip
+  // fares usually carry one combined key, but when the airline states each
+  // leg separately every key gets its own panel — never drop a leg.
+  const legEntries: Array<[string, any]> = Object.entries(fareRuleObj);
 
-  const summary = {
-    // Was hardcoded false — the modal called every fare Non-Refundable.
-    refundable,
-    cancellationFee: fareRules?.CANCELLATION?.[0]?.amount || 0,
-    cancellationAdditionalFee: fareRules?.CANCELLATION?.[0]?.additionalFee || 0,
-    cancellationTimeWindow: fareRules?.CANCELLATION?.[0]
-      ? `${fareRules.CANCELLATION[0].st} - ${fareRules.CANCELLATION[0].et} hours`
-      : 'N/A',
-    dateChangeFee: fareRules?.DATECHANGE?.[0]?.amount || 0,
-    dateChangeAdditionalFee: fareRules?.DATECHANGE?.[0]?.additionalFee || 0,
-    dateChangeTimeWindow: fareRules?.DATECHANGE?.[0]
-      ? `${fareRules.DATECHANGE[0].st} - ${fareRules.DATECHANGE[0].et} hours`
-      : 'N/A',
-    dateChangePolicy: fareRules?.DATECHANGE?.[0]?.policyInfo || '',
-    noShowPolicy: fareRules?.NO_SHOW?.[0]?.policyInfo || '',
-    noShowTimeWindow: fareRules?.NO_SHOW?.[0]
-      ? `${fareRules.NO_SHOW[0].st} - ${fareRules.NO_SHOW[0].et} hours`
-      : 'N/A',
-  };
-
-  const formatCurrency = (amount: number) => {
-    if (!amount && amount !== 0) return 'N/A';
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const formatTimeWindow = (st: string | number, et: string | number) => {
-    if (!st && !et) return 'Information not available';
-
-    const start = parseInt(st as string);
-    const end = parseInt(et as string);
-
-    if (start === 0 && end === 5) return 'Within 5 hours of departure';
-    if (start === 5 && end === 74) return '5 hours to 74 hours before departure';
-    if (start === 74 && end === 8760) return 'More than 74 hours before departure';
-    if (start === 0 && end === 8760) return 'Anytime';
-
-    return `${start} - ${end} hours before departure`;
-  };
-
-  const getTaxDescription = (code: string): string => {
-    const taxMap: Record<string, string> = {
-      CCF: 'TripJack Cancellation Fee',
-      CCFT: 'TripJack Cancellation Fee Tax',
-      ACF: 'Airline Cancellation Fee',
-      ACFT: 'Airline Cancellation Fee Tax',
-      ARF: 'Airline Reschedule Fee',
-      ARFT: 'Airline Reschedule Fee Tax',
-      CRF: 'Carrier Reschedule Fee',
-      CRFT: 'Carrier Reschedule Fee Tax',
-      BF: 'Base Fare',
-      TAF: 'Taxes And Fees',
-      TF: 'Total Fare',
-      MF: 'Management Fee',
-      MFT: 'Management Fee Tax',
-      OT: 'Other Tax',
-      YQ: 'Fuel Surcharge',
-      WO: 'Airport Tax',
-      PSF: 'Passenger Service Fee',
-      WC: 'Airport Arrival Tax',
-      YM: 'Development Fee',
-    };
-    return taxMap[code] || code;
+  // The review call writes sessionStorage and navigates when it resolves, so
+  // the modal must not be dismissable while it is in flight (the old design
+  // disabled both dismissal controls during processing).
+  const handleDismiss = () => {
+    if (!isProcessing) onClose();
   };
 
   const handleConfirmAndContinue = async () => {
@@ -186,369 +126,76 @@ export default function InternationalReturnFlightFareRuleCard({
     }
   };
 
-  const renderCancellationRules = () => {
-    const cancellation = fareRules?.CANCELLATION;
-    if (!cancellation || cancellation.length === 0) {
-      return <p className="text-gray-500">No cancellation rules available</p>;
-    }
-
-    return (
-      <div className="space-y-4">
-        {summary && (
-          <div className="bg-red-50 border border-red-100 rounded-lg p-3">
-            <div className="flex items-center gap-2 text-red-700 mb-1">
-              <Ban className="w-4 h-4" />
-              <span className="font-medium">Cancellation Summary</span>
-            </div>
-            <p className="text-sm">
-              Cancellation Fee: {formatCurrency(summary.cancellationFee)}
-              {summary.cancellationAdditionalFee > 0 &&
-                ` + ${formatCurrency(summary.cancellationAdditionalFee)} additional fee`}
-            </p>
-            <p className="text-xs text-gray-600 mt-1">
-              Time Window: {summary.cancellationTimeWindow || 'N/A'}
-            </p>
-          </div>
-        )}
-
-        {cancellation.map((window: any, index: number) => (
-          <div key={index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-2 mb-3">
-              <Clock className="w-4 h-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">
-                {formatTimeWindow(window.st, window.et)}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-gray-50 p-2 rounded">
-                <p className="text-xs text-gray-500">Airline Fee</p>
-                <p className="font-semibold">{formatCurrency(window.amount || 0)}</p>
-              </div>
-              <div className="bg-gray-50 p-2 rounded">
-                <p className="text-xs text-gray-500">Additional Fee</p>
-                <p className="font-semibold">{formatCurrency(window.additionalFee || 0)}</p>
-              </div>
-            </div>
-
-            {/* {window.FareComponentsSummary &&
-              Object.entries(window.FareComponentsSummary).filter(
-                ([_, value]) => value && Number(value) > 0,
-              ).length > 0 && (
-                <div className="mt-3 pt-2 border-t border-gray-100">
-                  <p className="text-xs font-medium text-gray-600 mb-2">Fee Breakdown</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {Object.entries(window.FareComponentsSummary).map(
-                      ([code, amount]: [string, any]) =>
-                        amount &&
-                        Number(amount) > 0 && (
-                          <div key={code} className="text-xs">
-                            <span className="text-gray-500">{getTaxDescription(code)}:</span>
-                            <span className="font-medium ml-1">{formatCurrency(amount)}</span>
-                          </div>
-                        ),
-                    )}
-                  </div>
-                </div>
-              )}
-
-            {window.policyInfo && (
-              <p className="text-xs text-gray-500 mt-2 italic">{window.policyInfo}</p>
-            )} */}
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  const renderDateChangeRules = () => {
-    const dateChange = fareRules?.DATECHANGE;
-    if (!dateChange || dateChange.length === 0) {
-      return <p className="text-gray-500">No date change rules available</p>;
-    }
-
-    return (
-      <div className="space-y-4">
-        {summary && (
-          <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-            <div className="flex items-center gap-2 text-blue-700 mb-1">
-              <CalendarX className="w-4 h-4" />
-              <span className="font-medium">Date Change Summary</span>
-            </div>
-            <p className="text-sm">
-              Date Change Fee: {formatCurrency(summary.dateChangeFee)}
-              {summary.dateChangeAdditionalFee > 0 &&
-                ` + ${formatCurrency(summary.dateChangeAdditionalFee)} additional fee`}
-            </p>
-            <p className="text-xs text-gray-600 mt-1">
-              Time Window: {summary.dateChangeTimeWindow || 'N/A'}
-            </p>
-            {summary.dateChangePolicy && (
-              <p className="text-xs text-blue-600 mt-1">{summary.dateChangePolicy}</p>
-            )}
-          </div>
-        )}
-
-        {dateChange.map((window: any, index: number) => (
-          <div key={index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-2 mb-3">
-              <Clock4 className="w-4 h-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">
-                {formatTimeWindow(window.st, window.et)}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-gray-50 p-2 rounded">
-                <p className="text-xs text-gray-500">Airline Fee</p>
-                <p className="font-semibold">{formatCurrency(window.amount || 0)}</p>
-              </div>
-              <div className="bg-gray-50 p-2 rounded">
-                <p className="text-xs text-gray-500">Additional Fee</p>
-                <p className="font-semibold">{formatCurrency(window.additionalFee || 0)}</p>
-              </div>
-            </div>
-
-            {/* {window.FareComponentsSummary &&
-              Object.entries(window.FareComponentsSummary).filter(
-                ([_, value]) => value && Number(value) > 0,
-              ).length > 0 && (
-                <div className="mt-3 pt-2 border-t border-gray-100">
-                  <p className="text-xs font-medium text-gray-600 mb-2">Fee Breakdown</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {Object.entries(window.FareComponentsSummary).map(
-                      ([code, amount]: [string, any]) =>
-                        amount &&
-                        Number(amount) > 0 && (
-                          <div key={code} className="text-xs">
-                            <span className="text-gray-500">{getTaxDescription(code)}:</span>
-                            <span className="font-medium ml-1">{formatCurrency(amount)}</span>
-                          </div>
-                        ),
-                    )}
-                  </div>
-                </div>
-              )}
-
-            {window.policyInfo && (
-              <p className="text-xs text-gray-500 mt-2 italic">{window.policyInfo}</p>
-            )} */}
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  const renderNoShowRules = () => {
-    const noShow = fareRules?.NO_SHOW;
-    if (!noShow || noShow.length === 0) {
-      return <p className="text-gray-500">No show rules available</p>;
-    }
-
-    return (
-      <div className="space-y-4">
-        {summary && summary.noShowPolicy && (
-          <div className="bg-orange-50 border border-orange-100 rounded-lg p-3">
-            <div className="flex items-center gap-2 text-orange-700 mb-1">
-              <AlertCircle className="w-4 h-4" />
-              <span className="font-medium">No Show Policy</span>
-            </div>
-            <p className="text-sm">{summary.noShowPolicy}</p>
-            {summary.noShowTimeWindow && (
-              <p className="text-xs text-gray-600 mt-1">Time Window: {summary.noShowTimeWindow}</p>
-            )}
-          </div>
-        )}
-
-        {noShow.map((window: any, index: number) => (
-          <div key={index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-2 mb-3">
-              <Clock className="w-4 h-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">
-                {formatTimeWindow(window.st, window.et)}
-              </span>
-            </div>
-
-            {window.policyInfo && (
-              <div className="bg-amber-50 border border-amber-100 rounded p-3">
-                <p className="text-sm text-amber-800">{window.policyInfo}</p>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  const renderSeatCharges = () => {
-    const seatCharges = fareRules?.SEAT_CHARGEABLE;
-    if (!seatCharges || seatCharges.length === 0) {
-      return <p className="text-gray-500">No seat charge information available</p>;
-    }
-
-    return (
-      <div className="space-y-4">
-        {seatCharges.map((charge: any, index: number) => (
-          <div key={index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-2 mb-3">
-              <Armchair className="w-4 h-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">
-                {formatTimeWindow(charge.st, charge.et)}
-              </span>
-            </div>
-
-            {charge.policyInfo && (
-              <div className="bg-purple-50 border border-purple-100 rounded p-3">
-                <p className="text-sm text-purple-800">{charge.policyInfo}</p>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   return (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-[2px] flex items-center justify-center z-[60]">
-      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <RefreshCw className="w-5 h-5 text-blue-600" />
-              <h2 className="text-xl font-bold text-gray-900">{fareType} Fare Rules</h2>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              disabled={isProcessing}
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]">
+      <div className="flex max-h-[92vh] w-full flex-col gap-0 overflow-hidden rounded-2xl bg-white shadow-2xl sm:max-w-[980px]">
+        <FareRulesHeader onClose={handleDismiss} />
 
-          <div className="flex gap-2 mt-4">
-            <button
-              onClick={() => setActiveTab('cancellation')}
-              className={`
-                                flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all
-                                ${
-                                  activeTab === 'cancellation'
-                                    ? 'bg-red-100 text-red-700'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }
-                            `}
-            >
-              <Ban className="w-3 h-3" />
-              Cancellation
-            </button>
-            <button
-              onClick={() => setActiveTab('dateChange')}
-              className={`
-                                flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all
-                                ${
-                                  activeTab === 'dateChange'
-                                    ? 'bg-blue-100 text-blue-700'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }
-                            `}
-            >
-              <CalendarX className="w-3 h-3" />
-              Date Change
-            </button>
-            <button
-              onClick={() => setActiveTab('noShow')}
-              className={`
-                                flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all
-                                ${
-                                  activeTab === 'noShow'
-                                    ? 'bg-orange-100 text-orange-700'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }
-                            `}
-            >
-              <AlertCircle className="w-3 h-3" />
-              No Show
-            </button>
-            <button
-              onClick={() => setActiveTab('seat')}
-              className={`
-                                flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all
-                                ${
-                                  activeTab === 'seat'
-                                    ? 'bg-purple-100 text-purple-700'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }
-                            `}
-            >
-              <Armchair className="w-3 h-3" />
-              Seat
-            </button>
-          </div>
-        </div>
-
-        <div className="overflow-y-auto p-6" style={{ maxHeight: 'calc(80vh - 200px)' }}>
-          {summary.refundable && (
+        <div className="flex-1 overflow-y-auto">
+          {/* The chooser hands this flow only the fare's refundable label —
+              no price/baggage summary — so the Summary tab stays off and the
+              refundability verdict is kept as a banner above the policies. */}
+          {refundable && (
             <div
-              className={`mb-4 p-3 rounded-lg ${
-                /^refundable$/i.test(summary.refundable)
-                  ? 'bg-green-50 border border-green-200'
-                  : 'bg-red-50 border border-red-200'
+              className={`mx-4 mt-5 rounded-xl border p-4 sm:mx-6 ${
+                refundable === 'Refundable'
+                  ? 'border-green-200 bg-green-50'
+                  : refundable === 'Partially Refundable'
+                    ? 'border-amber-200 bg-amber-50'
+                    : 'border-red-200 bg-red-50'
               }`}
             >
-              <div className="flex items-center gap-2">
-                {/^refundable$/i.test(summary.refundable) ? (
-                  <Check className="w-4 h-4 text-green-600" />
+              <div className="flex items-start gap-3">
+                {refundable === 'Refundable' ? (
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
+                ) : refundable === 'Partially Refundable' ? (
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
                 ) : (
-                  <XCircle className="w-4 h-4 text-red-600" />
+                  <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
                 )}
-                <span
-                  className={`text-sm font-medium ${
-                    /^refundable$/i.test(summary.refundable) ? 'text-green-700' : 'text-red-700'
+                <p
+                  className={`font-display text-base font-bold ${
+                    refundable === 'Refundable'
+                      ? 'text-green-700'
+                      : refundable === 'Partially Refundable'
+                        ? 'text-amber-700'
+                        : 'text-red-700'
                   }`}
                 >
-                  {summary.refundable} Fare
-                </span>
+                  {refundable} Fare
+                </p>
               </div>
             </div>
           )}
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-              {error}
+            <div className="mx-4 mt-5 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700 sm:mx-6">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{error}</span>
             </div>
           )}
 
-          {activeTab === 'cancellation' && renderCancellationRules()}
-          {activeTab === 'dateChange' && renderDateChangeRules()}
-          {activeTab === 'noShow' && renderNoShowRules()}
-          {activeTab === 'seat' && renderSeatCharges()}
+          {legEntries.map(([routeKey, routeData], index) => (
+            <div key={routeKey}>
+              {legEntries.length > 1 && (
+                <div className="px-4 pt-5 sm:px-6">
+                  <h2 className="font-display text-lg font-bold text-gray-900">
+                    {formatRouteKey(routeKey)}
+                    <span className="text-gray-400"> · </span>
+                    {legLabel(index, legEntries.length)}
+                  </h2>
+                </div>
+              )}
+              <FareRulesPanel tfr={routeData?.tfr as FareRulesTfr | undefined} showSummary={false} />
+            </div>
+          ))}
         </div>
 
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-end gap-3">
-            <button
-              onClick={onClose}
-              disabled={isProcessing}
-              className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleConfirmAndContinue}
-              disabled={isProcessing}
-              className="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                'Confirm & Continue'
-              )}
-            </button>
-          </div>
-        </div>
+        <FareRulesFooter
+          onBack={handleDismiss}
+          onConfirm={handleConfirmAndContinue}
+          isLoading={isProcessing}
+        />
       </div>
     </div>
   );
