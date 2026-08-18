@@ -106,6 +106,20 @@ export const searchOneWayController = async (req: Request, res: Response) => {
             }
         }
 
+        if (req.body.filters?.refundable && Array.isArray(req.body.filters.refundable)) {
+            filters.push({
+                type: 'refundable',
+                values: req.body.filters.refundable
+            });
+        }
+
+        if (req.body.filters?.fareTypes && Array.isArray(req.body.filters.fareTypes)) {
+            filters.push({
+                type: 'fareType',
+                values: req.body.filters.fareTypes
+            });
+        }
+
         const includeStats = req.query.includeStats === 'true';
 
         const result = await searchService.searchOneWay(
@@ -246,6 +260,20 @@ export const searchReturnController = async (req: Request, res: Response) => {
                     max
                 });
             }
+        }
+
+        if (req.body.filters?.refundable && Array.isArray(req.body.filters.refundable)) {
+            filters.push({
+                type: 'refundable',
+                values: req.body.filters.refundable
+            });
+        }
+
+        if (req.body.filters?.fareTypes && Array.isArray(req.body.filters.fareTypes)) {
+            filters.push({
+                type: 'fareType',
+                values: req.body.filters.fareTypes
+            });
         }
 
         const filterTarget = (req.body.filterTarget || 'both') as 'onward' | 'return' | 'both';
@@ -397,6 +425,20 @@ export const searchMulticityController = async (req: Request, res: Response) => 
                     max
                 });
             }
+        }
+
+        if (req.body.filters?.refundable && Array.isArray(req.body.filters.refundable)) {
+            filters.push({
+                type: 'refundable',
+                values: req.body.filters.refundable
+            });
+        }
+
+        if (req.body.filters?.fareTypes && Array.isArray(req.body.filters.fareTypes)) {
+            filters.push({
+                type: 'fareType',
+                values: req.body.filters.fareTypes
+            });
         }
 
         let applyToLegs: number[] | 'all' = 'all';

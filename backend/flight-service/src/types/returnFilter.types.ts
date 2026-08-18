@@ -92,4 +92,10 @@ export interface FlightSegment {
     duration: string;
     stops: number;
     price: number;
+    /**
+     * Normalised from the supplier and already present on every search result;
+     * declared optional because older cached payloads predate them.
+     */
+    refundable?: string;
+    fareIdentifier?: string;
 }

@@ -77,6 +77,74 @@ docker run -d -p 27017:27017 --name klar-mongo mongo:7 && docker run -d -p 6379:
 
 ---
 
+## Windows setup
+
+The commands elsewhere in this README are macOS/Linux. `npm run setup`, `npm run
+doctor` and `npm run dev` are cross-platform and work as written; the shell
+one-liners around them do not. This section is the Windows path. Everything
+below assumes **PowerShell**.
+
+### Node
+
+Install Node 20 or newer, then open a **new** terminal and confirm:
+
+```powershell
+winget install OpenJS.NodeJS.LTS
+node -v; npm -v
+```
+
+`nvm use` does not read `.nvmrc` here — `nvm` is a separate install on Windows
+(`nvm-windows` or `nvs`). Any Node ≥ 20 is fine; the stack has been run on 24.
+
+If `node` is not recognised straight after installing, the installer updated
+PATH but your open terminal still has the old copy. A new terminal fixes it.
+
+### MongoDB and Redis
+
+Both must be listening before you start the services.
+
+| | On Windows |
+|---|---|
+| MongoDB | The MongoDB Community Server MSI installs a Windows service on `27017` and starts it automatically. |
+| Redis | There is no official Windows build. Use **Memurai** (a native Redis-compatible Windows service), **Docker Desktop**, or **WSL2**. |
+
+With Docker Desktop running, the two `docker run` commands under
+[Requirements](#requirements) work unchanged.
+
+Check what is actually listening — there is no `lsof`:
+
+```powershell
+Get-NetTCPConnection -State Listen -LocalPort 27017,6379 | Select-Object LocalPort, OwningProcess
+```
+
+**Redis is optional for most of the stack.** `email-service` requires it and
+will not boot without it, and hotel search and booking fall back to uncached
+behaviour and log connection errors on a retry loop. Every other service starts
+normally. You can defer Redis and still develop against the other twelve.
+
+### Install and run
+
+```powershell
+npm run setup
+npm run doctor
+npm run dev
+```
+
+`npm run setup` installs the root tooling, then all 14 packages, then creates a
+`.env` in each from its `.env.example`. Expect it to take several minutes.
+
+### Stopping the stack
+
+Ctrl-C in the `npm run dev` terminal stops everything. If a service is left
+holding a port, find and stop it by port rather than killing every `node`
+process — other tooling on the machine also runs on Node:
+
+```powershell
+Get-NetTCPConnection -State Listen -LocalPort 5011 | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+```
+
+---
+
 ## Installation
 
 ```bash
@@ -343,7 +411,7 @@ repository.
 
 | Symptom | Cause and fix |
 |---|---|
-| `EADDRINUSE` on startup | Another process owns the port. `lsof -ti:5011 \| xargs kill`, or check nothing from a previous `npm run dev` survived. |
+| `EADDRINUSE` on startup | Another process owns the port. `lsof -ti:5011 \| xargs kill`, or check nothing from a previous `npm run dev` survived. On Windows see [Stopping the stack](#stopping-the-stack). A second working copy of this repo running its own `npm run dev` is the usual culprit — both bind the same ports. |
 | `Missing required environment variable: X` | That service validates its environment at boot. Copy the key from its `.env.example` and set it. |
 | `Missing ENV variables:` with a long list | payment-service. It validates everything up front and will not start partially configured. |
 | Every authenticated request 401s | `JWT_SECRET` differs between auth-service and the service you are calling. It must be byte-identical. |
@@ -353,7 +421,11 @@ repository.
 | CORS errors in the browser | The frontend origin is not in that service's `CORS_ORIGIN` / `ALLOWED_ORIGINS`. Localhost on any port is allowed automatically in non-production. |
 | Bookings created, then payment fails with *Access Denied* | `TRIPJACK_AGENCY_ID` is not the numeric agency id that owns `TRIPJACK_API_KEY`. |
 | `npm install` fails on puppeteer | flight-service and cabs-service pull Chromium (~150 MB each). Behind a proxy, set `PUPPETEER_SKIP_DOWNLOAD=true` — PDF generation will not work. |
-| Node version errors | `nvm use` picks up `.nvmrc`. Services declare `engines.node >= 20`. |
+| Node version errors | `nvm use` picks up `.nvmrc`. Services declare `engines.node >= 20`. On Windows `nvm` is a separate install — see [Windows setup](#windows-setup). |
+| `npm warn allow-scripts … not yet covered by allowScripts` | npm 11 blocks package install scripts by default, so Puppeteer never downloads Chromium and PDF generation fails at runtime rather than at install. Run `npm approve-scripts puppeteer` in `backend/flight-service` and `backend/cabs-service`, then reinstall there. Leaving it blocked is fine if you do not need PDFs. |
+| `node` or `npm` not recognised (Windows) | The installer updated PATH but the open terminal has a stale copy of it. Open a new terminal. |
+| `npm --prefix ./frontend run clean` fails on Windows | That script is `rm -rf node_modules dist .cache`. Use `Remove-Item -Recurse -Force node_modules, dist, .cache` from `frontend/` instead. |
+| `git@github.com: Permission denied (publickey)` during `npm install` | A dependency resolves to a `git+ssh` URL and npm cannot authenticate to GitHub. Nothing in this repo should do that any more; if it reappears, find the offending entry with `Select-String -Path package-lock.json -Pattern "git\+ssh"` and replace or remove that dependency rather than adding an SSH key. |
 
 ---
 

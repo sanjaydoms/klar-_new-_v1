@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { agreedValue, formatBaggage, refundableTone } from '../FlightCardFooter';
 import { getMultiCityFareDetails } from '@/api/flightService.api';
 import InternationalMultiFareDetailsCard from './InternationalMultiFareDetailsCard';
+import FareSelectModal, { mapDetailedFare, getPaxText } from '../modals/FareSelectModal';
 
 interface InternationalMultiFlightComboCardProps {
   itinerary: InternationalItinerary;
@@ -254,6 +255,13 @@ export default function InternationalMultiFlightComboCard({
   const [isLoadingFareOptions, setIsLoadingFareOptions] = useState(false);
   const [fareSelectionError, setFareSelectionError] = useState<string | null>(null);
   const [selectedLegIndex, setSelectedLegIndex] = useState<number>(0);
+  const [showFareSelect, setShowFareSelect] = useState(false);
+  const [comboFares, setComboFares] = useState<any[] | null>(null);
+  const [isLoadingFares, setIsLoadingFares] = useState(false);
+  // One fetch serves both the chooser upgrade and the confirm card.
+  const [fareResponse, setFareResponse] = useState<any>(null);
+  // The fare picked in the chooser; the details card auto-continues with it.
+  const [pendingFareId, setPendingFareId] = useState<string | null>(null);
 
   const { itineraryKey, totalPrice, legs } = itinerary;
   const firstLeg = legs[0];
@@ -266,14 +274,86 @@ export default function InternationalMultiFlightComboCard({
     return `/airline-logos/${airlineCode}.png`;
   };
 
-  const handleSelectClick = async () => {
+  /**
+   * An international itinerary is priced by COMBO fares covering every leg at
+   * once, and one supplier entry can still carry several of them. The chooser
+   * opens instantly on the itinerary's own price and upgrades to the complete
+   * fare list; the single fetch is then reused by BOOK NOW for the existing
+   * confirm card.
+   */
+  const fetchComboFares = async () => {
+    if (fareResponse) return fareResponse;
+    const sessionId = sessionStorage.getItem('multiCitySessionId');
+    const leg = legs[0];
+    if (!sessionId || !leg) return null;
+
+    const res = await getMultiCityFareDetails({
+      sessionId,
+      legIndex: legs.map((_, idx) => idx),
+      flightKey: leg.flightKey,
+    });
+    if (res?.success !== false && res?.data) {
+      setFareResponse(res);
+      return res;
+    }
+    return null;
+  };
+
+  const openFareSelect = async () => {
+    setShowFareSelect(true);
+    if (comboFares) return;
+
+    setIsLoadingFares(true);
+    try {
+      const res = await fetchComboFares();
+      const base = { ...firstLeg, totalPrice, cabinClass: (firstLeg as any)?.cabinClass || 'ECONOMY' };
+      const mapped = (res?.data?.fares || [])
+        .map((raw: any) => mapDetailedFare(raw, firstLeg?.flightKey ?? '', base))
+        .filter((f: any) => f && f.price != null);
+      if (mapped.length > 0) {
+        mapped.sort((a: any, b: any) => (a.price ?? 0) - (b.price ?? 0));
+        setComboFares(mapped);
+      }
+    } finally {
+      setIsLoadingFares(false);
+    }
+  };
+
+  const proceedWithFare = async () => {
+    setIsLoadingFareOptions(true);
+    setFareSelectionError(null);
+    setSelectedLegIndex(0);
+    try {
+      const res = await fetchComboFares();
+      if (res?.data) {
+        setFlightDetailsData({
+          data: res.data,
+          flightType: 'multiCity',
+          flight: legs[0],
+          itinerary: itinerary,
+        });
+        setShowFareDetailsPopup(true);
+      } else {
+        setFareSelectionError('Unable to load fare details. Please try again.');
+        onDeselect();
+      }
+    } catch (error: any) {
+      console.error('Error loading fare details:', error);
+      setFareSelectionError('Flight not found, search another.');
+      onDeselect();
+    } finally {
+      setIsLoadingFareOptions(false);
+    }
+  };
+
+  const handleSelectClick = () => {
     if (isSelected) {
       onDeselect();
       setShowFareDetailsPopup(false);
       setFlightDetailsData(null);
       setFareSelectionError(null);
     } else {
-      await loadFareDetailsForLeg(0);
+      openFareSelect();
     }
   };
 
@@ -439,8 +519,33 @@ export default function InternationalMultiFlightComboCard({
         </div>
       </div>
 
+      <FareSelectModal
+        isOpen={showFareSelect}
+        onClose={() => setShowFareSelect(false)}
+        flight={firstLeg}
+        fares={
+          comboFares ?? [
+            {
+              fareId: itineraryKey,
+              fareIdentifier: 'FULL ITINERARY',
+              price: totalPrice,
+              cabinClass: (firstLeg as any)?.cabinClass || 'ECONOMY',
+            },
+          ]
+        }
+        paxText={getPaxText()}
+        isLoading={isLoadingFareOptions}
+        isLoadingFares={isLoadingFares}
+        onBookFare={(chosen: any) => {
+          setPendingFareId(chosen?.fareId ?? null);
+          setShowFareSelect(false);
+          proceedWithFare();
+        }}
+      />
+
       {showFareDetailsPopup && flightDetailsData && (
         <InternationalMultiFareDetailsCard
+          initialFareId={pendingFareId ?? undefined}
           isOpen={showFareDetailsPopup}
           onClose={handleClosePopup}
           flightDetails={flightDetailsData}

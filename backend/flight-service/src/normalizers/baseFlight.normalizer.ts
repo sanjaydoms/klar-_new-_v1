@@ -130,6 +130,12 @@ export class BaseFlightNormalizer {
             seatsRemaining: adult?.sR,
             checkInBaggage: adult?.bI?.iB,
             cabinBaggage: adult?.bI?.cB,
+            // Airline booking class (RBD) for this fare, e.g. "RS", "CP".
+            bookingClass: adult?.cB,
+            // Tri-state on purpose: true/false when the supplier said so,
+            // undefined when it did not — the UI should hide the row rather
+            // than claim "not included" on the supplier's silence.
+            mealIncluded: typeof adult?.mI === 'boolean' ? adult.mI : undefined,
         };
     }
 

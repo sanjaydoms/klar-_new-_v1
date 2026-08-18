@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Heart, Plane } from 'lucide-react';
+import { Heart, Plane, Clock } from 'lucide-react';
 import FareDetailsCard from './FareDetailsCard';
+import FareSelectModal, { mapDetailedFare, getPaxText } from '../modals/FareSelectModal';
 import FlightDetailsModal from '../FlightDetailsModal';
 import FareVariantRows from '../FareVariantRows';
-import FlightCardFooter from '../FlightCardFooter';
+import { refundableTone, formatBaggage } from '../FlightCardFooter';
+import { CheckCircle, AlertCircle } from 'lucide-react';
 import { formatAircraft, formatTerminal } from '../../utils/flightDisplay';
 import { FlightData } from '../../types/types.oneWayFlight';
 import { getOnewayFareDetails } from '@/api/flightService.api';
@@ -131,12 +133,17 @@ const AirlineInfo = ({
           </span>
         )}
       </div>
-      <div className="flex flex-col gap-0.5">
-        <p className="text-[15px] font-semibold text-primary">{airline || 'N/A'}</p>
-        <p className="text-xs text-gray-500">{flightNumber || 'N/A'}</p>
-        <p className="text-xs text-gray-500">{cabinClassDisplay}</p>
-        {/* Aircraft is ours, not in the mockup — it is one of the TripJack
-            fields the search response carries. */}
+      <div className="flex flex-col items-start gap-1">
+        <p className="text-[15px] font-semibold leading-tight text-primary">{airline || 'N/A'}</p>
+        {flightNumber && (
+          <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
+            {flightNumber}
+          </span>
+        )}
+        <p className="flex items-center gap-1 text-xs text-gray-500">
+          <Plane className="h-3 w-3 text-gray-400" />
+          {cabinClassDisplay}
+        </p>
         {aircraft && <p className="text-xs text-gray-400">Aircraft {aircraft}</p>}
       </div>
     </div>
@@ -160,12 +167,15 @@ const FlightPoint = ({
   city,
   align = 'left',
 }: FlightPointProps) => {
+  const alignCls = align === 'right' ? 'items-end text-right' : 'items-start text-left';
   return (
-    <div className={align === 'right' ? 'text-right' : 'text-left'}>
-      <p className="text-xl font-bold text-primary">{formatTime(time)}</p>
-      <p className="mt-0.5 text-[15px] font-semibold text-primary">
+    <div className={'flex flex-col gap-1 ' + alignCls}>
+      <span className="rounded-lg bg-[#1A1F4D] px-3 py-1.5 text-sm font-bold tracking-wide text-white">
+        {formatTime(time)}
+      </span>
+      <p className="text-[15px] font-bold text-primary">
         {airportCode || 'N/A'}
-        {terminal && <span className="ml-1 text-xs font-medium text-gray-400">{terminal}</span>}
+        {terminal && <span className="ml-1.5 text-[11px] font-medium text-gray-400">{terminal}</span>}
       </p>
       {city && <p className="text-xs text-gray-500">{city}</p>}
       <p className="text-xs text-gray-500">{formatDateDisplay(date)}</p>
@@ -183,17 +193,22 @@ const DurationStops = ({ duration, stopDetails }: DurationStopsProps) => {
 
   return (
     <div className="flex w-full flex-col items-center">
-      <p className="mb-1.5 text-xs text-gray-500">{formatDuration(duration)}</p>
+      <p className="mb-1.5 flex items-center gap-1 text-xs text-gray-500">
+        <Clock className="h-3.5 w-3.5 text-gray-400" />
+        {formatDuration(duration)}
+      </p>
 
       <div className="relative flex w-full items-center">
         <span className="h-1.5 w-1.5 rounded-full bg-primary" />
         <span className="flex-1 border-t border-dashed border-gray-300" />
-        <Plane className="mx-1 h-4 w-4 rotate-90 text-primary" />
+        <span className="mx-1 flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
+          <Plane className="h-3.5 w-3.5 rotate-45 text-primary" />
+        </span>
         <span className="flex-1 border-t border-dashed border-gray-300" />
         <span className="h-1.5 w-1.5 rounded-full bg-primary" />
       </div>
 
-      <p className="mt-1.5 text-xs font-medium text-[var(--color-brand-red)]">{stopDisplay}</p>
+      <p className="mt-1.5 text-xs font-semibold text-[var(--color-brand-red)]">{stopDisplay}</p>
     </div>
   );
 };
@@ -212,21 +227,25 @@ const PriceAction = ({
   onViewDetails,
 }: PriceActionProps) => {
   return (
-    <div className="flex flex-col items-end gap-2">
-      <p className="text-xl font-bold text-primary">₹ {price != null ? Math.round(price).toLocaleString('en-IN') : '0'}</p>
-      <p className="-mt-1 text-xs text-gray-500">per adult</p>
-      <div className="mt-1 flex w-full flex-col items-stretch gap-2 xl:flex-row xl:justify-end">
+    <div className="flex flex-col gap-2 sm:items-end">
+      <div className="flex items-baseline gap-2 sm:flex-col sm:items-end sm:gap-0">
+        <p className="text-xl font-bold text-primary">
+          ₹ {price != null ? Math.round(price).toLocaleString('en-IN') : '0'}
+        </p>
+        <p className="text-xs text-gray-500">per adult</p>
+      </div>
+      <div className="mt-1 flex w-full flex-row items-stretch gap-2 sm:flex-col">
         <Button
           variant="outline"
           onClick={onViewDetails}
-          className="h-10 w-full rounded-lg border-border px-4 text-[13px] font-medium text-primary xl:w-auto"
+          className="h-10 w-full rounded-lg border-border px-4 text-[13px] font-medium text-primary"
         >
           View Details
         </Button>
         <Button
           onClick={onSelect}
           disabled={isLoading}
-          className="h-10 w-full rounded-lg bg-primary px-7 text-[13px] font-semibold text-white hover:bg-primary/90 xl:w-auto"
+          className="h-10 w-full rounded-lg bg-primary px-7 text-[13px] font-semibold text-white hover:bg-primary/90"
         >
           {isLoading ? 'Loading...' : 'Select'}
         </Button>
@@ -256,16 +275,66 @@ export default function OneWayFlightCard({
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFare, setSelectedFare] = useState<any>(null);
   const [showFareCard, setShowFareCard] = useState(false);
+  const [showFareSelect, setShowFareSelect] = useState(false);
+  // The fare picked in the chooser; FareDetailsCard auto-continues with it.
+  const [pendingFareId, setPendingFareId] = useState<string | null>(null);
+  const [fullFares, setFullFares] = useState<any[] | null>(null);
+  const [isLoadingFares, setIsLoadingFares] = useState(false);
 
-  const handleDisplayFare = async () => {
+  /**
+   * The search response keeps only the CHEAPEST fare of each supplier entry
+   * (~70% of fares are dropped). The fare endpoint returns an entry's complete
+   * totalPriceList, so the chooser opens on the search variants instantly and
+   * upgrades to the full list as soon as every variant's entry is fetched.
+   */
+  const openFareSelect = async () => {
+    setShowFareSelect(true);
+    if (fullFares) return; // already fetched for this card
+
+    const sessionId = sessionStorage.getItem('onewayFlightSessionId');
+    if (!sessionId) return; // chooser still works on the search variants
+
+    setIsLoadingFares(true);
+    try {
+      const keys = [...new Set(fares.map((f: any) => f.flightKey).filter(Boolean))];
+      const results = await Promise.all(
+        keys.map((k) =>
+          getOnewayFareDetails({ sessionId, flightKey: k as string }).catch(() => null),
+        ),
+      );
+      const merged: any[] = [];
+      const seen = new Set<string>();
+      results.forEach((res: any, i) => {
+        const data = res?.data || res;
+        (data?.fares || []).forEach((raw: any) => {
+          const mapped = mapDetailedFare(raw, keys[i] as string, flight);
+          if (mapped && mapped.price != null && !seen.has(mapped.fareId)) {
+            seen.add(mapped.fareId);
+            merged.push(mapped);
+          }
+        });
+      });
+      // Only upgrade when the fetch genuinely knows more than the search did.
+      if (merged.length >= fares.length) {
+        merged.sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
+        setFullFares(merged);
+      }
+    } finally {
+      setIsLoadingFares(false);
+    }
+  };
+
+  const handleDisplayFare = async (fareToBook?: any) => {
+    const fare = fareToBook ?? activeFare;
+    setPendingFareId(fareToBook?.fareId ?? null);
     try {
       setIsLoading(true);
 
       const sessionId = sessionStorage.getItem('onewayFlightSessionId');
-      const flightKey = activeFare.flightKey || activeFare.segmentId || activeFare.id;
+      const flightKey = fare.flightKey || fare.segmentId || fare.id;
 
       if (!flightKey) {
-        setSelectedFare(activeFare);
+        setSelectedFare(fare);
         setShowFareCard(true);
         return;
       }
@@ -283,7 +352,13 @@ export default function OneWayFlightCard({
       const response = await getOnewayFareDetails(payload);
 
       if (response && response.success === false) {
-        setSelectedFare(activeFare);
+        if (fareToBook) {
+          // The chooser picked a fare but the session is gone — say so instead
+          // of mounting the legacy card with nothing to show.
+          notifyError('This fare is no longer available. Please search again.');
+          return;
+        }
+        setSelectedFare(fare);
         setShowFareCard(true);
       } else {
         setSelectedFare(response);
@@ -291,7 +366,11 @@ export default function OneWayFlightCard({
       }
     } catch (error) {
       console.error('Error fetching fare details:', error);
-      setSelectedFare(activeFare);
+      if (fareToBook) {
+        notifyError('This fare is no longer available. Please search again.');
+        return;
+      }
+      setSelectedFare(fare);
       setShowFareCard(true);
     } finally {
       setIsLoading(false);
@@ -313,9 +392,9 @@ export default function OneWayFlightCard({
           <Heart className="h-5 w-5" />
         </button>
 
-        <div className="px-5 pt-5">
-          <div className="flex items-start justify-between gap-6">
-            <div className="w-[150px] shrink-0 xl:w-[180px]">
+        <div className="px-4 pt-4 sm:px-5 sm:pt-5">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
+            <div className="shrink-0 lg:w-[170px]">
               <AirlineInfo
                 airline={flight.airline}
                 airlineCode={flight.airlineCode || ''}
@@ -325,7 +404,7 @@ export default function OneWayFlightCard({
               />
             </div>
 
-            <div className="flex min-w-0 flex-1 items-start justify-between gap-4 pr-4">
+            <div className="flex min-w-0 flex-1 items-start justify-between gap-3 sm:gap-4 lg:pr-4">
               <FlightPoint
                 time={flight.from?.time}
                 airportCode={flight.from?.airportCode}
@@ -334,7 +413,7 @@ export default function OneWayFlightCard({
                 city={(flight.from as any)?.city}
               />
 
-              <div className="min-w-[110px] flex-1 pt-1">
+              <div className="min-w-[90px] flex-1 pt-1 sm:min-w-[110px]">
                 <DurationStops duration={flight.duration} stopDetails={flight.stopDetails} />
               </div>
 
@@ -348,43 +427,94 @@ export default function OneWayFlightCard({
               />
             </div>
 
-            <div className="w-[185px] shrink-0 border-l border-border pl-5">
+            <div className="shrink-0 border-t border-border pt-4 lg:w-[190px] lg:border-t-0 lg:border-l lg:pl-5 lg:pt-0">
               <PriceAction
                 price={activeFare.price}
                 isLoading={isLoading}
-                onSelect={handleDisplayFare}
+                onSelect={openFareSelect}
                 onViewDetails={handleViewDetails}
               />
             </div>
           </div>
 
-          {/* Ours, from the search response rather than the mockup. */}
-          {(arrivesNextDay || (typeof seatsLeft === 'number' && seatsLeft <= 6)) && (
-            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
-              {arrivesNextDay && (
-                <span className="font-medium text-gray-500">✈ Arrives next day</span>
-              )}
-              {typeof seatsLeft === 'number' && seatsLeft <= 6 && (
-                <span className="font-semibold text-[var(--color-brand-red)]">
-                  Seats left: {seatsLeft}
-                </span>
-              )}
-            </div>
-          )}
-
           <FareVariantRows fares={fares} activeIndex={fareIndex} onSelectFare={setFareIndex} />
 
-          <FlightCardFooter
-            refundable={(activeFare as any).refundable}
-            checkInBaggage={(activeFare as any).checkInBaggage}
-            cabinBaggage={(activeFare as any).cabinBaggage}
-          />
+          {/* Footer strip per the results design: next-day marker, the fare's
+              refundability as a toned pill, and its baggage allowance. Values
+              come from the ACTIVE fare's search data — anything the supplier
+              did not state is omitted, never defaulted. Seats-left is ours. */}
+          <div className="mt-1 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-gray-100 py-3 text-xs">
+            {arrivesNextDay && (
+              <span className="flex items-center gap-1.5 font-medium text-gray-500">
+                <Plane className="h-3.5 w-3.5 text-gray-400" />
+                Arrives next day
+              </span>
+            )}
+
+            {(() => {
+              const label = (activeFare as any).refundable?.trim();
+              const tone = refundableTone(label);
+              if (!tone) return null;
+              const isBad = tone === 'text-destructive';
+              const pill = isBad
+                ? 'border-red-200 bg-red-50 ' + tone
+                : tone === 'text-amber-600'
+                  ? 'border-amber-200 bg-amber-50 ' + tone
+                  : 'border-green-200 bg-green-50 ' + tone;
+              return (
+                <span
+                  className={'flex items-center gap-1 rounded-full border px-3 py-1 font-semibold uppercase tracking-wide ' + pill}
+                >
+                  {isBad ? <AlertCircle className="h-3.5 w-3.5" /> : <CheckCircle className="h-3.5 w-3.5" />}
+                  {label}
+                </span>
+              );
+            })()}
+
+            {(() => {
+              const baggage = formatBaggage(
+                (activeFare as any).checkInBaggage,
+                (activeFare as any).cabinBaggage,
+              );
+              if (!baggage) return null;
+              return (
+                <span
+                  className="flex items-center gap-1.5 text-gray-600"
+                  title="Check-in / cabin baggage"
+                >
+                  <img src="/logo/luggage.png" alt="" className="h-4 w-4 object-contain" />
+                  {baggage}
+                </span>
+              );
+            })()}
+
+            {typeof seatsLeft === 'number' && seatsLeft <= 6 && (
+              <span className="ml-auto font-semibold text-[var(--color-brand-red)]">
+                Seats left: {seatsLeft}
+              </span>
+            )}
+          </div>
         </div>
       </div>
+
+      <FareSelectModal
+        paxText={getPaxText()}
+        isOpen={showFareSelect}
+        onClose={() => setShowFareSelect(false)}
+        flight={flight}
+        fares={fullFares ?? fares}
+        isLoadingFares={isLoadingFares}
+        isLoading={isLoading}
+        onBookFare={(fare) => {
+          setShowFareSelect(false);
+          handleDisplayFare(fare);
+        }}
+      />
 
       {/* Fare Details Card */}
       {showFareCard && selectedFare && (
         <FareDetailsCard
+          initialFareId={pendingFareId ?? undefined}
           fare={selectedFare}
           airlineName={flight.airline}
           onClose={() => setShowFareCard(false)}

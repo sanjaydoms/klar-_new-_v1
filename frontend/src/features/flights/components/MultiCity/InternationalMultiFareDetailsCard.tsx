@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, Check, AlertCircle, ArrowRight, ChevronUp, ChevronDown, Loader2 } from 'lucide-react';
 import { getFareRule } from '@/api/flightService.api';
 import { cabinBaggageOf, refundableLabelFromType } from '@/features/flights/utils/flightDisplay';
@@ -8,6 +8,8 @@ interface InternationalMultiFareDetailsCardProps {
   isOpen: boolean;
   onClose: () => void;
   flightDetails: any;
+  /** Auto-continue with this fare (already chosen in the fare chooser). */
+  initialFareId?: string | undefined;
   fromLocation?: { code: string; city: string };
   toLocation?: { code: string; city: string };
   travelDate?: string;
@@ -99,6 +101,7 @@ export default function InternationalMultiFareDetailsCard({
   isOpen,
   onClose,
   flightDetails,
+  initialFareId,
   fromLocation,
   toLocation,
   travelDate,
@@ -196,6 +199,25 @@ export default function InternationalMultiFareDetailsCard({
       fareIdentifier: fare.FareIdentifierType || 'STANDARD',
     };
   };
+
+  /** See FareDetailsCard: the chooser's pick continues without re-asking. */
+  const autoSelectedRef = useRef(false);
+  useEffect(() => {
+    if (!initialFareId || autoSelectedRef.current) return;
+    const list = flightDetails?.data?.fares || [];
+    const match = list.find((f: any) => (f?.fareId || f?.id) === initialFareId) || list[0];
+    if (match) {
+      autoSelectedRef.current = true;
+      handleFareCardClick(match);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFareId, flightDetails]);
+
+  // Headless failure ends the flow quietly — the legacy list must never show.
+  useEffect(() => {
+    if (initialFareId && fareRuleError) onClose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fareRuleError]);
 
   const handleFareCardClick = async (fare: any) => {
     const fareId = fare.fareId || fare.FareIdentifierType || fare.id;
@@ -625,6 +647,15 @@ export default function InternationalMultiFareDetailsCard({
 
   return (
     <>
+      {initialFareId && !showFareRuleCard && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
+          <div className="flex items-center gap-3 rounded-2xl bg-white px-6 py-4 shadow-xl">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <span className="text-sm font-medium text-primary">Preparing your fare…</span>
+          </div>
+        </div>
+      )}
+      {!initialFareId && (
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[90vh] md:h-[92vh] lg:h-[95vh] overflow-hidden flex flex-col">
           <div className="px-6 pt-6 pb-2 border-b border-gray-100">
@@ -748,6 +779,7 @@ export default function InternationalMultiFareDetailsCard({
           </div>
         </div>
       </div>
+      )}
 
       {showFareRuleCard && fareRuleData && selectedFareId && selectedFareDetails && (
         <InternationalMultiFareRuleCard

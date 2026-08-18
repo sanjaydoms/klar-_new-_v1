@@ -1,5 +1,5 @@
 import { X, Check, AlertCircle } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { getFareRule } from '@/api/flightService.api';
 import { cabinBaggageOf, refundableLabelFromType } from '@/features/flights/utils/flightDisplay';
 import InternationalReturnFlightFareRuleCard from './InternationalReturnFlightFareRuleCard';
@@ -8,6 +8,8 @@ interface InternationalReturnFlightFareDetailsCardProps {
   isOpen: boolean;
   onClose: () => void;
   fareData: any;
+  /** Auto-continue with this fare (already chosen in the fare chooser). */
+  initialFareId?: string | undefined;
   flightType: 'departure' | 'return' | 'roundtrip';
   fromLocation?: { code: string; city: string };
   toLocation?: { code: string; city: string };
@@ -189,6 +191,7 @@ export default function InternationalReturnFlightFareDetailsCard({
   isOpen,
   onClose,
   fareData,
+  initialFareId,
   flightType,
   fromLocation,
   toLocation,
@@ -256,6 +259,25 @@ export default function InternationalReturnFlightFareDetailsCard({
   const getFilteredFares = () => {
     return groupedFares[activeCabinClass] || [];
   };
+
+  /** See FareDetailsCard: the chooser's pick continues without re-asking. */
+  const autoSelectedRef = useRef(false);
+  useEffect(() => {
+    if (!initialFareId || autoSelectedRef.current) return;
+    const list = fareData?.data?.fares || [];
+    const match = list.find((f: any) => f?.fareId === initialFareId) || list[0];
+    if (match) {
+      autoSelectedRef.current = true;
+      handleFareSelect({ id: match.fareId || initialFareId });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFareId, fareData]);
+
+  // Headless failure ends the flow quietly — the legacy list must never show.
+  useEffect(() => {
+    if (initialFareId && errorBanner) onClose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [errorBanner]);
 
   const handleFareSelect = async (fareOption: any) => {
     setSelectedFareId(fareOption.id);
@@ -417,6 +439,15 @@ export default function InternationalReturnFlightFareDetailsCard({
 
   return (
     <>
+      {initialFareId && !showFareRuleCard && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
+          <div className="flex items-center gap-3 rounded-2xl bg-white px-6 py-4 shadow-xl">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <span className="text-sm font-medium text-primary">Preparing your fare…</span>
+          </div>
+        </div>
+      )}
+      {!initialFareId && (
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-y-auto flex flex-col">
           {/* Header */}
@@ -557,6 +588,7 @@ export default function InternationalReturnFlightFareDetailsCard({
           </div>
         </div>
       </div>
+      )}
 
       {showFareRuleCard && fareRuleData && (
         <InternationalReturnFlightFareRuleCard

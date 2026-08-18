@@ -7,7 +7,9 @@ export type FilterField =
     | 'priceRange'
     | 'departureTimeRange'
     | 'arrivalTimeRange'
-    | 'durationRange';
+    | 'durationRange'
+    | 'refundable'
+    | 'fareType';
 
 export interface AirlineFilter {
     type: 'airline';
@@ -36,6 +38,18 @@ export interface TimeRangeFilter {
     end: string;
 }
 
+/** Matches TripJack's rT, normalised to 'Refundable' | 'Non-Refundable' | 'Unknown'. */
+export interface RefundableFilter {
+    type: 'refundable';
+    values: string[];
+}
+
+/** Matches the supplier's fareIdentifier: PUBLISHED, SME, ECO VALUE, NDC_Value, PROMO, … */
+export interface FareTypeFilter {
+    type: 'fareType';
+    values: string[];
+}
+
 export interface DurationRangeFilter {
     type: 'durationRange';
     min: number;
@@ -48,7 +62,9 @@ export type Filter =
     | StopsFilter
     | PriceRangeFilter
     | TimeRangeFilter
-    | DurationRangeFilter;
+    | DurationRangeFilter
+    | RefundableFilter
+    | FareTypeFilter;
 
 export interface FilterConfig {
     filters: Filter[];
@@ -65,6 +81,8 @@ export interface FilterValidationResult {
 export interface FilterStats {
     availableAirlines: string[];
     availableCabinClasses: string[];
+    availableRefundableTypes: string[];
+    availableFareTypes: string[];
     priceRange: { min: number; max: number };
     stopsRange: { min: number; max: number };
     durationRange: { min: number; max: number };

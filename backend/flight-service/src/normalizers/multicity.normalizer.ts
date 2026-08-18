@@ -61,6 +61,7 @@ export class MultiCityNormalizer extends BaseFlightNormalizer {
 
         return {
             flights: legs,
+            ...this.buildLabelFacets(allFlights),
             airlineStats: this.buildAirlineStats(allFlights)
         };
     }
@@ -493,6 +494,23 @@ export class MultiCityNormalizer extends BaseFlightNormalizer {
 
                 return flightData;
             })
+        };
+    }
+
+
+    /**
+     * Facet lists for the filter panel, from the UNFILTERED set — same rule as
+     * buildAirlineStats: options taken from the filtered set collapse the panel
+     * the moment a filter is applied.
+     */
+    private static buildLabelFacets(flights: any[]) {
+        return {
+            refundableTypes: Array.from(
+                new Set(flights.map((f: any) => f?.refundable).filter(Boolean))
+            ).sort(),
+            fareTypes: Array.from(
+                new Set(flights.map((f: any) => f?.fareIdentifier).filter(Boolean))
+            ).sort()
         };
     }
 

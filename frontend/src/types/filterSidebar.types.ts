@@ -7,6 +7,9 @@ export interface FlightFilterSidebarProps {
   onError?: (error: string) => void;
   flightType?: 'oneway' | 'return' | 'multicity';
   availableAirlines?: { airline: string; airlineCode: string; flights: number }[];
+  /** Facet lists from the UNFILTERED result set (search stats). */
+  availableRefundable?: string[];
+  availableFareTypes?: string[];
 }
 
 export interface FilterState {
@@ -17,4 +20,6 @@ export interface FilterState {
   maxPrice: number;
   selectedArrivalTimes: string[];
   selectedAirlines: string[];
+  selectedRefundable: string[];
+  selectedFareTypes: string[];
 }

@@ -272,7 +272,7 @@ export default function VisaSearchSection({ activeTab = 'visas' }: VisaSearchSec
         <div className="flex justify-center pt-2">
           <button
             onClick={handleSearchSubmit}
-            className="w-full sm:w-auto bg-[#7A1315] hover:bg-[#5a0e10] text-white font-bold flex items-center justify-center gap-2 px-12 py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-[0.98] text-sm"
+            className="w-full sm:w-auto bg-[var(--color-brand-red)] hover:bg-[var(--color-brand-red)]/90 text-white font-bold flex items-center justify-center gap-2 px-12 py-3.5 rounded-xl shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] transition-all duration-200 active:scale-[0.98] text-sm"
           >
             <Search className="w-4 h-4" />
             <span>Check Requirements</span>

@@ -364,7 +364,7 @@ const PassportServiceSearchSection: React.FC<PassportServiceSearchSectionProps> 
         <button
           type="submit"
           disabled={loading}
-          className="mt-2 px-8 py-3.5 bg-[#4A0000] hover:bg-[#330000] text-white font-sans font-medium text-sm rounded-xl transition-colors duration-200 shadow-xs active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+          className="mt-2 px-8 py-3.5 bg-[var(--color-brand-red)] hover:bg-[var(--color-brand-red)]/90 text-white font-sans font-medium text-sm rounded-xl shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] transition-colors duration-200 active:scale-[0.98] disabled:opacity-60 cursor-pointer"
         >
           {loading ? "Submitting..." : "Request Quote"}
         </button>

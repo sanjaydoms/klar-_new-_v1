@@ -5,11 +5,15 @@ import type { Flight } from '../../types/types.returnFlight';
  * `{ data: … }` envelope of an API response.
  *
  * "View details" on return results used to call `getFlightDetailsBySegmentId`,
- * which posts to `/api/flights/segment/:id`. **That route does not exist** — no
+ * which posted to `/api/flights/segment/:id`. **That route does not exist** — no
  * flight-service router registers it — so the fetch always 404s. Worse, the
- * function returns the Error from its own catch (flights.api.ts:127) instead of
- * throwing, so the caller set the modal's data to an Error object, the modal hit
+ * function returned the Error from its own catch instead of throwing, so the
+ * caller set the modal's data to an Error object, the modal hit
  * `if (!data) return null`, and the button opened nothing at all.
+ *
+ * That function lived in `src/api/flights.api.ts`, which has since been deleted:
+ * every one of its endpoints targeted a backend contract this repo does not
+ * implement. Multi-city's fare/details handlers were collapsed the same way.
  *
  * No endpoint is needed: everything the modal actually renders is already in the
  * search result. The one-way flow figured this out — its handleViewDetails is a

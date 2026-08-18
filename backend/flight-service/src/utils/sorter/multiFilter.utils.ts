@@ -77,6 +77,10 @@ export class MultiCityFlightFilter {
                 return this.filterByArrivalTimeRange(flight, filter.start, filter.end);
             case 'durationRange':
                 return this.filterByDurationRange(flight, filter.min, filter.max);
+            case 'refundable':
+                return this.matchesLabel(flight.refundable, filter.values, 'refundable', flight);
+            case 'fareType':
+                return this.matchesLabel(flight.fareIdentifier, filter.values, 'fareType', flight);
             default:
                 return true;
         }
@@ -85,6 +89,31 @@ export class MultiCityFlightFilter {
     /**
      * Filter by airline
      */
+    /**
+     * Case- and whitespace-insensitive label match. Mirrors
+     * `FlightFilter.matchesLabel` — see there for why supplier labels cannot be
+     * compared with === and why a missing label excludes the flight.
+     */
+    private static matchesLabel(
+        actual: string | undefined,
+        selected: string[],
+        field: string,
+        flight: MultiCityFlight
+    ): boolean {
+        if (!selected || selected.length === 0) return true;
+
+        const normalise = (v: string) => v.trim().toLowerCase().replace(/\s+/g, ' ');
+
+        if (actual === undefined || actual === null || actual.trim() === '') {
+            console.warn(
+                `[MultiCityFlightFilter] missing ${field} on flight ${flight.flightKey}; excluded from the ${field} filter`
+            );
+            return false;
+        }
+
+        return selected.map(normalise).includes(normalise(actual));
+    }
+
     private static filterByAirline(flight: MultiCityFlight, airlines: string[]): boolean {
         if (!airlines || airlines.length === 0) return true;
         return airlines.includes(flight.airline);
@@ -224,6 +253,8 @@ export class MultiCityFlightFilter {
         const stats: FilterStats = {
             availableAirlines: [],
             availableCabinClasses: [],
+            availableRefundableTypes: [],
+            availableFareTypes: [],
             priceRange: { min: Infinity, max: -Infinity },
             stopsRange: { min: Infinity, max: -Infinity },
             durationRange: { min: Infinity, max: -Infinity },

@@ -3,6 +3,7 @@ import { PairedFlight } from '../../types/types.returnFlight';
 import { useState } from 'react';
 import { getReturnFareDetails } from '@/api/flightService.api';
 import InternationalReturnFlightFareDetailsCard from './InternationalReturnFlightFareDetailsCard';
+import FareSelectModal, { mapDetailedFare, getPaxText } from '../modals/FareSelectModal';
 import FlightCardFooter from '../FlightCardFooter';
 
 interface InternationalReturnFlightComboCardProps {
@@ -240,48 +241,77 @@ export default function InternationalReturnFlightComboCard({
   const [isLoadingFare, setIsLoadingFare] = useState(false);
   const [fareSelectionError, setFareSelectionError] = useState<string | null>(null);
   const [selectedFareId, setSelectedFareId] = useState<string | null>(null);
+  const [showFareSelect, setShowFareSelect] = useState(false);
+  const [comboFares, setComboFares] = useState<any[] | null>(null);
+  const [isLoadingFares, setIsLoadingFares] = useState(false);
+  // One fetch serves both the chooser upgrade and the confirm card.
+  const [fareResponse, setFareResponse] = useState<any>(null);
+  // The fare picked in the chooser; the details card auto-continues with it.
+  const [pendingFareId, setPendingFareId] = useState<string | null>(null);
 
   const onward = comboFlight.onward;
   const returnFlight = comboFlight.return;
 
-  const handleSelectClick = async () => {
-    if (isSelected && selectedFareId) {
-      onDeselect();
-      setShowFareDetails(false);
-      setFlightDetails(null);
-      setSelectedFareId(null);
-      setFareSelectionError(null);
-      return;
-    }
+  /**
+   * A COMBO prices the whole round trip in one fare, and one supplier entry can
+   * still carry several such fares. The chooser opens instantly on the combo's
+   * own price and upgrades to the complete fare list; the single fetch is then
+   * reused by BOOK NOW for the existing confirm card.
+   */
+  const fetchComboFares = async () => {
+    const sessionId = sessionStorage.getItem('returnFlightSessionId');
+    const onwardFlightKey = onward.segmentId || onward.flightId;
+    if (!sessionId || !onwardFlightKey) return null;
+    if (fareResponse) return fareResponse;
 
+    const res = await getReturnFareDetails({
+      sessionId,
+      flightKey: onwardFlightKey,
+      segment: 'ONWARD',
+    });
+    if (res?.success !== false && res?.data) {
+      setFareResponse(res);
+      return res;
+    }
+    return null;
+  };
+
+  const openFareSelect = async () => {
+    setShowFareSelect(true);
+    if (comboFares) return;
+
+    setIsLoadingFares(true);
+    try {
+      const res = await fetchComboFares();
+      const flightKey = onward.segmentId || onward.flightId;
+      const base = {
+        ...onward,
+        totalPrice: comboFlight.totalPrice,
+        cabinClass: (onward as any).class || 'ECONOMY',
+      };
+      const mapped = (res?.data?.fares || [])
+        .map((raw: any) => mapDetailedFare(raw, flightKey, base))
+        .filter((f: any) => f && f.price != null);
+      if (mapped.length > 0) {
+        mapped.sort((a: any, b: any) => (a.price ?? 0) - (b.price ?? 0));
+        setComboFares(mapped);
+      }
+    } finally {
+      setIsLoadingFares(false);
+    }
+  };
+
+  const proceedWithFare = async () => {
     setFareSelectionError(null);
     setIsLoadingFare(true);
-
     try {
-      const sessionId = sessionStorage.getItem('returnFlightSessionId');
-      const onwardFlightKey = onward.segmentId || onward.flightId;
-
-      if (!sessionId || !onwardFlightKey) {
-        setFareSelectionError('Flight information missing');
-        return;
-      }
-
-      const fareDetailsResponse = await getReturnFareDetails({
-        sessionId,
-        flightKey: onwardFlightKey,
-        segment: 'ONWARD',
-      });
-
-      if (fareDetailsResponse?.success !== false && fareDetailsResponse?.data) {
-        setFlightDetails({
-          data: fareDetailsResponse.data,
-        });
+      const res = await fetchComboFares();
+      if (res?.data) {
+        setFlightDetails({ data: res.data });
         setShowFareDetails(true);
         onSelect();
       } else {
-        setFareSelectionError(
-          fareDetailsResponse?.message || 'Unable to load fare details. Please try again.',
-        );
+        setFareSelectionError('Unable to load fare details. Please try again.');
         onDeselect();
       }
     } catch (error) {
@@ -291,6 +321,18 @@ export default function InternationalReturnFlightComboCard({
     } finally {
       setIsLoadingFare(false);
     }
+  };
+
+  const handleSelectClick = () => {
+    if (isSelected && selectedFareId) {
+      onDeselect();
+      setShowFareDetails(false);
+      setFlightDetails(null);
+      setSelectedFareId(null);
+      setFareSelectionError(null);
+      return;
+    }
+    openFareSelect();
   };
 
   const handleCloseFareDetails = () => {
@@ -456,8 +498,36 @@ export default function InternationalReturnFlightComboCard({
         </div>
       </div>
 
+      <FareSelectModal
+          isOpen={showFareSelect}
+          onClose={() => setShowFareSelect(false)}
+          flight={onward}
+          fares={
+            comboFares ?? [
+              {
+                fareId: comboFlight.combinationId,
+                fareIdentifier: 'ROUND TRIP',
+                price: comboFlight.totalPrice,
+                cabinClass: (onward as any).class || 'ECONOMY',
+                refundable: comboFlight.refundable,
+                checkInBaggage: comboFlight.checkInBaggage,
+                cabinBaggage: comboFlight.cabinBaggage,
+              },
+            ]
+          }
+          paxText={getPaxText()}
+          isLoading={isLoadingFare}
+          isLoadingFares={isLoadingFares}
+          onBookFare={(chosen: any) => {
+            setPendingFareId(chosen?.fareId ?? null);
+            setShowFareSelect(false);
+            proceedWithFare();
+          }}
+        />
+
       {showFareDetails && flightDetails && isReturnFlightSearch && (
         <InternationalReturnFlightFareDetailsCard
+          initialFareId={pendingFareId ?? undefined}
           isOpen={showFareDetails}
           onClose={handleCloseFareDetails}
           fareData={flightDetails}

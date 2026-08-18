@@ -604,7 +604,7 @@ export default function CabSearchSection({ initialFrom, initialTo, initialFromPo
                   </div>
                   <button
                     onClick={() => setShowPaxDropdown(false)}
-                    className="w-full bg-[#7A1315] text-white py-2 rounded-lg text-sm font-bold"
+                    className="w-full bg-[var(--color-brand-red)] hover:bg-[var(--color-brand-red)]/90 text-white py-2 rounded-lg text-sm font-bold"
                   >
                     Done
                   </button>
@@ -617,7 +617,7 @@ export default function CabSearchSection({ initialFrom, initialTo, initialFromPo
         {/* Search Button */}
         <button
           onClick={handleSearch}
-          className="bg-[#7A1315] hover:bg-[#5a0e10] text-white font-semibold flex items-center justify-center gap-2 rounded-[12px] shadow-lg transition-all duration-200 mx-auto mt-6"
+          className="bg-[var(--color-brand-red)] hover:bg-[var(--color-brand-red)]/90 text-white font-semibold flex items-center justify-center gap-2 rounded-xl shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] transition-all duration-200 mx-auto mt-6"
           style={{ width: '190px', height: '46px', position: 'relative', zIndex: 10 }}
         >
           <Search className="w-5 h-5" />

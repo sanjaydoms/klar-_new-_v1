@@ -8,6 +8,8 @@ export const useFilters = () => {
   const [maxPrice, setMaxPrice] = useState<number>(100000);
   const [selectedArrivalTimes, setSelectedArrivalTimes] = useState<string[]>([]);
   const [selectedAirlines, setSelectedAirlines] = useState<string[]>([]);
+  const [selectedRefundable, setSelectedRefundable] = useState<string[]>([]);
+  const [selectedFareTypes, setSelectedFareTypes] = useState<string[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
@@ -18,7 +20,9 @@ export const useFilters = () => {
       minPrice > 0 ||
       maxPrice < 100000 ||
       selectedArrivalTimes.length > 0 ||
-      selectedAirlines.length > 0;
+      selectedAirlines.length > 0 ||
+      selectedRefundable.length > 0 ||
+      selectedFareTypes.length > 0;
     setHasChanges(hasActiveFilters);
   }, [
     primarySort,
@@ -28,6 +32,8 @@ export const useFilters = () => {
     maxPrice,
     selectedArrivalTimes,
     selectedAirlines,
+    selectedRefundable,
+    selectedFareTypes,
   ]);
 
   const handleSortSelect = (sortKey: string) => {
@@ -66,6 +72,18 @@ export const useFilters = () => {
     );
   };
 
+  const handleRefundableChange = (value: string) => {
+    setSelectedRefundable((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
+    );
+  };
+
+  const handleFareTypeChange = (value: string) => {
+    setSelectedFareTypes((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
+    );
+  };
+
   const handleArrivalTimeChange = (time: string) => {
     setSelectedArrivalTimes((prev) =>
       prev.includes(time) ? prev.filter((t) => t !== time) : [...prev, time],
@@ -80,6 +98,8 @@ export const useFilters = () => {
     setMaxPrice(100000);
     setSelectedArrivalTimes([]);
     setSelectedAirlines([]);
+    setSelectedRefundable([]);
+    setSelectedFareTypes([]);
   };
 
   return {
@@ -91,6 +111,8 @@ export const useFilters = () => {
     maxPrice,
     selectedArrivalTimes,
     selectedAirlines,
+    selectedRefundable,
+    selectedFareTypes,
     hasChanges,
     // Setters
     setMinPrice,
@@ -101,6 +123,8 @@ export const useFilters = () => {
     handleStopChange,
     handleAirlineChange,
     handleArrivalTimeChange,
+    handleRefundableChange,
+    handleFareTypeChange,
     resetFilters,
   };
 };

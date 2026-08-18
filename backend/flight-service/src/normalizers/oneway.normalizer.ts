@@ -136,9 +136,22 @@ export class OneWayNormalizer {
             }))
             .sort((a, b) => b.flights - a.flights);
 
+        // Facet lists for the filter panel, derived from the UNFILTERED set for
+        // the same reason airlineStats is: options taken from the filtered set
+        // collapse the panel the moment a filter is applied, so the selection
+        // can never be widened again.
+        const refundableTypes = Array.from(
+            new Set(normalizedFlights.map((f: any) => f.refundable).filter(Boolean))
+        ).sort();
+        const fareTypes = Array.from(
+            new Set(normalizedFlights.map((f: any) => f.fareIdentifier).filter(Boolean))
+        ).sort();
+
         return {
             flights: normalizedFlights,
-            airlineStats
+            airlineStats,
+            refundableTypes,
+            fareTypes
         };
     }
 

@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { notifyError } from '@/utils/notify';
 
+// flight-service mounts every route under /api/flight (backend/flight-service/src/app.ts),
+// so that prefix belongs here rather than repeated across each request path below.
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_FLIGHT_URL,
+  baseURL: `${(import.meta.env.VITE_BACKEND_FLIGHT_URL || 'http://localhost:5011').replace(/\/$/, '')}/api/flight`,
   withCredentials: false,
   headers: {
     'Content-Type': 'application/json',

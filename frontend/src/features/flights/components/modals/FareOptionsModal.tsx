@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Flight } from '../../types/types.returnFlight';
-import { reviewFlight } from '../../../../api/flights.api';
 import { Loader2 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
@@ -28,43 +27,6 @@ export default function FareOptionsModal({
 }: FareOptionsModalProps) {
   const [isReviewing, setIsReviewing] = useState(false);
   const [reviewError, setReviewError] = useState('');
-
-  // const handleSelectFlight = async (priceId: string) => {
-  //   try {
-  //     console.log('priceId', priceId);
-  //     setIsReviewing(true);
-  //     setReviewError('');
-
-  //     // We might need to ensure searchId exists
-  //     if (!modalFlight.searchId) {
-  //       setReviewError('Missing search information');
-  //       return;
-  //     }
-
-  //     const response = await reviewFlight(modalFlight.searchId, [priceId]);
-
-  //     if (response.success) {
-  //       // Create a new flight object with the selected fare info if needed,
-  //       // OR just pass the original modalFlight and let the parent handle the "selected" state
-  //       // based on the fact that this specific fare was chosen.
-  //       // Actually, the API review confirms the price.
-  //       // We might want to attach the selected price ID to the flight object.
-  //       const updatedFlight = { ...modalFlight, selectedFareId: priceId };
-
-  //       onFareSelected(updatedFlight);
-  //       setShowFareOptionsModal(false);
-
-  //       if (onBookNow) onBookNow();
-  //     } else {
-  //       setReviewError(response.message || 'Failed to review flight');
-  //     }
-  //   } catch (err) {
-  //     console.error('Error reviewing flight:', err);
-  //     setReviewError('An error occurred during flight review');
-  //   } finally {
-  //     setIsReviewing(false);
-  //   }
-  // };
 
   // Map totalPriceList from backend to fareOptions
 
