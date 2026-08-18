@@ -43,7 +43,7 @@ export default function FareVariantRows({
             <span className="text-xs text-muted-foreground">{f?.refundable}</span>
           </span>
           <span className="font-display text-sm font-medium text-primary">
-            ₹ {f?.price?.toFixed(0)}
+            ₹ {f?.price != null ? Math.round(f.price).toLocaleString('en-IN') : ''}
           </span>
         </button>
       ))}
