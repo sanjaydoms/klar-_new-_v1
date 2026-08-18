@@ -29,6 +29,12 @@ interface TravellerFormCardProps {
   validateNameInput: (value: string, field: string) => string;
   nameErrors: { [key: string]: string };
   setNameErrors: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>;
+  /** From the Review `conditions` block (ipa): supplier demands passports for this itinerary. */
+  passportRequired?: boolean;
+  /** From conditions.dob per pax type; defaults to required when unstated. */
+  dobRequired?: boolean;
+  /** conditions.anlm name-length limits (TripJack caps at 32/32). */
+  nameLimits?: { first: number; last: number };
 }
 
 export default function TravellerFormCard({
@@ -41,6 +47,9 @@ export default function TravellerFormCard({
   validateNameInput,
   nameErrors,
   setNameErrors,
+  passportRequired = false,
+  dobRequired = true,
+  nameLimits = { first: 32, last: 32 },
 }: TravellerFormCardProps) {
 
   const getTravelerTypeLabel = (type: string, idx: number) => {
@@ -75,7 +84,7 @@ export default function TravellerFormCard({
     traveler.passportExpiryDate;
 
   const validatePassportFields = () => {
-    if (traveler.passportNumber || traveler.passportIssueDate || traveler.passportExpiryDate) {
+    if (passportRequired || traveler.passportNumber || traveler.passportIssueDate || traveler.passportExpiryDate) {
       if (!traveler.passportNumber) {
         setNameErrors((prev) => ({
           ...prev,
@@ -202,7 +211,7 @@ export default function TravellerFormCard({
               aria-invalid={!!(nameErrors[`firstName_${index}`])}
               className="w-full h-9 text-xs sm:text-sm"
               placeholder="Enter first name"
-              maxLength={50}
+              maxLength={nameLimits.first}
             />
             {nameErrors[`firstName_${index}`] && (
               <p className="text-xs text-red-500 mt-1">{nameErrors[`firstName_${index}`]}</p>
@@ -258,7 +267,7 @@ export default function TravellerFormCard({
               aria-invalid={!!(nameErrors[`lastName_${index}`])}
               className="w-full h-9 text-xs sm:text-sm"
               placeholder="Enter last name"
-              maxLength={30}
+              maxLength={nameLimits.last}
             />
             {nameErrors[`lastName_${index}`] && (
               <p className="text-xs text-red-500 mt-1">{nameErrors[`lastName_${index}`]}</p>
@@ -268,14 +277,18 @@ export default function TravellerFormCard({
 
         <div>
           <Label htmlFor={fieldId('dateOfBirth')} className="mb-1 text-xs text-gray-700">
-            Date of Birth <span className="text-red-500">*</span>
+            Date of Birth {dobRequired ? (
+              <span className="text-red-500">*</span>
+            ) : (
+              <span className="text-gray-400 font-normal">(optional)</span>
+            )}
           </Label>
           <div className="relative">
             <Input
               id={fieldId('dateOfBirth')}
               name={fieldId('dateOfBirth')}
               autoComplete={autoFill('bday')}
-              required
+              required={dobRequired}
               type="date"
               value={traveler.dateOfBirth || ''}
               min={dateRange.min}
@@ -292,10 +305,12 @@ export default function TravellerFormCard({
               }}
               onBlur={(e) => {
                 if (!e.target.value) {
-                  setNameErrors((prev) => ({
-                    ...prev,
-                    [`dob_${index}`]: 'Date of birth is required',
-                  }));
+                  if (dobRequired) {
+                    setNameErrors((prev) => ({
+                      ...prev,
+                      [`dob_${index}`]: 'Date of birth is required',
+                    }));
+                  }
                 } else if (!isDateValidForType(e.target.value, traveler.type)) {
                   setNameErrors((prev) => ({
                     ...prev,
@@ -320,7 +335,12 @@ export default function TravellerFormCard({
 
         <div className="border-t border-gray-200 pt-4 mt-2">
           <h4 className="text-base font-medium text-gray-900 mb-3">
-            Passport Details <span className="text-red-500 text-sm font-normal ml-1">(Required for International Trip)</span>
+            Passport Details{' '}
+            {passportRequired ? (
+              <span className="text-red-500 text-sm font-normal ml-1">(Required for this trip)</span>
+            ) : (
+              <span className="text-gray-400 text-sm font-normal ml-1">(Optional — needed for international trips)</span>
+            )}
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div>

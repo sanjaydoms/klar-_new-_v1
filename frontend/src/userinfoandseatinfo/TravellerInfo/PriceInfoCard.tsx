@@ -89,7 +89,7 @@ export default function PriceInfoCard({
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Taxes & Surcharges</span>
-            <span className="font-medium text-green-600">{formatCurrency(totalTaxes)}</span>  {/* Changed: using totalTaxes */}
+            <span className="font-medium">{formatCurrency(totalTaxes)}</span>  {/* Changed: using totalTaxes */}
           </div>
           {/* {formattedBaggage && (
             <div className="flex justify-between text-xs text-gray-500">
@@ -120,7 +120,7 @@ export default function PriceInfoCard({
 
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Tax Amount</span>
-            <span className="font-medium text-green-600">{formatCurrency(taxAmount)}</span>
+            <span className="font-medium">{formatCurrency(taxAmount)}</span>
           </div>
 
         </div>
