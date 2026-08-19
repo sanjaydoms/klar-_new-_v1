@@ -3,6 +3,7 @@ import { Router } from "express";
 import { PERMISSIONS } from "../constants/permissions";
 import * as credentials from "../controllers/credential.controller";
 import * as providers from "../controllers/provider.controller";
+import * as routing from "../controllers/routing.controller";
 import { authenticateJWT } from "../middlewares/auth.middleware";
 import {
   requireMasterEmail,
@@ -88,7 +89,22 @@ router.post(
   credentials.test,
 );
 
-router.get("/routing", view, providers.routing);
+/**
+ * Routing.
+ *
+ * Reading needs VIEW. Writing needs the ROUTE permission and the email
+ * allowlist — changing routing changes which supplier a customer's money goes
+ * to, which is as consequential as switching a provider off.
+ */
+router.get("/catalogue", view, routing.catalogue);
+router.get("/routing", view, routing.list);
+router.get("/routing/:service/:operation", view, routing.get);
+router.put(
+  "/routing/:service/:operation",
+  requirePermission(PERMISSIONS.ROUTE),
+  requireMasterEmail,
+  routing.set,
+);
 router.get("/audit-logs", requirePermission(PERMISSIONS.AUDIT), providers.auditLog);
 
 export default router;

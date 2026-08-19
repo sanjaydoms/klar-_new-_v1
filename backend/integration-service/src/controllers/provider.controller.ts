@@ -187,14 +187,6 @@ export const create = async (req: Request, res: Response) => {
   }
 };
 
-export const routing = async (_req: Request, res: Response) => {
-  try {
-    res.json({ success: true, data: await resolveAll() });
-  } catch (err) {
-    fail(res, err, "routing");
-  }
-};
-
 export const auditLog = async (req: Request, res: Response) => {
   try {
     const { entries, limit } = await audit.list({
