@@ -37,7 +37,7 @@ const NAV: NavItem[] = [
   { to: "/credentials", label: "Credentials", icon: KeyRound },
   { to: "/health", label: "Health Monitor", icon: Activity },
   { to: "/logs", label: "API Logs", icon: ScrollText },
-  { to: "/incidents", label: "Incidents", icon: Siren, pending: "Phase 11" },
+  { to: "/incidents", label: "Incidents", icon: Siren },
   { to: "/audit", label: "Audit Logs", icon: FileClock },
 ];
 

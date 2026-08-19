@@ -5,9 +5,9 @@ import { ApiLogs } from "@/pages/ApiLogs";
 import { AuditLog } from "@/pages/AuditLog";
 import { Credentials } from "@/pages/Credentials";
 import { Health } from "@/pages/Health";
+import { Incidents } from "@/pages/Incidents";
 import { Login } from "@/pages/Login";
 import { Overview } from "@/pages/Overview";
-import { Pending } from "@/pages/Pending";
 import { ProviderDetail } from "@/pages/ProviderDetail";
 import { Providers } from "@/pages/Providers";
 import { Routing } from "@/pages/Routing";
@@ -43,16 +43,7 @@ function Gate() {
         <Route path="credentials" element={<Credentials />} />
         <Route path="health" element={<Health />} />
         <Route path="logs" element={<ApiLogs />} />
-        <Route
-          path="incidents"
-          element={
-            <Pending
-              title="Incidents"
-              phase="Phase 11"
-              description="Raised automatically when a provider or operation crosses a threshold, with the timeline of what the system did about it."
-            />
-          }
-        />
+        <Route path="incidents" element={<Incidents />} />
         <Route path="audit" element={<AuditLog />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

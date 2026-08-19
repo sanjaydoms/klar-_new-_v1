@@ -165,6 +165,21 @@ export const reportBreakers = async (
 
   try {
     const res = await BreakerState.bulkWrite(operations, { ordered: false });
+
+    // A circuit opening is part of the story of an outage (§27's "traffic
+    // shifted"). Imported lazily: incident.service imports this module for the
+    // health snapshot, and a top-level import would close the cycle.
+    const { noteCircuitChange } = await import("./incident.service");
+    for (const b of breakers) {
+      await noteCircuitChange(
+        b.providerSlug,
+        b.service,
+        b.operation,
+        b.state === "CLOSED" ? "CLOSED" : "OPEN",
+        b.lastReason,
+      );
+    }
+
     return res.upsertedCount + res.modifiedCount + res.deletedCount;
   } catch (err: any) {
     console.error(`[health] breaker report failed: ${err?.message ?? err}`);

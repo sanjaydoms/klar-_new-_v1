@@ -4,6 +4,7 @@ import { PERMISSIONS } from "../constants/permissions";
 import * as apilog from "../controllers/apilog.controller";
 import * as credentials from "../controllers/credential.controller";
 import * as healthController from "../controllers/health.controller";
+import * as incidents from "../controllers/incident.controller";
 import * as providers from "../controllers/provider.controller";
 import * as routing from "../controllers/routing.controller";
 import { authenticateJWT } from "../middlewares/auth.middleware";
@@ -117,6 +118,19 @@ router.get("/providers/:slug/health/timeline", view, healthController.timeline);
  * API logs. VIEW only — they carry no secret and no payload by construction,
  * so an operator who may see health may see these.
  */
+/**
+ * Incidents. Reading and acknowledging need only VIEW — an operator who can
+ * see an outage should be able to say they are on it, and neither action
+ * changes what customers can buy. Resolving needs CONTROL: closing an incident
+ * is a claim that the problem is over.
+ */
+router.get("/incidents", view, incidents.list);
+router.get("/incidents/:reference", view, incidents.get);
+router.post("/incidents/:reference/acknowledge", view, incidents.acknowledge);
+router.post("/incidents/:reference/notes", view, incidents.addNote);
+router.post("/incidents/:reference/resolve", control, incidents.resolve);
+router.post("/incidents/detect", control, incidents.runDetector);
+
 router.get("/logs", view, apilog.list);
 router.get("/logs/:id", view, apilog.correlation);
 

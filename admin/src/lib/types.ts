@@ -177,3 +177,38 @@ export interface CorrelationView {
   succeeded: boolean;
   servedBy: string | null;
 }
+
+/** An incident and its timeline (§27). */
+export interface IncidentEvent {
+  at: string;
+  kind:
+    | "OPENED"
+    | "DEGRADED"
+    | "RECOVERED"
+    | "CIRCUIT_OPENED"
+    | "CIRCUIT_CLOSED"
+    | "ACKNOWLEDGED"
+    | "NOTE"
+    | "RESOLVED";
+  message: string;
+  actorEmail?: string;
+}
+
+export interface Incident {
+  _id: string;
+  reference: string;
+  providerSlug: string;
+  service: string;
+  operation: string;
+  severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  status: "ACTIVE" | "ACKNOWLEDGED" | "RESOLVED";
+  title: string;
+  startedAt: string;
+  acknowledgedAt?: string;
+  acknowledgedBy?: string;
+  resolvedAt?: string;
+  resolvedBy?: string;
+  autoResolved: boolean;
+  openedWith?: { errorRate: number | null; p95Ms: number | null; requests: number };
+  events: IncidentEvent[];
+}
