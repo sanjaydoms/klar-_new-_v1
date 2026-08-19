@@ -141,6 +141,11 @@ The adapter's caller should record what happened. In `hotel-search-service`
 that is already done for search — a new supplier registered in the registry is
 measured with no further work.
 
+In `hotel-booking-service` it is done once, in the axios clients: every call
+through them is measured, and the route says which operation it belongs to
+(`observing("BOOKING")` in `routes/index.ts`). A new supplier there needs its
+client wrapped in `observe(...)` and nothing else.
+
 If you are adding an operation to a service that does not yet report, the shape
 is:
 

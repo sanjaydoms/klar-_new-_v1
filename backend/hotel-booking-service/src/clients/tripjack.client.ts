@@ -1,11 +1,12 @@
 import axios from "axios";
 import { env } from "../config/env";
+import { observe } from "./observe";
 
 /**
  * HMS Client - Hotel Management APIs (pricing, review)
  * Base: https://apitest-hms.tripjack.com
  */
-export const tripJackHmsClient = axios.create({
+export const tripJackHmsClient = observe(axios.create({
   baseURL: env.tripJack.baseUrl,
   timeout: 60000,
   headers: {
@@ -17,13 +18,13 @@ export const tripJackHmsClient = axios.create({
     "User-Agent":
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
   },
-});
+}), "TJ");
 
 /**
  * OMS Client - Order Management APIs (book, booking-details, cancel)
  * Base: https://apitest-oms.tripjack.com
  */
-export const tripJackOmsClient = axios.create({
+export const tripJackOmsClient = observe(axios.create({
   baseURL: env.tripJack.omsBaseUrl,
   timeout: 120000, // 120s — confirm-book can be slow (payment processing)
   headers: {
@@ -35,4 +36,4 @@ export const tripJackOmsClient = axios.create({
     "User-Agent":
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
   },
-});
+}), "TJ");

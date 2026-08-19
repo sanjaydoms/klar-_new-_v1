@@ -2,6 +2,21 @@
 
 ## The layering
 
+Two services call suppliers, and they integrate with the control center
+DIFFERENTLY — on purpose.
+
+| | hotel-search-service | hotel-booking-service |
+|---|---|---|
+| Consults routing | yes | **no** |
+| Circuit breaker | yes | **no** |
+| Reports health and logs | yes | yes |
+
+A search fans out and merges, so skipping a supplier costs coverage and saves
+a timeout. A booking is made against a SPECIFIC rate at a SPECIFIC supplier:
+there is no second provider who could serve the same request, so refusing to
+call the one that owns it would abandon a customer mid-purchase rather than
+protect anything. The booking service therefore observes and does not decide.
+
 ```
 customer request
       │
@@ -10,6 +25,11 @@ hotel-search-service          owns the supplier adapters and makes the calls
       │  ├─ config/integration-config.ts   holds a routing snapshot, refreshed on a timer
       │  ├─ config/breaker.ts              circuit breaker, state local to this process
       │  └─ config/telemetry.ts            batches observations, sends them fire-and-forget
+      │
+      │
+hotel-booking-service         observes only
+      │  ├─ utils/observability.ts        the route names the operation; ALS carries it
+      │  └─ clients/observe.ts            one axios interceptor per supplier client
       │
       ▼ (once per 15s, and once per 10s the other way)
 integration-service
