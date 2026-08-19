@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import { PERMISSIONS } from "../constants/permissions";
 import * as credentials from "../controllers/credential.controller";
+import * as healthController from "../controllers/health.controller";
 import * as providers from "../controllers/provider.controller";
 import * as routing from "../controllers/routing.controller";
 import { authenticateJWT } from "../middlewares/auth.middleware";
@@ -96,6 +97,21 @@ router.post(
  * allowlist — changing routing changes which supplier a customer's money goes
  * to, which is as consequential as switching a provider off.
  */
+/**
+ * Health. Reading needs VIEW; changing the thresholds needs CONTROL and the
+ * allowlist — widening the critical band silences an alarm as effectively as
+ * turning monitoring off.
+ */
+router.get("/health", view, healthController.snapshot);
+router.get("/health/thresholds", view, healthController.thresholds);
+router.put(
+  "/health/thresholds",
+  control,
+  requireMasterEmail,
+  healthController.setThresholds,
+);
+router.get("/providers/:slug/health/timeline", view, healthController.timeline);
+
 router.get("/catalogue", view, routing.catalogue);
 router.get("/routing", view, routing.list);
 router.get("/routing/:service/:operation", view, routing.get);

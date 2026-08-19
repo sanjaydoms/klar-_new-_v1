@@ -27,3 +27,19 @@ export const humanise = (value: string): string => {
 
 export const duration = (ms: number): string =>
   ms < 1000 ? `${Math.round(ms)}ms` : `${(ms / 1000).toFixed(1)}s`;
+
+/**
+ * A latency figure, or an honest absence.
+ *
+ * `Infinity` comes back when a percentile lands in the overflow bucket — the
+ * value is genuinely unbounded above, so it is shown as "> 30s" rather than
+ * given a number the measurement cannot support.
+ */
+export const latency = (ms: number | null): string => {
+  if (ms === null) return "—";
+  if (!Number.isFinite(ms)) return "> 30s";
+  return duration(ms);
+};
+
+export const percent = (value: number | null): string =>
+  value === null ? "—" : `${value}%`;

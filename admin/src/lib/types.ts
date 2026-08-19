@@ -75,3 +75,56 @@ export interface AuditEntry {
   after?: unknown;
   createdAt: string;
 }
+
+/** Health (§22-24). Nulls mean "not measured", never zero. */
+export interface Metrics {
+  requests: number;
+  successes: number;
+  failures: number;
+  timeouts: number;
+  authFailures: number;
+  supplierErrors: number;
+  errorRate: number | null;
+  averageMs: number | null;
+  p95Ms: number | null;
+  p99Ms: number | null;
+  lastSuccessAt: string | null;
+  lastFailureAt: string | null;
+  lastFailureReason: string | null;
+  status: "HEALTHY" | "WARNING" | "DEGRADED" | "CRITICAL" | "UNKNOWN";
+  belowSampleSize: boolean;
+}
+
+export interface OperationHealth extends Metrics {
+  operation: string;
+}
+export interface ServiceHealth extends Metrics {
+  service: string;
+  operations: OperationHealth[];
+}
+export interface ProviderHealth extends Metrics {
+  providerSlug: string;
+  name: string;
+  environment: string;
+  services: ServiceHealth[];
+}
+
+export interface HealthSnapshot {
+  windowMinutes: number;
+  since: string;
+  providers: ProviderHealth[];
+  overall: Metrics;
+}
+
+export interface Thresholds {
+  warningErrorRate: number;
+  degradedErrorRate: number;
+  criticalErrorRate: number;
+  warningP95Ms: number;
+  degradedP95Ms: number;
+  criticalP95Ms: number;
+  minimumSampleSize: number;
+  windowMinutes: number;
+  updatedBy?: string;
+  updatedAt?: string;
+}

@@ -15,7 +15,15 @@ import {
 import { StatusPill } from "@/components/StatusPill";
 import { api, errorMessage } from "@/lib/api";
 import { absoluteTime, humanise, relativeTime } from "@/lib/format";
-import type { Environment, Provider, RoutingDecision } from "@/lib/types";
+import { latency, percent } from "@/lib/format";
+import type {
+  Environment,
+  HealthSnapshot,
+  Metrics,
+  Provider,
+  ProviderHealth,
+  RoutingDecision,
+} from "@/lib/types";
 
 interface Impact {
   affected: {
@@ -40,6 +48,7 @@ export function ProviderDetail() {
   const { slug = "" } = useParams();
   const [provider, setProvider] = useState<Provider | null>(null);
   const [routing, setRouting] = useState<RoutingDecision[]>([]);
+  const [health, setHealth] = useState<ProviderHealth | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -53,12 +62,15 @@ export function ProviderDetail() {
 
   const load = useCallback(async () => {
     try {
-      const [p, r] = await Promise.all([
+      const [p, r, h] = await Promise.all([
         api.get(`/providers/${slug}`),
         api.get("/routing"),
+        api.get("/health", { params: { minutes: 60 } }),
       ]);
       setProvider(p.data.data);
       setRouting(r.data.data);
+      const snapshot: HealthSnapshot = h.data.data;
+      setHealth(snapshot.providers.find((x) => x.providerSlug === slug) ?? null);
       setError(null);
     } catch (err) {
       setError(errorMessage(err));
@@ -211,8 +223,33 @@ export function ProviderDetail() {
           hint={`primary for ${primaryFor.length}`}
           tone={serving.length ? "neutral" : "warn"}
         />
-        <Stat label="Uptime" unavailable="Health monitoring lands in phase 8" />
-        <Stat label="Average response" unavailable="Health monitoring lands in phase 8" />
+        <Stat
+          label="Error rate (1h)"
+          value={percent(health?.errorRate ?? null)}
+          hint={
+            health && health.requests > 0
+              ? `${health.requests.toLocaleString()} requests`
+              : undefined
+          }
+          tone={
+            health?.status === "CRITICAL"
+              ? "critical"
+              : health?.status === "HEALTHY"
+                ? "ok"
+                : "warn"
+          }
+          unavailable={
+            health && health.requests > 0 ? undefined : "No supplier calls observed yet"
+          }
+        />
+        <Stat
+          label="Response p95 / p99"
+          value={`${latency(health?.p95Ms ?? null)} / ${latency(health?.p99Ms ?? null)}`}
+          hint={health?.averageMs ? `average ${latency(health.averageMs)}` : undefined}
+          unavailable={
+            health && health.requests > 0 ? undefined : "No supplier calls observed yet"
+          }
+        />
       </div>
 
       <Card className="mt-5">
@@ -339,7 +376,14 @@ export function ProviderDetail() {
                             : `fallback #${position}`}
                       </td>
                       <td className="px-5 py-3">
-                        <StatusPill status="UNKNOWN" label="Not measured" size="sm" />
+                        <OperationHealthPill
+                          metrics={
+                            health?.services
+                              .find((s) => s.service === service.service)
+                              ?.operations.find((o) => o.operation === op.operation) ??
+                            null
+                          }
+                        />
                       </td>
                     </tr>
                   );
@@ -445,6 +489,17 @@ export function ProviderDetail() {
       )}
     </>
   );
+}
+
+/** A measured operation status, or an honest absence of one. */
+function OperationHealthPill({ metrics }: { metrics: Metrics | null }) {
+  if (!metrics || metrics.requests === 0) {
+    return <StatusPill status="UNKNOWN" label="No traffic" size="sm" />;
+  }
+  if (metrics.belowSampleSize) {
+    return <StatusPill status="UNKNOWN" label="Too little traffic" size="sm" />;
+  }
+  return <StatusPill status={metrics.status} size="sm" />;
 }
 
 /**

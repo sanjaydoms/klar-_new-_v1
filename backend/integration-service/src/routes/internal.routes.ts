@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import * as credentials from "../controllers/credential.controller";
+import * as health from "../controllers/health.controller";
 import { internalServiceAuth } from "../middlewares/internalService.middleware";
 import { resolve, resolveAll } from "../services/router.service";
 
@@ -53,5 +54,13 @@ router.get("/routing/:service/:operation", async (req, res) => {
  * one environment, per call.
  */
 router.get("/credentials/:slug/:environment", credentials.forService);
+
+/**
+ * Telemetry from the services that actually call suppliers.
+ *
+ * They batch and send fire-and-forget, so this answers fast and swallows bad
+ * rows rather than returning an error a caller might retry.
+ */
+router.post("/telemetry", health.ingest);
 
 export default router;

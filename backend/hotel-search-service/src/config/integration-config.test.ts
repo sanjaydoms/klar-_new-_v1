@@ -13,7 +13,14 @@ import { AddressInfo } from "node:net";
 
 type Decision = Record<string, unknown>;
 
-/** A stand-in integration-service that serves whatever `body` currently holds. */
+/**
+ * A stand-in integration-service that serves whatever `body` currently holds.
+ *
+ * Registered for teardown with `t.after` rather than closed at the end of the
+ * test body: a failing assertion throws, the close never runs, and the open
+ * server then holds the whole test process open forever. A suite that hangs on
+ * failure is a suite nobody runs.
+ */
 const startStub = async (state: { body: Decision[]; fail: boolean }) => {
   const server = http.createServer((req, res) => {
     if (state.fail) {
@@ -58,41 +65,47 @@ const decision = (operation: string, over: Decision = {}): Decision => ({
  * otherwise inherit each other's answers.
  */
 const load = async (url: string) => {
-  // env.ts captures the service URL at import time, so this must be set first.
-  process.env.INTEGRATION_SERVICE_URL = url;
   process.env.INTEGRATION_CONFIG_TTL_MS = "0";
   delete require.cache[require.resolve("./integration-config")];
   delete require.cache[require.resolve("./env")];
   const mod = await import("./integration-config");
-  // AFTER the import: env.ts calls dotenv with `override: true`, which would
-  // otherwise replace this with the developer's real key and make the stub
-  // reject every request with a 401.
+
+  // Both of these are set AFTER the import, and the URL is written onto the
+  // env OBJECT rather than into process.env.
+  //
+  // env.ts calls dotenv with `override: true`, so anything this test puts in
+  // process.env beforehand is replaced by whatever the developer's .env holds
+  // — which, now that INTEGRATION_SERVICE_URL lives there, pointed these tests
+  // at a real running service and made them pass or fail depending on whether
+  // one happened to be up.
+  const { env } = await import("./env");
+  env.integrationServiceUrl = url;
   process.env.INTERNAL_SERVICE_KEY = "test-key";
   return mod;
 };
 
-test("an operation with no rule yields no opinion", async () => {
+test("an operation with no rule yields no opinion", async (t) => {
   const state = { body: [] as Decision[], fail: false };
   const { stop, url } = await startStub(state);
+  t.after(stop);
   const mod = await load(url);
   await mod.refreshRouting();
   // null, not [] — the caller must fall back to its own behaviour.
   assert.equal(mod.routableCodes("HOTEL", "SEARCH"), null);
-  await stop();
 });
 
-test("a rule with nothing routable yields an empty answer, not no opinion", async () => {
+test("a rule with nothing routable yields an empty answer, not no opinion", async (t) => {
   // The kill switch. If this returned null the caller would fan out to
   // everybody and the disabled provider would keep serving traffic.
   const state = { body: [decision("SEARCH")], fail: false };
   const { stop, url } = await startStub(state);
+  t.after(stop);
   const mod = await load(url);
   await mod.refreshRouting();
   assert.deepEqual(mod.routableCodes("HOTEL", "SEARCH"), []);
-  await stop();
 });
 
-test("providers come back in priority order", async () => {
+test("providers come back in priority order", async (t) => {
   const state = {
     body: [
       decision("SEARCH", {
@@ -105,13 +118,13 @@ test("providers come back in priority order", async () => {
     fail: false,
   };
   const { stop, url } = await startStub(state);
+  t.after(stop);
   const mod = await load(url);
   await mod.refreshRouting();
   assert.deepEqual(mod.routableCodes("HOTEL", "SEARCH"), ["RG", "TJ"]);
-  await stop();
 });
 
-test("the admin plane going down keeps the last known good answer", async () => {
+test("the admin plane going down keeps the last known good answer", async (t) => {
   // An admin kills RateGain, then integration-service dies. The kill must hold.
   const state = {
     body: [
@@ -120,6 +133,7 @@ test("the admin plane going down keeps the last known good answer", async () => 
     fail: false,
   };
   const { stop, url } = await startStub(state);
+  t.after(stop);
   const mod = await load(url);
   await mod.refreshRouting();
 
@@ -127,20 +141,19 @@ test("the admin plane going down keeps the last known good answer", async () => 
   await mod.refreshRouting();
 
   assert.deepEqual(mod.routableCodes("HOTEL", "SEARCH"), ["TJ"]);
-  await stop();
 });
 
-test("a cold start with the admin plane down has no opinion at all", async () => {
+test("a cold start with the admin plane down has no opinion at all", async (t) => {
   // Never had an answer: behave exactly as the service did before this existed.
   const state = { body: [] as Decision[], fail: true };
   const { stop, url } = await startStub(state);
+  t.after(stop);
   const mod = await load(url);
   await mod.refreshRouting();
   assert.equal(mod.routableCodes("HOTEL", "SEARCH"), null);
-  await stop();
 });
 
-test("intersectCodes narrows, never widens", async () => {
+test("intersectCodes narrows, never widens", async (t) => {
   const { intersectCodes } = await import("./integration-config");
 
   // No routing configured: the caller's own filter is untouched.

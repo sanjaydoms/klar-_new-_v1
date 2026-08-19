@@ -41,6 +41,8 @@ interface ResolvedProvider {
   slug: string;
   code: string;
   priority: number;
+  /** Which supplier account this provider is pointed at, for telemetry labels. */
+  environment: string;
 }
 
 interface RoutingDecision {

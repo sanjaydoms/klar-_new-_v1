@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "@/components/AppShell";
 import { AuditLog } from "@/pages/AuditLog";
 import { Credentials } from "@/pages/Credentials";
+import { Health } from "@/pages/Health";
 import { Login } from "@/pages/Login";
 import { Overview } from "@/pages/Overview";
 import { Pending } from "@/pages/Pending";
@@ -39,16 +40,7 @@ function Gate() {
         <Route path="providers/:slug" element={<ProviderDetail />} />
         <Route path="routing" element={<Routing />} />
         <Route path="credentials" element={<Credentials />} />
-        <Route
-          path="health"
-          element={
-            <Pending
-              title="Health Monitor"
-              phase="Phase 8"
-              description="Availability, response times and error rates per provider, service and operation."
-            />
-          }
-        />
+        <Route path="health" element={<Health />} />
         <Route
           path="logs"
           element={

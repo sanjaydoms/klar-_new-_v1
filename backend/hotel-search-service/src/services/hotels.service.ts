@@ -20,6 +20,11 @@ import {
   routableCodes,
   routingFor,
 } from "../config/integration-config";
+import {
+  classifyError,
+  providerSlugFor,
+  recordCall,
+} from "../config/telemetry";
 import searchResultCache from "../cache/searchResultCache.service";
 import { LruCache } from "../utils/lruCache";
 import {
@@ -609,8 +614,16 @@ export class HotelsService {
       _abortSignal: abortController.signal,
     };
 
-    const allTasks = enabledSuppliers.map((supplier) =>
-      supplier
+    const allTasks = enabledSuppliers.map((supplier) => {
+      // Timed per supplier rather than from the shared page start: with a
+      // fan-out, `startTime` measures how long the SLOWEST supplier has been
+      // running, which would report every fast supplier as slow.
+      const callStart = Date.now();
+      const environment =
+        routingFor("HOTEL", "SEARCH")?.providers.find((p) => p.code === supplier.code)
+          ?.environment ?? "test";
+
+      return supplier
         .search(pagePayload, clientType)
         .then((res) => {
           providerStats[supplier.code] = {
@@ -619,14 +632,33 @@ export class HotelsService {
             hasMore: res.hasMore,
           };
           pageResults.push(...res.hotels);
+          const durationMs = Date.now() - callStart;
           console.log(
             `[OK] ${supplier.code} page ${pageNo} finished in ${Date.now() - startTime}ms (${res.hotels.length} hotels)`,
           );
+          recordCall({
+            providerSlug: providerSlugFor(supplier.code),
+            service: "HOTEL",
+            operation: "SEARCH",
+            environment,
+            outcome: "SUCCESS",
+            durationMs,
+          });
         })
         .catch((err) => {
           console.error(`[ERR] ${supplier.code} page ${pageNo} failed: ${err.message}`);
-        }),
-    );
+          const { outcome, reason } = classifyError(err);
+          recordCall({
+            providerSlug: providerSlugFor(supplier.code),
+            service: "HOTEL",
+            operation: "SEARCH",
+            environment,
+            outcome,
+            reason,
+            durationMs: Date.now() - callStart,
+          });
+        });
+    });
 
     // Partial-return policy (MMT-style), but never discard a supplier that is
     // about to deliver just because it crossed the window by a hair:

@@ -6,7 +6,8 @@ import { Card, EmptyState, ErrorNotice, SectionHeader, Stat } from "@/components
 import { StatusPill } from "@/components/StatusPill";
 import { api, errorMessage } from "@/lib/api";
 import { humanise, relativeTime } from "@/lib/format";
-import type { Provider, RoutingDecision } from "@/lib/types";
+import { latency, percent } from "@/lib/format";
+import type { HealthSnapshot, Provider, RoutingDecision } from "@/lib/types";
 
 /**
  * "Are KLAR's external travel APIs healthy right now?" (§5)
@@ -24,19 +25,43 @@ import type { Provider, RoutingDecision } from "@/lib/types";
  * nobody. An orphaned operation is an outage whether or not anyone has
  * measured a request failing.
  */
+/** A provider's measured status, or an honest absence of one. */
+function ProviderHealthPill({
+  slug,
+  health,
+}: {
+  slug: string;
+  health: HealthSnapshot | null;
+}) {
+  const metrics = health?.providers.find((p) => p.providerSlug === slug);
+  if (!metrics || metrics.requests === 0) {
+    return <StatusPill status="UNKNOWN" label="No traffic" size="sm" />;
+  }
+  if (metrics.belowSampleSize) {
+    return <StatusPill status="UNKNOWN" label="Too little traffic" size="sm" />;
+  }
+  return <StatusPill status={metrics.status} size="sm" />;
+}
+
 export function Overview() {
   const [providers, setProviders] = useState<Provider[] | null>(null);
   const [routing, setRouting] = useState<RoutingDecision[] | null>(null);
+  const [health, setHealth] = useState<HealthSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let live = true;
     const load = async () => {
       try {
-        const [p, r] = await Promise.all([api.get("/providers"), api.get("/routing")]);
+        const [p, r, h] = await Promise.all([
+          api.get("/providers"),
+          api.get("/routing"),
+          api.get("/health", { params: { minutes: 1440 } }),
+        ]);
         if (!live) return;
         setProviders(p.data.data);
         setRouting(r.data.data);
+        setHealth(h.data.data);
         setError(null);
       } catch (err) {
         if (live) setError(errorMessage(err));
@@ -65,6 +90,11 @@ export function Overview() {
   const active = all.filter((p) => p.status === "ACTIVE");
   const disabled = all.filter((p) => p.status === "DISABLED");
   const maintenance = all.filter((p) => p.status === "MAINTENANCE");
+
+  const overall = health?.overall;
+  // "Measured" means a real supplier call was observed. Without one, every
+  // derived number would be an artefact of an empty set.
+  const measured = Boolean(overall && overall.requests > 0);
 
   const configured = (routing ?? []).filter((d) => d.configured);
   const orphaned = configured.filter((d) => d.providers.length === 0);
@@ -106,10 +136,47 @@ export function Overview() {
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Requests today" unavailable="Health monitoring lands in phase 8" />
-        <Stat label="Average response" unavailable="Health monitoring lands in phase 8" />
-        <Stat label="Error rate" unavailable="Health monitoring lands in phase 8" />
-        <Stat label="API availability" unavailable="Health monitoring lands in phase 8" />
+        {/*
+          Measured, not configured. `measured` is false until a supplier call
+          has actually been observed, and these stay "Not collected" until then
+          — a 0 here would read as "no errors" rather than "nothing watched".
+        */}
+        <Stat
+          label="Requests (24h)"
+          value={overall?.requests.toLocaleString()}
+          hint={measured ? `${overall!.failures.toLocaleString()} failed` : undefined}
+          unavailable={measured ? undefined : "No supplier calls observed yet"}
+        />
+        <Stat
+          label="Average response"
+          value={latency(overall?.averageMs ?? null)}
+          hint={measured ? `p95 ${latency(overall!.p95Ms)}` : undefined}
+          unavailable={measured ? undefined : "No supplier calls observed yet"}
+        />
+        <Stat
+          label="Error rate"
+          value={percent(overall?.errorRate ?? null)}
+          tone={
+            !measured
+              ? "neutral"
+              : overall!.status === "CRITICAL"
+                ? "critical"
+                : overall!.status === "HEALTHY"
+                  ? "ok"
+                  : "warn"
+          }
+          unavailable={measured ? undefined : "No supplier calls observed yet"}
+        />
+        <Stat
+          label="Success rate"
+          value={
+            measured
+              ? `${Math.round((overall!.successes / overall!.requests) * 1000) / 10}%`
+              : undefined
+          }
+          hint={measured ? `over ${overall!.requests.toLocaleString()} calls` : undefined}
+          unavailable={measured ? undefined : "No supplier calls observed yet"}
+        />
       </div>
 
       {orphaned.length > 0 && (
@@ -143,7 +210,7 @@ export function Overview() {
       <Card className="mt-5">
         <SectionHeader
           title="Providers"
-          description="Status is what an administrator set. Health is measured separately, from phase 8."
+          description="Status is what an administrator set. Health is what the suppliers actually did."
         />
         {all.length === 0 ? (
           <EmptyState
@@ -196,7 +263,7 @@ export function Overview() {
                       <StatusPill status={p.status} size="sm" />
                     </td>
                     <td className="px-5 py-3">
-                      <StatusPill status="UNKNOWN" label="Not measured" size="sm" />
+                      <ProviderHealthPill slug={p.slug} health={health} />
                     </td>
                     <td className="px-5 py-3 text-ink-400">
                       {relativeTime(p.statusChangedAt)}
