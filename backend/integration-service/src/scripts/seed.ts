@@ -55,6 +55,7 @@ const env = (key: string) => process.env[key] || "";
 const providers = [
   {
     slug: "tripjack",
+    code: "TJ",
     name: "TripJack",
     types: ["FLIGHT", "HOTEL"],
     description: "Flight and hotel aggregator. KLAR's incumbent supplier for both.",
@@ -91,6 +92,7 @@ const providers = [
   },
   {
     slug: "rategain",
+    code: "RG",
     name: "RateGain",
     types: ["HOTEL"],
     description: "Hotel-only aggregator. Second source for hotel inventory.",
@@ -163,13 +165,12 @@ const seed = async (): Promise<void> => {
   await connectDB();
 
   for (const p of providers) {
-    const hasTestUrl = Boolean(p.baseUrls.test);
-    const hasProdUrl = Boolean(p.baseUrls.production);
 
     await Provider.findOneAndUpdate(
       { slug: p.slug },
       {
         $set: {
+          code: p.code,
           name: p.name,
           types: p.types,
           description: p.description,
@@ -177,10 +178,6 @@ const seed = async (): Promise<void> => {
           credentialSchema: p.credentialSchema,
           "environments.production.baseUrl": p.baseUrls.production,
           "environments.test.baseUrl": p.baseUrls.test,
-          // An environment with no base URL cannot be called, so it is not
-          // enabled — the router would otherwise pick a provider it cannot reach.
-          "environments.production.enabled": hasProdUrl,
-          "environments.test.enabled": hasTestUrl,
         },
         // Only on insert: never stamp over an admin's later choices by re-seeding.
         $setOnInsert: {
@@ -191,13 +188,23 @@ const seed = async (): Promise<void> => {
           statusChangedBy: "system:seed",
           activeEnvironment: "test",
           activatedAt: new Date(),
+          // Enabled because these suppliers ARE being called today. The base
+          // URL here may be blank: until credentials are migrated, each
+          // consuming service still holds its own supplier configuration, so an
+          // empty field means "not migrated yet", not "unreachable". Inferring
+          // disabled from it would black out a search the moment this service
+          // came up.
+          "environments.test.enabled": true,
+          "environments.production.enabled": true,
         },
       },
       { upsert: true },
     );
 
-    const note = hasTestUrl || hasProdUrl ? "" : "  (no base URL in env — environments left disabled)";
-    console.log(`  provider  ${p.slug}${note}`);
+    const migrated = p.baseUrls.test || p.baseUrls.production;
+    console.log(
+      `  provider  ${p.slug}${migrated ? "" : "  (base URL still held by the consuming service)"}`,
+    );
   }
 
   for (const r of routing) {

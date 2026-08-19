@@ -3,6 +3,7 @@ import express from "express";
 import helmet from "helmet";
 
 import { envConfig } from "./config/env.config";
+import internalRoutes from "./routes/internal.routes";
 
 export const app = express();
 
@@ -20,4 +21,6 @@ app.get("/health", (_req, res) => {
   res.json({ success: true, service: "integration-service", uptime: process.uptime() });
 });
 
-// Admin and internal routes are mounted here as each phase lands.
+app.use("/internal", internalRoutes);
+
+// Admin routes are mounted here as each phase lands.

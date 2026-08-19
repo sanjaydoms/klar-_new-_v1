@@ -53,6 +53,16 @@ export interface ProviderEnvironment {
 
 export interface IProvider extends Document {
   slug: string;
+  /**
+   * The short code the supplier adapters already call themselves — "TJ", "RG"
+   * (each `suppliers/<name>/index.ts` in hotel-search-service and
+   * hotel-booking-service declares one).
+   *
+   * Carried as data rather than mapped in code, so wiring a new supplier to
+   * the router is a field on its provider record instead of an edit to a
+   * translation table in every consuming service.
+   */
+  code: string;
   name: string;
   types: ServiceCode[];
   description?: string;
@@ -131,6 +141,7 @@ const credentialFieldSchema = new Schema<CredentialField>(
 const providerSchema = new Schema<IProvider>(
   {
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    code: { type: String, required: true, uppercase: true, trim: true },
     name: { type: String, required: true, trim: true },
     types: { type: [String], required: true, default: [] },
     description: { type: String },

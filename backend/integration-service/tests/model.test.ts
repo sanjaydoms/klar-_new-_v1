@@ -17,6 +17,7 @@ import { decrypt, encrypt, mask } from "../src/utils/crypto";
 const provider = (overrides: Record<string, unknown> = {}) =>
   new Provider({
     slug: "acme",
+    code: "AC",
     name: "Acme",
     types: ["HOTEL"],
     status: "ACTIVE",

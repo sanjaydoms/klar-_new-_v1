@@ -14,6 +14,12 @@ import {
 import { getSuggestions } from "./suggestions.service";
 import { HotelModel } from "../models/Hotel.model";
 import { env } from "../config/env";
+import {
+  intersectCodes,
+  refreshRouting,
+  routableCodes,
+  routingFor,
+} from "../config/integration-config";
 import searchResultCache from "../cache/searchResultCache.service";
 import { LruCache } from "../utils/lruCache";
 import {
@@ -113,11 +119,13 @@ export class HotelsService {
     // adapters read the platform snapshot synchronously, per rate, and cannot
     // await a config fetch mid-mapping.
     const searchRegion = deriveRegion(searchPayload.countryCode);
-    const markupRules = await resolveMarkupRules(
-      clientType,
-      token ?? null,
-      searchRegion,
-    );
+    // Both of these refresh a global snapshot the synchronous path downstream
+    // reads. Run together: they are independent, and serialising two admin-plane
+    // fetches would put their latencies end to end on every cold search.
+    const [markupRules] = await Promise.all([
+      resolveMarkupRules(clientType, token ?? null, searchRegion),
+      refreshRouting(),
+    ]);
     const nights = calculateNights(searchPayload.checkin, searchPayload.checkout);
     const mode = process.env.HOTEL_PROVIDER_MODE || "UNIFIED";
     console.log(
@@ -536,16 +544,48 @@ export class HotelsService {
     const pageResults: UnifiedHotel[] = [];
     const providerStats: Record<string, { count: number; total: number; hasMore: boolean }> = {};
 
-    // Fan out to every supplier enabled for this mode/destination/providers-filter.
+    // Fan out to every supplier enabled for this mode/destination/providers-filter,
+    // narrowed further by whatever the admin has routed for HOTEL/SEARCH.
     const requestedProviders = searchPayload.providers;
     const eligibleSuppliers = supplierRegistry.getModeAndDirectEligible(
       mode,
       searchPayload.destination,
     );
+
+    // The router can only ever NARROW what HOTEL_PROVIDER_MODE already allows,
+    // never widen it. Deploying the control center must not be able to switch
+    // on a supplier an env var had switched off — that surprise would arrive
+    // as live traffic to a supplier somebody had deliberately silenced.
+    const routed = routableCodes("HOTEL", "SEARCH");
+    if (routed) {
+      const decision = routingFor("HOTEL", "SEARCH");
+      const dropped = decision?.excluded ?? [];
+      if (dropped.length) {
+        console.log(
+          `[ROUTING] excluded ${dropped
+            .map((e) => `${e.slug}(${e.reason})`)
+            .join(", ")}`,
+        );
+      }
+    }
+
+    // An EMPTY routed list means an admin has left nothing routable, which the
+    // registry cannot express: it reads an empty requestedCodes as "no filter"
+    // and would fan out to everyone. Handled here so the kill switch is
+    // absolute rather than inverted.
+    if (routed && routed.length === 0) {
+      console.warn(
+        "[ROUTING] no provider is routable for HOTEL/SEARCH — returning no results",
+      );
+      return { hotels: [], providerStats: {} };
+    }
+
+    const allowedCodes = intersectCodes(routed, requestedProviders);
+
     const enabledSuppliers = supplierRegistry.getEnabled({
       mode,
       destination: searchPayload.destination,
-      requestedCodes: requestedProviders,
+      requestedCodes: allowedCodes,
     });
 
     if (requestedProviders && requestedProviders.length > 0) {
