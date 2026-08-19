@@ -3,6 +3,7 @@ import express from "express";
 import helmet from "helmet";
 
 import { envConfig } from "./config/env.config";
+import adminRoutes from "./routes/admin.routes";
 import internalRoutes from "./routes/internal.routes";
 
 export const app = express();
@@ -22,5 +23,4 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/internal", internalRoutes);
-
-// Admin routes are mounted here as each phase lands.
+app.use("/admin/integrations", adminRoutes);
