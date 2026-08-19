@@ -20,6 +20,7 @@ import {
   routableCodes,
   routingFor,
 } from "../config/integration-config";
+import * as breaker from "../config/breaker";
 import {
   classifyError,
   providerSlugFor,
@@ -604,11 +605,42 @@ export class HotelsService {
 
     const allowedCodes = intersectCodes(routed, requestedProviders);
 
-    const enabledSuppliers = supplierRegistry.getEnabled({
+    const routableSuppliers = supplierRegistry.getEnabled({
       mode,
       destination: searchPayload.destination,
       requestedCodes: allowedCodes,
     });
+
+    /**
+     * Drop suppliers whose circuit is open (§46).
+     *
+     * This does not make the search more likely to succeed — the fan-out
+     * already tolerates one supplier failing. It stops every search paying the
+     * full timeout for a supplier that is not going to answer, which on a
+     * 15-second window is most of the wait the user experiences.
+     */
+    const enabledSuppliers = routableSuppliers.filter((s) =>
+      breaker.canAttempt(s.code, "HOTEL", "SEARCH"),
+    );
+
+    const shortCircuited = routableSuppliers.filter(
+      (s) => !enabledSuppliers.includes(s),
+    );
+    if (shortCircuited.length) {
+      console.warn(
+        `[BREAKER] skipping ${shortCircuited.map((s) => s.code).join(", ")} — circuit open`,
+      );
+    }
+
+    /**
+     * Every routable supplier is short-circuited.
+     *
+     * Try them anyway rather than returning nothing. An empty result page is a
+     * worse outcome than a slow one, and if every supplier is out then the
+     * breaker is no longer protecting a healthy path — there is no healthy
+     * path left to protect.
+     */
+    const suppliersToCall = enabledSuppliers.length ? enabledSuppliers : routableSuppliers;
 
     if (requestedProviders && requestedProviders.length > 0) {
       eligibleSuppliers
@@ -631,7 +663,7 @@ export class HotelsService {
       _abortSignal: abortController.signal,
     };
 
-    const allTasks = enabledSuppliers.map((supplier) => {
+    const allTasks = suppliersToCall.map((supplier) => {
       // Timed per supplier rather than from the shared page start: with a
       // fan-out, `startTime` measures how long the SLOWEST supplier has been
       // running, which would report every fast supplier as slow.
@@ -671,6 +703,7 @@ export class HotelsService {
           console.log(
             `[OK] ${supplier.code} page ${pageNo} finished in ${Date.now() - startTime}ms (${res.hotels.length} hotels)`,
           );
+          breaker.recordSuccess(supplier.code, "HOTEL", "SEARCH");
           recordCall({
             providerSlug: providerSlugFor(supplier.code),
             service: "HOTEL",
@@ -686,6 +719,7 @@ export class HotelsService {
         .catch((err) => {
           console.error(`[ERR] ${supplier.code} page ${pageNo} failed: ${err.message}`);
           const { outcome, reason } = classifyError(err);
+          breaker.recordFailure(supplier.code, "HOTEL", "SEARCH", reason);
           recordCall({
             providerSlug: providerSlugFor(supplier.code),
             service: "HOTEL",

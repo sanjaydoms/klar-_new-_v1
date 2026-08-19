@@ -36,6 +36,23 @@ export interface IHealthThresholds extends Document {
   /** How far back the live status looks. */
   windowMinutes: number;
 
+  /**
+   * Circuit breaker (§46).
+   *
+   * Lives with the health thresholds because it is the same judgement made for
+   * a different purpose: these numbers decide when a provider is bad enough to
+   * stop calling, where the ones above decide when it is bad enough to show in
+   * red. One editor, one audit entry, no chance of the two drifting into
+   * saying different things about the same supplier.
+   */
+  breakerEnabled: boolean;
+  /** Consecutive failures on one operation before the circuit opens. */
+  breakerFailureThreshold: number;
+  /** How long the circuit stays open before a probe is allowed through. */
+  breakerCooldownSeconds: number;
+  /** Consecutive successful probes needed to close it again. */
+  breakerProbeSuccesses: number;
+
   updatedBy?: string;
   updatedAt: Date;
 }
@@ -57,6 +74,14 @@ const thresholdsSchema = new Schema<IHealthThresholds>(
 
     minimumSampleSize: { type: Number, default: 20 },
     windowMinutes: { type: Number, default: 15 },
+
+    breakerEnabled: { type: Boolean, default: true },
+    // Five in a row, not a percentage: a breaker exists to react in seconds,
+    // and a rate over a window is still averaging while every request is
+    // failing. Five consecutive failures is not bad luck.
+    breakerFailureThreshold: { type: Number, default: 5 },
+    breakerCooldownSeconds: { type: Number, default: 60 },
+    breakerProbeSuccesses: { type: Number, default: 2 },
 
     updatedBy: { type: String },
   },

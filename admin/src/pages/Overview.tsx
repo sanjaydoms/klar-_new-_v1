@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+import { OpenCircuits } from "@/components/OpenCircuits";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, EmptyState, ErrorNotice, SectionHeader, Stat } from "@/components/Primitives";
 import { StatusPill } from "@/components/StatusPill";
@@ -178,6 +179,8 @@ export function Overview() {
           unavailable={measured ? undefined : "No supplier calls observed yet"}
         />
       </div>
+
+      <OpenCircuits circuits={health?.circuits ?? []} />
 
       {orphaned.length > 0 && (
         <Card className="mt-5 border-critical-500/30 bg-critical-500/5">

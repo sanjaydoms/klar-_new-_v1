@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Field, TextInput } from "@/components/Fields";
+import { OpenCircuits } from "@/components/OpenCircuits";
 import { PageHeader } from "@/components/PageHeader";
 import {
   Button,
@@ -130,6 +131,8 @@ export function Health() {
           value={`${latency(snapshot.overall.p95Ms)} / ${latency(snapshot.overall.p99Ms)}`}
         />
       </div>
+
+      <OpenCircuits circuits={snapshot.circuits ?? []} />
 
       {nothingMeasured && (
         <Card className="mt-5">
@@ -315,6 +318,9 @@ function ThresholdEditor({
     ["criticalP95Ms", "Critical p95", "ms"],
     ["minimumSampleSize", "Minimum requests before judging", ""],
     ["windowMinutes", "Default window", "minutes"],
+    ["breakerFailureThreshold", "Circuit opens after", "failures in a row"],
+    ["breakerCooldownSeconds", "Circuit cooldown", "seconds"],
+    ["breakerProbeSuccesses", "Probes needed to close", ""],
   ];
 
   return (

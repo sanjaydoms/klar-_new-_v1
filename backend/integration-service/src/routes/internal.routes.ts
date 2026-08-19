@@ -3,6 +3,7 @@ import { Router } from "express";
 import * as credentials from "../controllers/credential.controller";
 import * as health from "../controllers/health.controller";
 import { internalServiceAuth } from "../middlewares/internalService.middleware";
+import { currentThresholds } from "../models/HealthThresholds.model";
 import { resolve, resolveAll } from "../services/router.service";
 
 /**
@@ -25,7 +26,21 @@ router.use(internalServiceAuth);
  */
 router.get("/routing", async (_req, res) => {
   try {
-    res.json({ success: true, data: await resolveAll() });
+    // The breaker configuration rides along with the routing snapshot the
+    // clients already poll. The breaker runs in THEIR process — it has to, a
+    // breaker that needs a network hop to decide whether to make a network
+    // call has already failed — but its numbers stay admin-owned.
+    const [data, thresholds] = await Promise.all([resolveAll(), currentThresholds()]);
+    res.json({
+      success: true,
+      data,
+      breaker: {
+        enabled: thresholds.breakerEnabled,
+        failureThreshold: thresholds.breakerFailureThreshold,
+        cooldownSeconds: thresholds.breakerCooldownSeconds,
+        probeSuccesses: thresholds.breakerProbeSuccesses,
+      },
+    });
   } catch (err: any) {
     console.error("[internal] resolveAll failed:", err?.message ?? err);
     res.status(500).json({ success: false, message: "Failed to resolve routing." });

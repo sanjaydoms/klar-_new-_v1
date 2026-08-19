@@ -1,5 +1,6 @@
 import { HISTOGRAM_SIZE, bucketFor, percentileFrom } from "../constants/latency";
 import { HEALTH_STATUS, HealthStatus } from "../constants/status";
+import { BreakerState } from "../models/BreakerState.model";
 import { HealthBucket } from "../models/HealthBucket.model";
 import { IHealthThresholds, currentThresholds } from "../models/HealthThresholds.model";
 import { Provider } from "../models/Provider.model";
@@ -102,6 +103,80 @@ export const report = async (reports: CallReport[]): Promise<number> => {
     return 0;
   }
 };
+
+export interface BreakerReport {
+  providerSlug: string;
+  service: string;
+  operation: string;
+  state: "CLOSED" | "OPEN" | "HALF_OPEN";
+  since?: string | Date;
+  consecutiveFailures?: number;
+  lastReason?: string;
+}
+
+/**
+ * Record what a calling process believes about its circuits.
+ *
+ * CLOSED reports are deleted rather than stored. The dashboard question is
+ * "what is broken", and a row per healthy circuit per instance would bury the
+ * two that matter under a hundred that do not.
+ */
+export const reportBreakers = async (
+  reportedBy: string,
+  breakers: BreakerReport[],
+): Promise<number> => {
+  if (!breakers.length) return 0;
+
+  const now = new Date();
+  const operations = breakers.map((b) =>
+    b.state === "CLOSED"
+      ? {
+          deleteOne: {
+            filter: {
+              providerSlug: b.providerSlug,
+              service: b.service,
+              operation: b.operation,
+              reportedBy,
+            },
+          },
+        }
+      : {
+          updateOne: {
+            filter: {
+              providerSlug: b.providerSlug,
+              service: b.service,
+              operation: b.operation,
+              reportedBy,
+            },
+            update: {
+              $set: {
+                state: b.state,
+                reportedBy,
+                reportedAt: now,
+                since: b.since ? new Date(b.since) : now,
+                consecutiveFailures: b.consecutiveFailures ?? 0,
+                lastReason: b.lastReason,
+              },
+            },
+            upsert: true,
+          },
+        },
+  );
+
+  try {
+    const res = await BreakerState.bulkWrite(operations, { ordered: false });
+    return res.upsertedCount + res.modifiedCount + res.deletedCount;
+  } catch (err: any) {
+    console.error(`[health] breaker report failed: ${err?.message ?? err}`);
+    return 0;
+  }
+};
+
+/** Every circuit not currently closed, newest report first. */
+export const openCircuits = () =>
+  BreakerState.find({ state: { $ne: "CLOSED" } })
+    .sort({ reportedAt: -1 })
+    .lean();
 
 export interface Metrics {
   requests: number;
@@ -311,6 +386,18 @@ export interface HealthSnapshot {
   since: Date;
   providers: ProviderHealth[];
   overall: Metrics;
+  /** Circuits a calling process has taken out of rotation (§46). */
+  circuits: {
+    providerSlug: string;
+    service: string;
+    operation: string;
+    state: string;
+    since: Date;
+    reportedBy: string;
+    reportedAt: Date;
+    consecutiveFailures: number;
+    lastReason?: string;
+  }[];
 }
 
 /**
@@ -326,9 +413,10 @@ export const snapshot = async (options: { minutes?: number } = {}): Promise<Heal
   const windowMinutes = options.minutes ?? thresholds.windowMinutes;
   const since = new Date(Date.now() - windowMinutes * 60_000);
 
-  const [buckets, providers] = await Promise.all([
+  const [buckets, providers, circuits] = await Promise.all([
     HealthBucket.find({ minute: { $gte: since } }).lean(),
     Provider.find().lean(),
+    openCircuits(),
   ]);
 
   const providerHealth: ProviderHealth[] = providers.map((provider) => {
@@ -367,6 +455,17 @@ export const snapshot = async (options: { minutes?: number } = {}): Promise<Heal
     since,
     providers: providerHealth,
     overall: aggregate(buckets, thresholds),
+    circuits: circuits.map((c) => ({
+      providerSlug: c.providerSlug,
+      service: c.service,
+      operation: c.operation,
+      state: c.state,
+      since: c.since,
+      reportedBy: c.reportedBy,
+      reportedAt: c.reportedAt,
+      consecutiveFailures: c.consecutiveFailures,
+      lastReason: c.lastReason,
+    })),
   };
 };
 

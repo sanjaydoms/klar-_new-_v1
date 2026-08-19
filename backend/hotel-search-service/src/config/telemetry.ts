@@ -16,7 +16,9 @@
  */
 
 import axios from "axios";
+import os from "node:os";
 
+import * as breaker from "./breaker";
 import { env } from "./env";
 
 export type CallOutcome =
@@ -169,7 +171,14 @@ export const flush = async (): Promise<void> => {
   try {
     await axios.post(
       `${env.integrationServiceUrl}/internal/telemetry`,
-      { reports: batch },
+      {
+        reports: batch,
+        // Sent on every flush rather than only on change: the admin plane
+        // expires stale reports, so a circuit that stays open has to keep
+        // saying so or it would vanish from the dashboard while still open.
+        breakers: breaker.snapshot(providerSlugFor),
+        reportedBy: `hotel-search@${os.hostname()}:${process.pid}`,
+      },
       { headers: { "x-internal-key": internalKey }, timeout: TIMEOUT_MS },
     );
   } catch (err: any) {

@@ -27,11 +27,13 @@ export const ingest = async (req: Request, res: Response) => {
   // Both consumers, one batch: the health bucket is the aggregate and the log
   // row is the individual record of the SAME observation. Run together rather
   // than in sequence — neither depends on the other, and a caller is waiting.
-  const [accepted, logged] = await Promise.all([
+  const breakers = Array.isArray(req.body?.breakers) ? req.body.breakers : [];
+  const [accepted, logged, circuits] = await Promise.all([
     health.report(reports),
     apilog.write(reports),
+    health.reportBreakers(String(req.body?.reportedBy ?? "unknown"), breakers),
   ]);
-  res.json({ success: true, accepted, logged });
+  res.json({ success: true, accepted, logged, circuits });
 };
 
 export const snapshot = async (req: Request, res: Response) => {

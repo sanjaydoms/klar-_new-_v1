@@ -35,9 +35,29 @@ export interface IRoutingRule extends Document {
    * May the router try the next provider when the primary fails?
    *
    * For booking-shaped operations this is a request to attempt failover, not a
-   * licence to retry blindly — the failover service still has to establish
-   * that the supplier did not process the request (§21) before trying anyone
-   * else. For search it is a straightforward "try the next one".
+   * licence to retry blindly — the supplier must be established not to have
+   * processed the request (§21) before anyone else is asked.
+   *
+   * WHAT THIS FLAG DOES AND DOES NOT DO TODAY
+   * -----------------------------------------
+   * KLAR's hotel search does not fail over, because it does not need to: it
+   * calls every routed supplier IN PARALLEL and merges the results, so one
+   * supplier failing costs coverage rather than the search. What protects that
+   * path is the circuit breaker, which stops the search waiting out the
+   * timeout of a supplier that is not going to answer.
+   *
+   * The operations after search cannot fail over at all, and that is a
+   * property of the domain rather than a gap. Hotel details are fetched by a
+   * property id that BELONGS to one supplier — TripJack cannot price a
+   * RateGain property — and a booking is made against the specific rate that
+   * was revalidated moments earlier. There is no second supplier who could
+   * serve the same request.
+   *
+   * So this flag is enforced (phase 5 guards turning it on for booking-shaped
+   * operations) and recorded, and it will govern sequential retry the first
+   * time an operation exists that can genuinely be served by more than one
+   * provider — a flight search across two aggregators, for instance. It is
+   * deliberately not wired to fabricate failover on a path that merges.
    */
   failoverEnabled: boolean;
   providers: RoutingTarget[];

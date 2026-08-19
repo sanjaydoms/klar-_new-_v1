@@ -109,14 +109,31 @@ export interface ProviderHealth extends Metrics {
   services: ServiceHealth[];
 }
 
+export interface CircuitState {
+  providerSlug: string;
+  service: string;
+  operation: string;
+  state: "OPEN" | "HALF_OPEN" | "CLOSED";
+  since: string;
+  reportedBy: string;
+  reportedAt: string;
+  consecutiveFailures: number;
+  lastReason?: string;
+}
+
 export interface HealthSnapshot {
   windowMinutes: number;
   since: string;
   providers: ProviderHealth[];
   overall: Metrics;
+  circuits: CircuitState[];
 }
 
 export interface Thresholds {
+  breakerEnabled: boolean;
+  breakerFailureThreshold: number;
+  breakerCooldownSeconds: number;
+  breakerProbeSuccesses: number;
   warningErrorRate: number;
   degradedErrorRate: number;
   criticalErrorRate: number;

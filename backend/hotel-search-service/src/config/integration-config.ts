@@ -34,6 +34,7 @@
 
 import axios from "axios";
 
+import * as breaker from "./breaker";
 import { env } from "./env";
 
 /** One provider the router says may serve an operation, in priority order. */
@@ -95,6 +96,11 @@ async function fetchRouting(): Promise<void> {
   for (const d of res.data.data as RoutingDecision[]) {
     next.set(key(d.service, d.operation), d);
   }
+
+  // The breaker runs in this process but its numbers are admin-owned, and they
+  // arrive on the snapshot this client already polls rather than needing a
+  // second fetch on a second timer.
+  if (res.data.breaker) breaker.configure(res.data.breaker);
 
   // Swapped whole, never mutated in place: a search reading mid-update would
   // otherwise see half of one configuration and half of another.
