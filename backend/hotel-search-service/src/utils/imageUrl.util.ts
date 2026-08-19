@@ -18,14 +18,27 @@
 const HOTELBEDS_CDN = "https://photos.hotelbeds.com/giata/";
 
 /**
- * TripJack serves absolute URLs in its static-detail payloads, so there is
- * normally nothing to qualify. Set TRIPJACK_IMAGE_BASE only if a TJ feed is
- * found to emit relative paths; until then an unresolvable TJ path is dropped
- * rather than pointed at someone else's CDN.
+ * Where a RELATIVE image path from each supplier is hosted, keyed by the
+ * supplier's registry `code`.
+ *
+ * A code that is absent — or present with "" — drops relative paths instead of
+ * guessing a host, which is the rule stated above. TripJack serves absolute
+ * URLs in its static-detail payloads, so there is normally nothing to qualify;
+ * set TRIPJACK_IMAGE_BASE only if a TJ feed is found to emit relative paths.
+ *
+ * A new supplier adds an entry here ONLY if it emits relative paths. Absolute
+ * URLs, the common case, need nothing.
  */
-const TRIPJACK_IMAGE_BASE = process.env.TRIPJACK_IMAGE_BASE || "";
+const IMAGE_BASE_BY_SOURCE: Record<string, string> = {
+  RG: HOTELBEDS_CDN,
+  TJ: process.env.TRIPJACK_IMAGE_BASE || "",
+};
 
-export type ImageSource = "TJ" | "RG";
+/**
+ * A supplier's registry `code` — see suppliers/registry.ts. Not a union of the
+ * codes registered today, so adding a supplier does not edit this file.
+ */
+export type ImageSource = string;
 
 const IMAGE_EXTENSION = /\.(jpg|jpeg|png|webp|gif|bmp)$/i;
 
@@ -79,22 +92,20 @@ export function qualifyImageUrl(raw: any, source: ImageSource): string {
   if (path.startsWith("//")) return `https:${path}`;
 
   // A supplier hotel id is not an image. These leak into image arrays when an
-  // upstream mapper falls back to the wrong field.
-  if (/^(TJ|RG):/.test(path) || /^\d+$/.test(path)) return "";
+  // upstream mapper falls back to the wrong field. Matches any supplier-code
+  // prefix ("TJ:", "RG:", and whatever a future supplier registers) rather than
+  // the two codes that happened to exist when this guard was written — a real
+  // URL has already returned above, so nothing legitimate reaches here.
+  if (/^[A-Z]{2,4}:/.test(path) || /^\d+$/.test(path)) return "";
 
   // `_hb_` positively identifies a Hotelbeds asset whoever supplied it.
   if (path.includes("_hb_")) {
     return HOTELBEDS_CDN + path.replace(/^\/+/, "");
   }
 
-  if (source === "RG" && IMAGE_EXTENSION.test(path)) {
-    return HOTELBEDS_CDN + path.replace(/^\/+/, "");
-  }
-
-  if (source === "TJ" && TRIPJACK_IMAGE_BASE && IMAGE_EXTENSION.test(path)) {
-    return (
-      TRIPJACK_IMAGE_BASE.replace(/\/+$/, "") + "/" + path.replace(/^\/+/, "")
-    );
+  const base = IMAGE_BASE_BY_SOURCE[source];
+  if (base && IMAGE_EXTENSION.test(path)) {
+    return base.replace(/\/+$/, "") + "/" + path.replace(/^\/+/, "");
   }
 
   // Unresolvable: no host, and no basis for inventing one.

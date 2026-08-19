@@ -38,8 +38,14 @@ export interface UnifiedRoom {
 }
 
 export interface UnifiedHotel {
-  hotelId: string; // "RG:ChIJ..." or "TJ:10000000012345"
-  source: "RG" | "TJ";
+  hotelId: string; // "<CODE>:<supplier id>", e.g. "RG:ChIJ..." or "TJ:10000000012345"
+  /**
+   * The `code` of the supplier that returned this hotel — see
+   * suppliers/registry.ts, which is the only place supplier codes are defined.
+   * Deliberately not a union of the codes registered today: a third supplier is
+   * a new entry in that registry, not an edit to every type that carries a code.
+   */
+  source: string;
   name: string;
   address: string;
   city: string;
@@ -84,7 +90,7 @@ export interface UnifiedHotel {
   rawPayload: unknown; // keep original for detail/book calls
   altDeal?: {
     // cross-provider comparison
-    source: "RG" | "TJ";
+    source: string;
     price: number;
     currency?: string;
   };
