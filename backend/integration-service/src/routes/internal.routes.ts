@@ -1,5 +1,6 @@
 import { Router } from "express";
 
+import * as credentials from "../controllers/credential.controller";
 import { internalServiceAuth } from "../middlewares/internalService.middleware";
 import { resolve, resolveAll } from "../services/router.service";
 
@@ -43,5 +44,14 @@ router.get("/routing/:service/:operation", async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to resolve routing." });
   }
 });
+
+/**
+ * Decrypted supplier credentials for a KLAR service.
+ *
+ * The only route in the system that returns a plaintext secret, and it is
+ * server-to-server behind the shared key. Deliberately narrow: one provider,
+ * one environment, per call.
+ */
+router.get("/credentials/:slug/:environment", credentials.forService);
 
 export default router;

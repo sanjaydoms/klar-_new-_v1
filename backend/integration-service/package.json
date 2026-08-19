@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test --import tsx tests/*.test.ts",
     "seed": "ts-node src/scripts/seed.ts",
+    "import-credentials": "ts-node src/scripts/import-credentials.ts",
     "pm2:start": "pm2 start dist/server.js --name integration-service",
     "pm2:stop": "pm2 stop integration-service",
     "pm2:restart": "pm2 restart integration-service",

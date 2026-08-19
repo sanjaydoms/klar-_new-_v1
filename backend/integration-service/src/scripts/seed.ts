@@ -72,19 +72,44 @@ const providers = [
       { service: "HOTEL", enabled: true, operations: ops(HOTEL_OPS, HOTEL_OPS) },
       { service: "FLIGHT", enabled: true, operations: ops(FLIGHT_OPS, FLIGHT_OPS) },
     ],
+    /**
+     * Three hosts, not one — this is what the live .env files actually hold:
+     * flights on apitest.tripjack.com, hotels on apitest-hms, order management
+     * on apitest-oms. Modelled as credential fields because the split is
+     * TripJack's, not a shape every provider shares.
+     */
     credentialSchema: [
-      { key: "BASE_URL", label: "Base URL", type: "url", required: true },
-      { key: "API_KEY", label: "API Key", type: "secret", required: true },
-      { key: "AGENCY_ID", label: "Agency ID", type: "text", required: false },
+      { key: "BASE_URL", label: "Flight API Base URL", type: "url", required: true },
       {
-        key: "OMS_BASE_URL",
-        label: "OMS Base URL",
+        key: "HOTEL_BASE_URL",
+        label: "Hotel API Base URL",
         type: "url",
         required: false,
-        helpText: "Order management host. Booking service only.",
+        helpText: "Hotel search and booking. Separate host from flights.",
       },
+      {
+        key: "OMS_BASE_URL",
+        label: "Order Management Base URL",
+        type: "url",
+        required: false,
+        helpText: "Booking status and amendments.",
+      },
+      { key: "API_KEY", label: "API Key", type: "secret", required: true },
+      { key: "AGENCY_ID", label: "Agency ID", type: "text", required: false },
       { key: "IMAGE_BASE", label: "Image Base URL", type: "url", required: false },
     ],
+    /**
+     * Header names taken from the live clients (hotel-search-service's
+     * clients/tripjack.client.ts), not from the documentation — which has
+     * diverged from the live API every time it mattered. The path is left at
+     * the base URL because no health endpoint has been verified against UAT;
+     * that is metadata, so tightening it later needs no code change.
+     */
+    connectionTest: {
+      method: "GET" as const,
+      path: "",
+      headers: { apikey: "{{API_KEY}}", agencyId: "{{AGENCY_ID}}" },
+    },
     baseUrls: {
       production: env("TRIPJACK_PROD_BASE_URL"),
       test: env("TRIPJACK_TEST_BASE_URL") || env("TRIPJACK_BASE_URL"),
@@ -125,6 +150,12 @@ const providers = [
       { key: "API_KEY", label: "API Key", type: "secret", required: true },
       { key: "SECRET_KEY", label: "Secret Key", type: "secret", required: true },
     ],
+    /** Header names from hotel-search-service's clients/rategain.client.ts. */
+    connectionTest: {
+      method: "GET" as const,
+      path: "",
+      headers: { ApiKey: "{{API_KEY}}", ApiSecret: "{{SECRET_KEY}}" },
+    },
     baseUrls: {
       production: "",
       test: env("RATEGAIN_BASE_URL"),
@@ -176,6 +207,7 @@ const seed = async (): Promise<void> => {
           description: p.description,
           services: p.services,
           credentialSchema: p.credentialSchema,
+          connectionTest: p.connectionTest,
           "environments.production.baseUrl": p.baseUrls.production,
           "environments.test.baseUrl": p.baseUrls.test,
         },

@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import { PERMISSIONS } from "../constants/permissions";
+import * as credentials from "../controllers/credential.controller";
 import * as providers from "../controllers/provider.controller";
 import { authenticateJWT } from "../middlewares/auth.middleware";
 import {
@@ -55,6 +56,36 @@ router.patch(
   control,
   requireMasterEmail,
   providers.setEnvironment,
+);
+
+/**
+ * Credentials.
+ *
+ * The read is masked and needs only VIEW; every write needs the CREDENTIALS
+ * permission AND the email allowlist. Test Connection writes nothing to the
+ * supplier but does spend a real request against KLAR's account, so it sits
+ * with the writes rather than the reads.
+ */
+const credentialWrite = [
+  requirePermission(PERMISSIONS.CREDENTIALS),
+  requireMasterEmail,
+];
+
+router.get("/providers/:slug/credentials/:environment", view, credentials.view);
+router.put(
+  "/providers/:slug/credentials/:environment",
+  credentialWrite,
+  credentials.save,
+);
+router.delete(
+  "/providers/:slug/credentials/:environment",
+  credentialWrite,
+  credentials.remove,
+);
+router.post(
+  "/providers/:slug/credentials/:environment/test",
+  credentialWrite,
+  credentials.test,
 );
 
 router.get("/routing", view, providers.routing);

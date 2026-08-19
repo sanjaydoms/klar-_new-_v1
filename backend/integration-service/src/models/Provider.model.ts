@@ -46,7 +46,47 @@ export interface ProviderService {
   operations: ProviderOperation[];
 }
 
+/**
+ * How to prove this provider's credentials work (§17).
+ *
+ * Described as data rather than written as code per supplier, for the same
+ * reason credentialSchema is: integration-service must not learn what a
+ * TripJack is. Header and body values may contain {{KEY}} placeholders, filled
+ * from the environment's credentials at call time.
+ *
+ * Absent means Test Connection falls back to a plain authenticated request at
+ * the base URL — enough to tell a dead host from a rejected key, which is most
+ * of what the button is for.
+ */
+export interface ConnectionTest {
+  method: "GET" | "POST";
+  /** Appended to the environment's base URL. */
+  path: string;
+  headers?: Record<string, string>;
+  /** JSON string, same {{KEY}} templating as headers. */
+  body?: string;
+  /**
+   * Statuses that mean "the credentials are good", beyond the default of any
+   * 2xx. Some supplier health endpoints answer a probe with 400 because the
+   * probe body is deliberately empty — that still proves authentication.
+   */
+  okStatuses?: number[];
+  timeoutMs?: number;
+}
+
 export interface ProviderEnvironment {
+  /**
+   * The provider's primary endpoint for this environment — what Test
+   * Connection probes and what the router reports.
+   *
+   * NOT necessarily the only host the provider answers on. TripJack alone
+   * serves flights, hotels and order management from three different
+   * subdomains, so suppliers whose services live on separate hosts declare
+   * those as credential fields (HOTEL_BASE_URL, OMS_BASE_URL, ...). A fixed
+   * per-service URL column here would be wrong for every provider that does
+   * not split the same way, which is most of them; credentialSchema already
+   * exists to express exactly this kind of per-provider shape.
+   */
   baseUrl: string;
   enabled: boolean;
 }
@@ -79,6 +119,7 @@ export interface IProvider extends Document {
 
   services: ProviderService[];
   credentialSchema: CredentialField[];
+  connectionTest?: ConnectionTest;
 
   /**
    * When an admin first activated it. Null means the provider was created but
@@ -122,6 +163,18 @@ const environmentSchema = new Schema<ProviderEnvironment>(
   {
     baseUrl: { type: String, default: "" },
     enabled: { type: Boolean, default: false },
+  },
+  { _id: false },
+);
+
+const connectionTestSchema = new Schema<ConnectionTest>(
+  {
+    method: { type: String, enum: ["GET", "POST"], default: "GET" },
+    path: { type: String, default: "" },
+    headers: { type: Map, of: String, default: {} },
+    body: { type: String },
+    okStatuses: { type: [Number], default: [] },
+    timeoutMs: { type: Number },
   },
   { _id: false },
 );
@@ -172,6 +225,7 @@ const providerSchema = new Schema<IProvider>(
 
     services: { type: [serviceSchema], default: [] },
     credentialSchema: { type: [credentialFieldSchema], default: [] },
+    connectionTest: { type: connectionTestSchema, default: undefined },
 
     activatedAt: { type: Date, default: null },
   },
