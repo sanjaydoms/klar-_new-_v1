@@ -31,6 +31,11 @@ before(async () => {
 
   await mongoose.connection.dropDatabase();
 
+  // AFTER the drop, not before: dropping a database removes the indexes with
+  // it, so building them first achieves nothing.
+  const { ensureIndexes } = await import("../src/config/db.config");
+  await ensureIndexes();
+
   await Provider.create([
     {
       slug: "alpha",

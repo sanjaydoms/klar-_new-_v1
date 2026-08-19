@@ -152,20 +152,3 @@ test("a cold start with the admin plane down has no opinion at all", async (t) =
   await mod.refreshRouting();
   assert.equal(mod.routableCodes("HOTEL", "SEARCH"), null);
 });
-
-test("intersectCodes narrows, never widens", async (t) => {
-  const { intersectCodes } = await import("./integration-config");
-
-  // No routing configured: the caller's own filter is untouched.
-  assert.deepEqual(intersectCodes(null, ["RG"]), ["RG"]);
-  assert.equal(intersectCodes(null, undefined), undefined);
-
-  // Routing configured, no caller filter: routing decides.
-  assert.deepEqual(intersectCodes(["RG", "TJ"], undefined), ["RG", "TJ"]);
-  assert.deepEqual(intersectCodes(["RG", "TJ"], []), ["RG", "TJ"]);
-
-  // Both present: only what BOTH allow. A caller cannot ask for a provider
-  // the admin has routed away.
-  assert.deepEqual(intersectCodes(["TJ"], ["RG", "TJ"]), ["TJ"]);
-  assert.deepEqual(intersectCodes(["TJ"], ["RG"]), []);
-});

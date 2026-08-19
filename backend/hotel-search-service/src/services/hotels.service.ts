@@ -15,11 +15,11 @@ import { getSuggestions } from "./suggestions.service";
 import { HotelModel } from "../models/Hotel.model";
 import { env } from "../config/env";
 import {
-  intersectCodes,
   refreshRouting,
   routableCodes,
   routingFor,
 } from "../config/integration-config";
+import { selectSuppliers } from "../config/supplier-selection";
 import * as breaker from "../config/breaker";
 import {
   classifyError,
@@ -567,80 +567,50 @@ export class HotelsService {
     const pageResults: UnifiedHotel[] = [];
     const providerStats: Record<string, { count: number; total: number; hasMore: boolean }> = {};
 
-    // Fan out to every supplier enabled for this mode/destination/providers-filter,
-    // narrowed further by whatever the admin has routed for HOTEL/SEARCH.
+    // Fan out to every supplier the registry, the administrator, the caller's
+    // own filter and the circuit breaker all allow. The policy lives in
+    // config/supplier-selection so it can be tested; this is the wiring.
     const requestedProviders = searchPayload.providers;
     const eligibleSuppliers = supplierRegistry.getModeAndDirectEligible(
       mode,
       searchPayload.destination,
     );
 
-    // The router can only ever NARROW what HOTEL_PROVIDER_MODE already allows,
-    // never widen it. Deploying the control center must not be able to switch
-    // on a supplier an env var had switched off — that surprise would arrive
-    // as live traffic to a supplier somebody had deliberately silenced.
     const routed = routableCodes("HOTEL", "SEARCH");
-    if (routed) {
-      const decision = routingFor("HOTEL", "SEARCH");
-      const dropped = decision?.excluded ?? [];
-      if (dropped.length) {
-        console.log(
-          `[ROUTING] excluded ${dropped
-            .map((e) => `${e.slug}(${e.reason})`)
-            .join(", ")}`,
-        );
-      }
+    const excluded = routed ? (routingFor("HOTEL", "SEARCH")?.excluded ?? []) : [];
+    if (excluded.length) {
+      console.log(
+        `[ROUTING] excluded ${excluded.map((e) => `${e.slug}(${e.reason})`).join(", ")}`,
+      );
     }
 
-    // An EMPTY routed list means an admin has left nothing routable, which the
-    // registry cannot express: it reads an empty requestedCodes as "no filter"
-    // and would fan out to everyone. Handled here so the kill switch is
-    // absolute rather than inverted.
-    if (routed && routed.length === 0) {
+    const selection = selectSuppliers({
+      eligible: eligibleSuppliers.map((s) => s.code),
+      routed,
+      requested: requestedProviders,
+      canAttempt: (code) => breaker.canAttempt(code, "HOTEL", "SEARCH"),
+    });
+
+    if (selection.serveNothing) {
       console.warn(
         "[ROUTING] no provider is routable for HOTEL/SEARCH — returning no results",
       );
       return { hotels: [], providerStats: {} };
     }
 
-    const allowedCodes = intersectCodes(routed, requestedProviders);
-
-    const routableSuppliers = supplierRegistry.getEnabled({
-      mode,
-      destination: searchPayload.destination,
-      requestedCodes: allowedCodes,
-    });
-
-    /**
-     * Drop suppliers whose circuit is open (§46).
-     *
-     * This does not make the search more likely to succeed — the fan-out
-     * already tolerates one supplier failing. It stops every search paying the
-     * full timeout for a supplier that is not going to answer, which on a
-     * 15-second window is most of the wait the user experiences.
-     */
-    const enabledSuppliers = routableSuppliers.filter((s) =>
-      breaker.canAttempt(s.code, "HOTEL", "SEARCH"),
-    );
-
-    const shortCircuited = routableSuppliers.filter(
-      (s) => !enabledSuppliers.includes(s),
-    );
-    if (shortCircuited.length) {
+    if (selection.shortCircuited.length) {
       console.warn(
-        `[BREAKER] skipping ${shortCircuited.map((s) => s.code).join(", ")} — circuit open`,
+        `[BREAKER] ${selection.shortCircuited.join(", ")} circuit open` +
+          (selection.ignoredCircuits
+            ? " — but every supplier is out, so calling them anyway"
+            : " — skipping"),
       );
     }
 
-    /**
-     * Every routable supplier is short-circuited.
-     *
-     * Try them anyway rather than returning nothing. An empty result page is a
-     * worse outcome than a slow one, and if every supplier is out then the
-     * breaker is no longer protecting a healthy path — there is no healthy
-     * path left to protect.
-     */
-    const suppliersToCall = enabledSuppliers.length ? enabledSuppliers : routableSuppliers;
+    const byCode = new Map(eligibleSuppliers.map((s) => [s.code, s]));
+    const suppliersToCall = selection.codes
+      .map((code) => byCode.get(code))
+      .filter((s): s is NonNullable<typeof s> => Boolean(s));
 
     if (requestedProviders && requestedProviders.length > 0) {
       eligibleSuppliers

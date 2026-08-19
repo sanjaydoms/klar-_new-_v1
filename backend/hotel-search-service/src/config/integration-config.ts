@@ -159,23 +159,6 @@ export function routingFor(service: string, operation: string): RoutingDecision 
   return snapshot.get(key(service, operation)) ?? null;
 }
 
-/**
- * Combine the admin's routing with a caller's own provider filter.
- *
- * Either may be absent and each can only narrow, so the result is their
- * intersection. `undefined` out means "no filter" — which is what the supplier
- * registry already understands as "everything eligible", and what both inputs
- * being absent means.
- */
-export function intersectCodes(
-  routed: string[] | null,
-  requested: string[] | undefined,
-): string[] | undefined {
-  if (!routed) return requested;
-  if (!requested || requested.length === 0) return routed;
-  return routed.filter((c) => requested.includes(c));
-}
-
 /** Test seam — drops the snapshot back to "no opinion". */
 export function __resetRoutingForTests(): void {
   snapshot = new Map();

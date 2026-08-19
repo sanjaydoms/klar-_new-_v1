@@ -36,11 +36,13 @@ before(async () => {
     return;
   }
 
-  // Indexes are built after connect. Without this the unique constraints that
-  // make concurrent writes safe may not exist yet — see config/db.config.ts.
+  await mongoose.connection.dropDatabase();
+
+  // AFTER the drop, not before: dropping a database removes the indexes with
+  // it, so building them first achieves nothing. This ordering is the whole
+  // reason the concurrency test kept failing.
   const { ensureIndexes } = await import("../src/config/db.config");
   await ensureIndexes();
-  await mongoose.connection.dropDatabase();
 
   hook = http.createServer((r, res) => {
     let raw = "";

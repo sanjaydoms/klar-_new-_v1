@@ -60,11 +60,13 @@ before(async () => {
     return;
   }
 
-  // Indexes are built after connect. Without this the unique constraints that
-  // make concurrent writes safe may not exist yet — see config/db.config.ts.
+  await mongoose.connection.dropDatabase();
+
+  // AFTER the drop, not before: dropping a database removes the indexes with
+  // it, so building them first achieves nothing. This ordering is the whole
+  // reason the concurrency test kept failing.
   const { ensureIndexes } = await import("../src/config/db.config");
   await ensureIndexes();
-  await mongoose.connection.dropDatabase();
 
   const { Provider } = await import("../src/models/Provider.model");
   const { RoutingRule } = await import("../src/models/RoutingRule.model");
@@ -293,6 +295,94 @@ test("disabling one operation leaves the provider's others alone", async (t) => 
   assert.deepEqual(mod.providers, []);
   assert.deepEqual(mod.excluded, [{ slug: "alpha", reason: "OPERATION_DISABLED" }]);
   assert.deepEqual(search.providers.map((p: any) => p.slug), ["alpha", "beta"]);
+});
+
+test("a whole service can be switched off, and back on", async (t) => {
+  if (needsMongo(t)) return;
+  // §13 and §55 — distinct from the per-operation toggle: a supplier can be
+  // fine at flights and broken at hotels, and this is the switch for that.
+  const off = await call("/providers/beta/services/HOTEL", {
+    method: "PATCH",
+    body: { enabled: false, reason: "supplier withdrew hotel inventory" },
+  });
+  assert.equal(off.status, 200);
+  assert.equal((await off.json()).data.services[0].enabled, false);
+
+  // Every one of its operations goes with it, whatever their own state.
+  const routing = await (await call("/routing")).json();
+  const search = routing.data.find((d: any) => d.operation === "SEARCH");
+  assert.ok(!search.providers.some((p: any) => p.slug === "beta"));
+  assert.deepEqual(
+    search.excluded.find((e: any) => e.slug === "beta"),
+    { slug: "beta", reason: "SERVICE_DISABLED" },
+  );
+
+  const audit = await (await call("/audit-logs?action=SERVICE_DISABLED")).json();
+  assert.equal(audit.data[0].service, "HOTEL");
+  assert.equal(audit.data[0].reason, "supplier withdrew hotel inventory");
+
+  const on = await call("/providers/beta/services/HOTEL", {
+    method: "PATCH",
+    body: { enabled: true, reason: "inventory restored" },
+  });
+  assert.equal(on.status, 200);
+});
+
+test("a service the provider does not offer cannot be toggled", async (t) => {
+  if (needsMongo(t)) return;
+  const res = await call("/providers/beta/services/FLIGHT", {
+    method: "PATCH",
+    body: { enabled: false, reason: "it has none" },
+  });
+  assert.equal(res.status, 404);
+  assert.equal((await res.json()).code, "SERVICE_NOT_FOUND");
+});
+
+test("when every provider is out, the operation has nobody and says so", async (t) => {
+  if (needsMongo(t)) return;
+  // §56 scenario 5. The interesting part is that this must be VISIBLE rather
+  // than looking like an ordinary quiet moment — an operation with no provider
+  // is an outage whether or not a request has failed yet.
+  const phrase = async (slug: string) =>
+    (await (await call(`/providers/${slug}/disable-impact`)).json()).data
+      .confirmationPhrase;
+
+  for (const slug of ["alpha", "beta"]) {
+    const res = await call(`/providers/${slug}/status`, {
+      method: "PATCH",
+      body: {
+        status: "DISABLED",
+        reason: "total supplier outage",
+        confirmation: await phrase(slug),
+      },
+    });
+    assert.equal(res.status, 200);
+  }
+
+  const routing = await (await call("/routing")).json();
+  const search = routing.data.find((d: any) => d.operation === "SEARCH");
+
+  // Configured, but with nobody — which the callers must not mistake for
+  // "unconfigured, do what you always did".
+  assert.equal(search.configured, true);
+  assert.deepEqual(search.providers, []);
+  assert.deepEqual(
+    search.excluded.map((e: any) => e.reason).sort(),
+    ["PROVIDER_DISABLED", "PROVIDER_DISABLED"],
+  );
+
+  // Bringing one back restores it without anyone touching routing.
+  await call("/providers/beta/status", {
+    method: "PATCH",
+    body: { status: "ACTIVE", reason: "recovered" },
+  });
+  const after = await (await call("/routing")).json();
+  assert.deepEqual(
+    after.data
+      .find((d: any) => d.operation === "SEARCH")
+      .providers.map((p: any) => p.slug),
+    ["beta"],
+  );
 });
 
 test("a new provider is created inert", async (t) => {

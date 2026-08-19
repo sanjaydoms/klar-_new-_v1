@@ -1,6 +1,9 @@
 import mongoose from "mongoose";
 
 import { envConfig } from "./env.config";
+// Side-effect import: registers every model, so the check below is complete
+// rather than covering only whatever the caller imported first.
+import "../models";
 
 /**
  * Wait until every model's indexes exist.
@@ -17,6 +20,11 @@ import { envConfig } from "./env.config";
  *
  * `Model.init()` resolves once a model's indexes are built. Awaiting all of
  * them costs milliseconds against an existing database and is the whole fix.
+ *
+ * The models are imported for their side effect above, because mongoose only
+ * knows about a model once its module has been evaluated — without that this
+ * check silently covers nothing in any path that imports models lazily, which
+ * is exactly how it first appeared to work and did not.
  */
 export const ensureIndexes = async (): Promise<void> => {
   await Promise.all(Object.values(mongoose.models).map((model) => model.init()));
