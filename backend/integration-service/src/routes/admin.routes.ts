@@ -5,6 +5,7 @@ import * as apilog from "../controllers/apilog.controller";
 import * as credentials from "../controllers/credential.controller";
 import * as healthController from "../controllers/health.controller";
 import * as incidents from "../controllers/incident.controller";
+import * as notifications from "../controllers/notification.controller";
 import * as providers from "../controllers/provider.controller";
 import * as routing from "../controllers/routing.controller";
 import { authenticateJWT } from "../middlewares/auth.middleware";
@@ -124,6 +125,24 @@ router.get("/providers/:slug/health/timeline", view, healthController.timeline);
  * changes what customers can buy. Resolving needs CONTROL: closing an incident
  * is a claim that the problem is over.
  */
+/**
+ * Alerting.
+ *
+ * Configuring where KLAR's outages are announced needs MANAGE and the email
+ * allowlist: a webhook URL is bearer-equivalent, and someone who can add a
+ * target can route every incident to an address of their choosing. Reading the
+ * delivery history needs only VIEW — it holds no configuration.
+ */
+const alertWrite = [requirePermission(PERMISSIONS.MANAGE), requireMasterEmail];
+
+router.get("/alerts/options", view, notifications.options);
+router.get("/alerts/targets", view, notifications.list);
+router.post("/alerts/targets", alertWrite, notifications.create);
+router.patch("/alerts/targets/:id", alertWrite, notifications.update);
+router.delete("/alerts/targets/:id", alertWrite, notifications.remove);
+router.post("/alerts/targets/:id/test", alertWrite, notifications.test);
+router.get("/alerts/deliveries", view, notifications.deliveries);
+
 router.get("/incidents", view, incidents.list);
 router.get("/incidents/:reference", view, incidents.get);
 router.post("/incidents/:reference/acknowledge", view, incidents.acknowledge);

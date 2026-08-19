@@ -69,6 +69,9 @@ npm run import-credentials   # dry run; add -- --write to import from the other 
 | `INCIDENT_DETECTOR` | `off` to disable the background detector |
 | `INCIDENT_HEALTHY_CHECKS_TO_RESOLVE` | 3 |
 | `ADMIN_RATE_LIMIT` / `INTERNAL_RATE_LIMIT` | 300 / 3000 requests per minute |
+| `EMAIL_SERVICE_URL` | `http://localhost:5015/api/v1` — where email alerts are queued |
+| `ALERT_DELIVERY_RETENTION_DAYS` | 90 |
+| `WEBHOOK_TIMEOUT_MS` / `EMAIL_ALERT_TIMEOUT_MS` | 8000 |
 
 Generate the master key with:
 

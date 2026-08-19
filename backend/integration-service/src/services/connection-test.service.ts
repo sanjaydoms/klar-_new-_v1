@@ -1,6 +1,8 @@
+import { ALERT_EVENTS } from "../constants/alerts";
 import { Environment } from "../constants/status";
 import { ConnectionTest, IProvider, Provider } from "../models/Provider.model";
 import * as credentials from "./credential.service";
+import { dispatch } from "./notification.service";
 import { ProviderError } from "./provider.service";
 
 /**
@@ -162,6 +164,27 @@ export const test = async (
     const category = classify(res.status, spec.okStatuses ?? []);
     const result = finish(category, { httpStatus: res.status });
     await credentials.recordTest(provider.slug, environment, result.ok);
+
+    if (category === "AUTHENTICATION_FAILED") {
+      await dispatch({
+        event: ALERT_EVENTS.AUTH_FAILURE,
+        // Production is louder: a rejected sandbox key costs a test, a
+        // rejected live key means KLAR cannot buy from this supplier at all.
+        severity: environment === "production" ? "CRITICAL" : "MEDIUM",
+        title: `${provider.name} rejected KLAR's ${environment} credentials`,
+        body:
+          "A connection test was refused by the supplier. An expired or rotated " +
+          "key will not recover on its own, and no amount of traffic will reveal it.",
+        facts: [
+          { label: "Provider", value: provider.name },
+          { label: "Environment", value: environment },
+          { label: "HTTP status", value: String(res.status) },
+        ],
+        providerSlug: provider.slug,
+        at: new Date(),
+      });
+    }
+
     return result;
   } catch (err: any) {
     // Nothing from `err` reaches the caller. A fetch error can carry the

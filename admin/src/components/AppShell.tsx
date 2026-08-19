@@ -1,5 +1,6 @@
 import {
   Activity,
+  BellRing,
   Boxes,
   FileClock,
   KeyRound,
@@ -38,6 +39,7 @@ const NAV: NavItem[] = [
   { to: "/health", label: "Health Monitor", icon: Activity },
   { to: "/logs", label: "API Logs", icon: ScrollText },
   { to: "/incidents", label: "Incidents", icon: Siren },
+  { to: "/alerts", label: "Alerts", icon: BellRing },
   { to: "/audit", label: "Audit Logs", icon: FileClock },
 ];
 

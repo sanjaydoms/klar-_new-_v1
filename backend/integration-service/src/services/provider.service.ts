@@ -4,7 +4,9 @@ import { OPERATIONS, isKnownOperation, isKnownService } from "../constants/catal
 import { PROVIDER_STATUS, ProviderStatus } from "../constants/status";
 import { IProvider, Provider } from "../models/Provider.model";
 import { RoutingRule } from "../models/RoutingRule.model";
+import { ALERT_EVENTS } from "../constants/alerts";
 import * as audit from "./audit.service";
+import { dispatch } from "./notification.service";
 import { resolveAll } from "./router.service";
 
 /**
@@ -156,6 +158,26 @@ export const setStatus = async (
     after: { status: provider.status, statusReason: reason },
     reason,
   });
+
+  // Only when it goes OFF. An administrator taking a supplier off-sale is a
+  // change other people need to know about — the health monitor will not raise
+  // it, because a provider nobody is calling produces no errors.
+  if (takingOffline && before.status !== change.status) {
+    await dispatch({
+      event: ALERT_EVENTS.PROVIDER_DISABLED,
+      severity: change.status === PROVIDER_STATUS.DISABLED ? "HIGH" : "MEDIUM",
+      title: `${provider.name} was ${change.status === PROVIDER_STATUS.DISABLED ? "disabled" : "put into maintenance"}`,
+      body: `${provider.statusChangedBy} took ${provider.name} out of rotation. Reason: ${reason}`,
+      facts: [
+        { label: "Provider", value: provider.name },
+        { label: "Changed by", value: provider.statusChangedBy ?? "unknown" },
+        { label: "New status", value: change.status },
+        { label: "Reason", value: reason },
+      ],
+      providerSlug: provider.slug,
+      at: new Date(),
+    });
+  }
 
   return provider;
 };

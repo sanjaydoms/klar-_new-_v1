@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
 import { AddProvider } from "@/pages/AddProvider";
+import { Alerts } from "@/pages/Alerts";
 import { ApiLogs } from "@/pages/ApiLogs";
 import { AuditLog } from "@/pages/AuditLog";
 import { Credentials } from "@/pages/Credentials";
@@ -46,6 +47,7 @@ function Gate() {
         <Route path="health" element={<Health />} />
         <Route path="logs" element={<ApiLogs />} />
         <Route path="incidents" element={<Incidents />} />
+        <Route path="alerts" element={<Alerts />} />
         <Route path="audit" element={<AuditLog />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

@@ -7,7 +7,9 @@ import {
   IncidentSeverity,
   nextReference,
 } from "../models/Incident.model";
+import { ALERT_EVENTS } from "../constants/alerts";
 import * as audit from "./audit.service";
+import { dispatch } from "./notification.service";
 import { HealthStatus } from "../constants/status";
 import { Metrics, snapshot } from "./health.service";
 import { ProviderError } from "./provider.service";
@@ -113,6 +115,26 @@ export const detect = async (): Promise<{
             });
             await incident.save();
             opened.push(incident.reference);
+
+            // Awaited so a detector pass does not finish before its alerts are
+            // recorded — dispatch never throws, so this cannot fail the pass.
+            await dispatch({
+              event: ALERT_EVENTS.INCIDENT_OPENED,
+              severity,
+              title: `${provider.name} ${service.service} ${operation.operation} is ${operation.status.toLowerCase()}`,
+              body: `KLAR's health monitor opened ${incident.reference}. ${describe(operation)}.`,
+              facts: [
+                { label: "Incident", value: incident.reference },
+                { label: "Provider", value: provider.name },
+                { label: "Operation", value: `${service.service} / ${operation.operation}` },
+                { label: "Environment", value: provider.environment },
+                { label: "Error rate", value: `${operation.errorRate ?? 0}%` },
+                { label: "Requests observed", value: String(operation.requests) },
+              ],
+              providerSlug: provider.providerSlug,
+              incidentReference: incident.reference,
+              at: now,
+            });
           } else {
             existing.healthyChecks = 0;
             // Escalation is recorded; de-escalation is not, because an
@@ -126,6 +148,22 @@ export const detect = async (): Promise<{
                 message: `Escalated to critical: ${describe(operation)}`,
               });
               updated.push(existing.reference);
+
+              await dispatch({
+                event: ALERT_EVENTS.INCIDENT_ESCALATED,
+                severity: "CRITICAL",
+                title: `${provider.name} ${service.service} ${operation.operation} escalated to critical`,
+                body: `${existing.reference} got worse. ${describe(operation)}.`,
+                facts: [
+                  { label: "Incident", value: existing.reference },
+                  { label: "Provider", value: provider.name },
+                  { label: "Operation", value: `${service.service} / ${operation.operation}` },
+                  { label: "Error rate", value: `${operation.errorRate ?? 0}%` },
+                ],
+                providerSlug: provider.providerSlug,
+                incidentReference: existing.reference,
+                at: now,
+              });
             }
             await existing.save();
           }
@@ -159,6 +197,29 @@ export const detect = async (): Promise<{
               message: `Closed automatically after ${existing.healthyChecks} consecutive healthy checks`,
             });
             resolvedRefs.push(existing.reference);
+
+            // Sent at the SAME severity the incident carried, so whoever was
+            // woken by it is told by the same route that it is over. A
+            // recovery downgraded to LOW would be filtered out by exactly the
+            // target that most needs to hear it.
+            await dispatch({
+              event: ALERT_EVENTS.INCIDENT_RESOLVED,
+              severity: existing.severity,
+              title: `${provider.name} ${service.service} ${operation.operation} has recovered`,
+              body: `${existing.reference} closed automatically after ${existing.healthyChecks} consecutive healthy checks.`,
+              facts: [
+                { label: "Incident", value: existing.reference },
+                { label: "Provider", value: provider.name },
+                { label: "Operation", value: `${service.service} / ${operation.operation}` },
+                {
+                  label: "Open for",
+                  value: `${Math.round((now.getTime() - existing.startedAt.getTime()) / 60_000)} minutes`,
+                },
+              ],
+              providerSlug: provider.providerSlug,
+              incidentReference: existing.reference,
+              at: now,
+            });
           }
           await existing.save();
         }

@@ -74,6 +74,8 @@ is what the existing supplier adapters already call themselves.
 | `incidents` | an outage and its timeline | Partial unique index on (provider, service, operation): one open incident per provider per operation, so two suppliers can each have one for the same operation |
 | `audit_logs` | every administrative change | Append-only, longest retention |
 | `health_thresholds` | one document | When a measurement becomes a status, plus the breaker's numbers |
+| `notification_targets` | where an alert can be sent | Channel config; secret-declared keys encrypted |
+| `alert_deliveries` | one attempt to deliver one alert | TTL 90 days. Never holds a target's configuration |
 | `counters` | incident numbering | Atomic `$inc`; a row count would collide |
 
 ### The provider document
@@ -172,6 +174,47 @@ a 100% error rate and means nothing. Status takes the *worse* of the
 error-rate and latency verdicts: a supplier answering everything in forty
 seconds is not healthy just because nothing failed.
 
+## Alerting
+
+Incidents raise themselves, but a dashboard only helps somebody already looking
+at it. Alerts are what make the workflow work at three in the morning.
+
+```
+incident opened / escalated / resolved ─┐
+provider disabled by an administrator ──┼─▶ dispatch ─▶ every target that
+supplier rejected our credentials ──────┘                subscribed to that event
+                                                         and meets its severity floor
+                                                              │
+                                                    channel registry (by type)
+                                                         ├─ webhook  → Slack, Teams, PagerDuty…
+                                                         └─ email    → via email-service
+```
+
+The registry is §44's "do not hard-code notification providers": everything
+above it looks a channel up by a type string, so adding one is a file in
+`services/channels/` and a line in its index. No model, controller, dispatcher
+or console change.
+
+Two events do not come from incidents, deliberately. **A provider disabled by
+an administrator** raises nothing in the health monitor — a supplier nobody is
+calling produces no errors — yet it is exactly what other people need to know.
+**A rejected credential** needs a different person: an expired key is not fixed
+by watching an error rate come down, and a connection test can find it with no
+customer traffic at all.
+
+`dispatch` never throws. It is called from the incident detector and from the
+middle of administrative actions, and an alert that cannot be delivered must
+not roll back the thing it was describing. Failures become deliveries with
+status `FAILED`, which is what somebody asks about afterwards.
+
+A resolution alert is sent at the severity the incident carried, not at LOW.
+Downgrading it would filter it out at exactly the target that most needs to
+hear the outage is over.
+
+A webhook URL is treated as a credential — a Slack or Teams URL is
+bearer-equivalent — so it is encrypted at rest, masked on read, `http` is
+refused, and it never reaches the delivery log or the audit trail.
+
 ## Security
 
 | | |
@@ -225,6 +268,11 @@ creates internal staff roles, at which point they become entries in
 | `GET` | `/incidents`, `/incidents/:reference` | view |
 | `POST` | `/incidents/:reference/acknowledge`, `/notes` | view |
 | `POST` | `/incidents/:reference/resolve`, `/incidents/detect` | control |
+| `GET` | `/alerts/options` | view — the channel and event catalogue the console renders its form from |
+| `GET` | `/alerts/targets` | view — secrets masked |
+| `POST` `PATCH` `DELETE` | `/alerts/targets[/:id]` | manage + allowlist |
+| `POST` | `/alerts/targets/:id/test` | manage + allowlist |
+| `GET` | `/alerts/deliveries` | view |
 | `GET` | `/audit-logs` | audit |
 
 ### Internal — `/internal`, `x-internal-key`

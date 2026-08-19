@@ -212,3 +212,52 @@ export interface Incident {
   openedWith?: { errorRate: number | null; p95Ms: number | null; requests: number };
   events: IncidentEvent[];
 }
+
+/** Alerting (§44). */
+export interface ChannelField {
+  key: string;
+  label: string;
+  type: "text" | "secret";
+  required: boolean;
+  placeholder?: string;
+  helpText?: string;
+}
+
+export interface ChannelOption {
+  type: string;
+  label: string;
+  description: string;
+  fields: ChannelField[];
+}
+
+export interface NotificationTarget {
+  id: string;
+  name: string;
+  type: string;
+  enabled: boolean;
+  config: Record<string, string>;
+  events: string[];
+  minSeverity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  minIntervalSeconds: number;
+  lastDeliveryAt?: string | null;
+  lastDeliveryOk?: boolean | null;
+  lastDeliveryError?: string;
+  updatedBy?: string;
+  updatedAt?: string;
+  /** The channel it names is not in this build. */
+  unknownChannel: boolean;
+}
+
+export interface AlertDelivery {
+  _id: string;
+  event: string;
+  severity: string;
+  title: string;
+  targetName: string;
+  targetType: string;
+  status: "SENT" | "FAILED" | "SUPPRESSED";
+  detail?: string;
+  durationMs?: number;
+  incidentReference?: string;
+  createdAt: string;
+}

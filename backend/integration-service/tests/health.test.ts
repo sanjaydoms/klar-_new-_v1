@@ -32,6 +32,11 @@ before(async () => {
   } catch {
     return;
   }
+
+  // Indexes are built after connect. Without this the unique constraints that
+  // make concurrent writes safe may not exist yet — see config/db.config.ts.
+  const { ensureIndexes } = await import("../src/config/db.config");
+  await ensureIndexes();
   await mongoose.connection.dropDatabase();
 });
 

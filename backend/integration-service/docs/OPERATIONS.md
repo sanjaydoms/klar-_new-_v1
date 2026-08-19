@@ -119,9 +119,39 @@ credentials. Decryption failures are logged and return empty rather than
 throwing, so the page stays usable — an administrator who cannot open it cannot
 fix it either.
 
+**An alert says "Could not reach the endpoint".**
+Exactly what it says — including a TLS certificate the service does not trust.
+Self-signed certificates are rejected, which is correct; use a real one.
+
 **Test connection says `NOT_CONFIGURED`.**
 No base URL, or no credentials, for that environment. It is reporting honestly
 rather than inventing a result.
+
+---
+
+## Making sure somebody hears about it
+
+**Alerts → Add target.** A webhook (Slack, Teams, Discord, PagerDuty and most
+internal tools accept one) or an email address.
+
+Choose which events reach it and a severity floor. A target with no events
+selected receives nothing — that is stated on the form rather than assumed.
+
+**Press Test.** It sends a real alert, bypassing the target's own filters,
+because the question is whether the destination works — a test that silently
+matched none of the rules would look identical to a broken webhook.
+
+With no target configured, the Alerts screen says so plainly: incidents open
+themselves, but nobody is told, and an outage at three in the morning goes
+unnoticed until somebody opens this console.
+
+**Delivery history** is on the same screen. `SENT`, `FAILED` and `SUPPRESSED`
+are three different answers, and during a post-mortem the difference between
+"nobody was told" and "somebody was told and did not act" is the whole
+question.
+
+Webhook URLs are treated as credentials: encrypted, masked, and `http` is
+refused. They never appear in the delivery log or the audit trail.
 
 ---
 
