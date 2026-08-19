@@ -1,4 +1,4 @@
-import { tripJackClient } from "../clients/tripjack.client";
+import { tripJackClient, assertTripJackOk } from "../clients/tripjack.client";
 import { v4 as uuidv4 } from "uuid";
 import { HotelModel } from "../models/Hotel.model";
 import {
@@ -40,6 +40,9 @@ async function fetchStaticDetail(hid: string): Promise<any> {
     { hid },
     { timeout: STATIC_DETAIL_TIMEOUT_MS },
   );
+  // Check BEFORE caching: an error body stored here would be replayed as this
+  // hotel's static detail for the whole 6h TTL, long after the cause cleared.
+  assertTripJackOk(res.data, "hotel static-detail");
   if (res.data) staticDetailCache.set(hid, res.data);
   return res.data;
 }
@@ -48,6 +51,7 @@ export class TripJackApiProvider {
   async getNationalities() {
     try {
       const res = await tripJackClient.get("/hms/v3/nationality-info");
+      assertTripJackOk(res.data, "nationality-info");
       return res.data;
     } catch (error: any) {
       console.error(
@@ -185,6 +189,10 @@ export class TripJackApiProvider {
           new Promise((resolve) => setTimeout(resolve, budgetMs)),
         ]);
       }
+
+      // Rates are what the customer is about to be quoted, so a refusal must
+      // surface as an error — not as a hotel with no rooms available.
+      assertTripJackOk(pricingRes.data, "hotel pricing");
 
       const pricingData = pricingRes.data;
 
