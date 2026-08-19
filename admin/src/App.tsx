@@ -2,10 +2,13 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
 import { AuditLog } from "@/pages/AuditLog";
+import { Credentials } from "@/pages/Credentials";
 import { Login } from "@/pages/Login";
 import { Overview } from "@/pages/Overview";
 import { Pending } from "@/pages/Pending";
+import { ProviderDetail } from "@/pages/ProviderDetail";
 import { Providers } from "@/pages/Providers";
+import { Routing } from "@/pages/Routing";
 import { SessionProvider, useSession } from "@/lib/session";
 
 /**
@@ -33,26 +36,9 @@ function Gate() {
       <Route element={<AppShell />}>
         <Route index element={<Overview />} />
         <Route path="providers" element={<Providers />} />
-        <Route
-          path="routing"
-          element={
-            <Pending
-              title="Service Routing"
-              phase="Phase 7"
-              description="Reorder providers per operation, park one without losing its place, and control failover. The backend is built and tested; this screen is next."
-            />
-          }
-        />
-        <Route
-          path="credentials"
-          element={
-            <Pending
-              title="Credentials"
-              phase="Phase 7"
-              description="Production and test credentials per provider, masked, with a real Test Connection. The backend is built and tested; this screen is next."
-            />
-          }
-        />
+        <Route path="providers/:slug" element={<ProviderDetail />} />
+        <Route path="routing" element={<Routing />} />
+        <Route path="credentials" element={<Credentials />} />
         <Route
           path="health"
           element={

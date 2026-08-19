@@ -286,7 +286,13 @@ export const forService = async (
   return out;
 };
 
-/** Records the outcome of a Test Connection run against these credentials. */
+/**
+ * Records the outcome of a Test Connection run against these credentials.
+ *
+ * `timestamps: false` because a test does not CHANGE the credentials — letting
+ * it bump updatedAt would make the UI report "last updated just now by
+ * <whoever last saved>", which is a claim about a change that never happened.
+ */
 export const recordTest = async (
   slug: string,
   environment: Environment,
@@ -295,5 +301,6 @@ export const recordTest = async (
   await ProviderCredential.updateOne(
     { providerSlug: slug.toLowerCase(), environment },
     { $set: { lastTestedAt: new Date(), lastTestOk: ok } },
+    { timestamps: false },
   );
 };
