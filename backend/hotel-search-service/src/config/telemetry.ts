@@ -36,6 +36,26 @@ interface CallReport {
   durationMs: number;
   reason?: string;
   at: string;
+
+  /**
+   * Log fields. Optional: a report without a requestId feeds health only.
+   * Some measurements are worth counting without being worth keeping a row
+   * for, and inventing an id for those would produce rows nobody can trace.
+   */
+  correlationId?: string;
+  requestId?: string;
+  httpStatus?: number;
+  attempt?: number;
+  isFailover?: boolean;
+  failedOverFrom?: string;
+  /**
+   * Safe scalars for the log, chosen by the caller.
+   *
+   * The CALLER decides what is safe, because it is the only place that knows
+   * which of its fields are a destination and which are a guest's name. Never
+   * pass a payload, a header, or anything a customer typed about themselves.
+   */
+  summary?: Record<string, unknown>;
 }
 
 const FLUSH_MS = Number(process.env.TELEMETRY_FLUSH_MS || 10_000);

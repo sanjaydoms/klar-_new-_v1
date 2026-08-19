@@ -128,3 +128,35 @@ export interface Thresholds {
   updatedBy?: string;
   updatedAt?: string;
 }
+
+/** One supplier call (§25). Carries no payload and no header by construction. */
+export interface ApiLogEntry {
+  _id: string;
+  correlationId: string;
+  requestId: string;
+  providerSlug: string;
+  service: string;
+  operation: string;
+  environment: string;
+  startedAt: string;
+  durationMs: number;
+  outcome: string;
+  success: boolean;
+  httpStatus?: number;
+  errorReason?: string;
+  attempt: number;
+  isFailover: boolean;
+  failedOverFrom?: string;
+  summary?: Record<string, string | number | boolean>;
+}
+
+/** One customer action and every attempt it caused (§42). */
+export interface CorrelationView {
+  correlationId: string;
+  attempts: ApiLogEntry[];
+  startedAt: string;
+  totalMs: number;
+  providersTried: string[];
+  succeeded: boolean;
+  servedBy: string | null;
+}

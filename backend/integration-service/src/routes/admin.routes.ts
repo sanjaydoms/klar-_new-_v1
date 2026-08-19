@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import { PERMISSIONS } from "../constants/permissions";
+import * as apilog from "../controllers/apilog.controller";
 import * as credentials from "../controllers/credential.controller";
 import * as healthController from "../controllers/health.controller";
 import * as providers from "../controllers/provider.controller";
@@ -111,6 +112,13 @@ router.put(
   healthController.setThresholds,
 );
 router.get("/providers/:slug/health/timeline", view, healthController.timeline);
+
+/**
+ * API logs. VIEW only — they carry no secret and no payload by construction,
+ * so an operator who may see health may see these.
+ */
+router.get("/logs", view, apilog.list);
+router.get("/logs/:id", view, apilog.correlation);
 
 router.get("/catalogue", view, routing.catalogue);
 router.get("/routing", view, routing.list);

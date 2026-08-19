@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
+import { ApiLogs } from "@/pages/ApiLogs";
 import { AuditLog } from "@/pages/AuditLog";
 import { Credentials } from "@/pages/Credentials";
 import { Health } from "@/pages/Health";
@@ -41,16 +42,7 @@ function Gate() {
         <Route path="routing" element={<Routing />} />
         <Route path="credentials" element={<Credentials />} />
         <Route path="health" element={<Health />} />
-        <Route
-          path="logs"
-          element={
-            <Pending
-              title="API Logs"
-              phase="Phase 9"
-              description="Every request KLAR makes to a supplier, with request ids that trace one customer action across retries and failover."
-            />
-          }
-        />
+        <Route path="logs" element={<ApiLogs />} />
         <Route
           path="incidents"
           element={

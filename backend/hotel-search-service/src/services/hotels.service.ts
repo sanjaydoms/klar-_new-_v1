@@ -25,6 +25,13 @@ import {
   providerSlugFor,
   recordCall,
 } from "../config/telemetry";
+import {
+  currentCorrelationId,
+  deriveBackgroundId,
+  ensureCorrelation,
+  newRequestId,
+  runWithCorrelation,
+} from "../utils/correlation";
 import searchResultCache from "../cache/searchResultCache.service";
 import { LruCache } from "../utils/lruCache";
 import {
@@ -117,6 +124,9 @@ export class HotelsService {
     token?: string | null,
   ) {
     const totalStartTime = Date.now();
+    // Everything this search causes — including the background refreshes it
+    // schedules — is traceable from here (§42).
+    ensureCorrelation();
     // Resolves the agent's rules for B2B / the master's B2C rule for B2C, and
     // refreshes the platform-markup snapshot the adapters read synchronously.
     // The destination's country decides which region's markup this search is
@@ -324,12 +334,19 @@ export class HotelsService {
   ): void {
     if (backgroundJobs.has(key)) return;
     backgroundJobs.add(key);
+    // Derived at SCHEDULING time, while the requesting scope is still current.
+    // A refresh that outlives the request that triggered it is not part of it —
+    // labelling it so would make one user's search look like it took minutes —
+    // but the link back to what scheduled it stays visible in the id.
+    const backgroundId = deriveBackgroundId();
     setImmediate(() => {
-      job()
-        .catch((err: any) =>
-          console.warn(`[Search] background ${label} failed for ${key}: ${err?.message}`),
-        )
-        .finally(() => backgroundJobs.delete(key));
+      runWithCorrelation(backgroundId, () =>
+        job()
+          .catch((err: any) =>
+            console.warn(`[Search] background ${label} failed for ${key}: ${err?.message}`),
+          )
+          .finally(() => backgroundJobs.delete(key)),
+      );
     });
   }
 
@@ -622,6 +639,24 @@ export class HotelsService {
       const environment =
         routingFor("HOTEL", "SEARCH")?.providers.find((p) => p.code === supplier.code)
           ?.environment ?? "test";
+      const requestId = newRequestId(supplier.code);
+      const correlationId = currentCorrelationId() ?? undefined;
+      /**
+       * What an operator needs to recognise this call, and nothing more.
+       *
+       * A destination, a page and a room count. No guest names, no contact
+       * details, no tokens — the log is read by more people than the booking
+       * records are, and the reliable way to keep personal data out of it is
+       * never to put any in.
+       */
+      const summary = {
+        destination: searchPayload.destination,
+        checkin: searchPayload.checkin,
+        checkout: searchPayload.checkout,
+        rooms: searchPayload.rooms?.length ?? 0,
+        page: pageNo,
+        clientType,
+      };
 
       return supplier
         .search(pagePayload, clientType)
@@ -643,6 +678,9 @@ export class HotelsService {
             environment,
             outcome: "SUCCESS",
             durationMs,
+            correlationId,
+            requestId,
+            summary: { ...summary, hotels: res.hotels.length },
           });
         })
         .catch((err) => {
@@ -656,6 +694,10 @@ export class HotelsService {
             outcome,
             reason,
             durationMs: Date.now() - callStart,
+            correlationId,
+            requestId,
+            httpStatus: err?.response?.status,
+            summary,
           });
         });
     });

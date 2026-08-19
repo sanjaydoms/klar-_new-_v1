@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 
 import { HealthThresholds, currentThresholds } from "../models/HealthThresholds.model";
+import * as apilog from "../services/apilog.service";
 import * as audit from "../services/audit.service";
 import * as health from "../services/health.service";
 
@@ -23,8 +24,14 @@ export const ingest = async (req: Request, res: Response) => {
     return res.status(413).json({ success: false, message: "Batch too large." });
   }
 
-  const accepted = await health.report(reports);
-  res.json({ success: true, accepted });
+  // Both consumers, one batch: the health bucket is the aggregate and the log
+  // row is the individual record of the SAME observation. Run together rather
+  // than in sequence — neither depends on the other, and a caller is waiting.
+  const [accepted, logged] = await Promise.all([
+    health.report(reports),
+    apilog.write(reports),
+  ]);
+  res.json({ success: true, accepted, logged });
 };
 
 export const snapshot = async (req: Request, res: Response) => {
