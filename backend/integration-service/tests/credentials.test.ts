@@ -288,7 +288,7 @@ test("deleting credentials switches the environment off", async (t) => {
   // choosing it the moment they are gone.
   const res = await call("/providers/alpha/credentials/test", {
     method: "DELETE",
-    body: { reason: "decommissioned" },
+    body: { reason: "decommissioned", confirmation: "DELETE ALPHA" },
   });
   assert.equal(res.status, 200);
 
@@ -297,4 +297,56 @@ test("deleting credentials switches the environment off", async (t) => {
 
   const routing = await (await call("/routing")).json();
   assert.equal(routing.data.length >= 0, true);
+});
+
+test("writing PRODUCTION credentials without the phrase is refused by the server", async (t) => {
+  if (needsMongo(t)) return;
+  // The console asks for this phrase, but a curl would skip it — and a wrong
+  // production key stops KLAR selling.
+  const res = await call("/providers/alpha/credentials/production", {
+    method: "PUT",
+    body: { values: { API_KEY: "live-key" }, reason: "rotating" },
+  });
+  assert.equal(res.status, 400);
+  assert.equal((await res.json()).code, "CONFIRMATION_REQUIRED");
+});
+
+test("writing production credentials WITH the phrase succeeds", async (t) => {
+  if (needsMongo(t)) return;
+  const res = await call("/providers/alpha/credentials/production", {
+    method: "PUT",
+    body: {
+      values: { API_KEY: "live-key" },
+      reason: "rotating",
+      confirmation: "update production",
+    },
+  });
+  assert.equal(res.status, 200);
+});
+
+test("writing TEST credentials needs no phrase", async (t) => {
+  if (needsMongo(t)) return;
+  // The asymmetry is the point: a wrong sandbox key costs one request.
+  const res = await save({ API_KEY: "sandbox-key" });
+  assert.equal(res.status, 200);
+});
+
+test("the server tells the console which phrase it will demand", async (t) => {
+  if (needsMongo(t)) return;
+  // One definition, so the two cannot drift into demanding different words.
+  const prod = await (await call("/providers/alpha/credentials/production")).json();
+  const test = await (await call("/providers/alpha/credentials/test")).json();
+  assert.equal(prod.data.writeConfirmationPhrase, "UPDATE PRODUCTION");
+  assert.equal(test.data.writeConfirmationPhrase, null);
+});
+
+test("deleting credentials without the phrase is refused", async (t) => {
+  if (needsMongo(t)) return;
+  // A delete also switches the environment off, in either environment.
+  const res = await call("/providers/alpha/credentials/production", {
+    method: "DELETE",
+    body: { reason: "cleanup" },
+  });
+  assert.equal(res.status, 400);
+  assert.equal((await res.json()).code, "CONFIRMATION_REQUIRED");
 });

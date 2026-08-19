@@ -71,7 +71,7 @@ is what the existing supplier adapters already call themselves.
 | `health_buckets` | one minute of calls per provider/service/operation/environment | Pre-aggregated, TTL 30 days |
 | `api_request_logs` | one supplier call attempt | No payloads, no headers. TTL 30 days |
 | `breaker_states` | a circuit as reported by one process | TTL 15 minutes, so a dead process's OPEN does not linger |
-| `incidents` | an outage and its timeline | Partial unique index: one open incident per operation |
+| `incidents` | an outage and its timeline | Partial unique index on (provider, service, operation): one open incident per provider per operation, so two suppliers can each have one for the same operation |
 | `audit_logs` | every administrative change | Append-only, longest retention |
 | `health_thresholds` | one document | When a measurement becomes a status, plus the breaker's numbers |
 | `counters` | incident numbering | Atomic `$inc`; a row count would collide |
@@ -111,12 +111,16 @@ dashboard exists to show.
 
 ## The routing decision
 
-`resolve(service, operation)` runs four gates, in order:
+`resolve(service, operation)` runs six gates, in order:
 
-1. the provider is `ACTIVE`
-2. its active environment is enabled
-3. the service is enabled
-4. the operation is both `supported` and `enabled`
+1. the target is enabled **in this routing rule** — a per-route switch,
+   independent of the provider's own status, for parking a provider on one
+   operation without touching the rest (`ROUTE_DISABLED`)
+2. the provider still exists (`UNKNOWN_PROVIDER`)
+3. the provider is `ACTIVE`
+4. its active environment is enabled
+5. the service is enabled
+6. the operation is both `supported` and `enabled`
 
 Anything that fails a gate appears in `excluded` with the reason, which the
 console shows and the logs record. Silently dropping a provider hides a broken
@@ -175,7 +179,7 @@ seconds is not healthy just because nothing failed.
 | Authentication | the same JWT auth-service issues, from the `Authorization` header or the `token` cookie. This service verifies and never mints. `?token=` is deliberately not accepted — query strings end up in access logs |
 | Authorisation | `constants/permissions.ts` maps role → permissions; routes state the permission they need |
 | Second factor | destructive routes also require the caller's email in `MASTER_EMAILS` |
-| Typed confirmation | enforced server-side. A confirmation only the browser checks is one a `curl` skips |
+| Typed confirmation | enforced server-side for disabling a provider, entering maintenance, enabling failover on a booking-shaped operation, writing production credentials and deleting credentials. A confirmation only the browser checks is one a `curl` skips |
 | Credentials at rest | AES-256-GCM, one random IV per value, authentication tag stored alongside |
 | Credentials in transit to the browser | never. Masked reads only |
 | Service-to-service | shared `x-internal-key`; fails closed when unset |

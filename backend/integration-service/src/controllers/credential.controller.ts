@@ -44,9 +44,16 @@ export const view = async (req: Request, res: Response) => {
   try {
     const environment = environmentOf(req, res);
     if (!environment) return;
+    const data = await credentials.view(param(req.params.slug), environment);
+    // The console asks the SERVER what it will be required to type, rather
+    // than holding its own copy of the phrase — one definition, so the two
+    // cannot drift into demanding different words.
     res.json({
       success: true,
-      data: await credentials.view(param(req.params.slug), environment),
+      data: {
+        ...data,
+        writeConfirmationPhrase: credentials.writeConfirmationPhrase(environment),
+      },
     });
   } catch (err) {
     fail(res, err, "view");
@@ -61,6 +68,7 @@ export const save = async (req: Request, res: Response) => {
       values: req.body?.values ?? {},
       reason: req.body?.reason ?? "",
       rotation: Boolean(req.body?.rotation),
+      confirmation: req.body?.confirmation,
     });
     res.json({ success: true, data });
   } catch (err) {
@@ -77,6 +85,7 @@ export const remove = async (req: Request, res: Response) => {
       param(req.params.slug),
       environment,
       req.body?.reason ?? "",
+      req.body?.confirmation,
     );
     res.json({ success: true });
   } catch (err) {

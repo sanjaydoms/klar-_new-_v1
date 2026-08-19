@@ -116,7 +116,11 @@ test("production and test credentials are genuinely separate", async (t) => {
   });
   await call(creds("production"), {
     method: "PUT",
-    body: JSON.stringify({ values: { API_KEY: "live-key-ZZZZ" }, reason: "setup" }),
+    body: JSON.stringify({
+      values: { API_KEY: "live-key-ZZZZ" },
+      reason: "setup",
+      confirmation: "UPDATE PRODUCTION",
+    }),
   });
 
   const t1 = await (await call(creds("test"))).json();
@@ -130,7 +134,7 @@ test("deleting one environment's credentials leaves the other's intact", async (
   // The mistake that would matter: a delete that took production with it.
   await call(creds("test"), {
     method: "DELETE",
-    body: JSON.stringify({ reason: "decommissioned" }),
+    body: JSON.stringify({ reason: "decommissioned", confirmation: "DELETE ALPHA" }),
   });
 
   const gone = await (await call(creds("test"))).json();

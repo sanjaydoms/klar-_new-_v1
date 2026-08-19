@@ -1,6 +1,6 @@
 import { Request } from "express";
 
-import { isKnownOperation, isKnownService } from "../constants/catalogue";
+import { OPERATIONS, isKnownOperation, isKnownService } from "../constants/catalogue";
 import { PROVIDER_STATUS, ProviderStatus } from "../constants/status";
 import { IProvider, Provider } from "../models/Provider.model";
 import { RoutingRule } from "../models/RoutingRule.model";
@@ -342,13 +342,24 @@ export const create = async (req: Request, input: NewProvider): Promise<IProvide
       },
       test: { baseUrl: input.environments?.test?.baseUrl ?? "", enabled: false },
     },
+    /**
+     * Every operation the service HAS, with the undeclared ones recorded
+     * `supported: false` rather than left absent.
+     *
+     * Absent and unsupported look the same to the router — neither is
+     * routable — but not to a person: the capability matrix is how an operator
+     * sees that a supplier cannot amend a booking, and a row that is simply
+     * missing reads as an oversight rather than a fact. This mirrors what the
+     * seed does, so a provider added through the API is described the same way
+     * as one that shipped with the system.
+     */
     services: (input.services ?? []).map((s) => ({
       service: s.service,
       enabled: true,
-      operations: s.operations.map((operation) => ({
+      operations: OPERATIONS[s.service as keyof typeof OPERATIONS].map((operation) => ({
         operation,
-        supported: true,
-        enabled: true,
+        supported: s.operations.includes(operation),
+        enabled: s.operations.includes(operation),
       })),
     })),
     credentialSchema: input.credentialSchema ?? [],

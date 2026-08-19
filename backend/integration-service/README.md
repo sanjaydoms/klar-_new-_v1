@@ -60,11 +60,15 @@ npm run import-credentials   # dry run; add -- --write to import from the other 
 | `INTERNAL_SERVICE_KEY` | shared secret other KLAR services present. Empty makes the internal routes unreachable |
 | `INTEGRATION_MASTER_KEY` | 32 bytes of hex for credential encryption. **Losing it makes every stored credential unrecoverable** |
 | `PORT` | 5022 |
+| `NODE_ENV` | `development` |
 | `CORS_ORIGIN` | comma-separated; the admin console's origin |
+| `CORS_CREDENTIALS` | `true` — required, since the console authenticates by cookie |
 | `HEALTH_RETENTION_DAYS` | 30 |
 | `API_LOG_RETENTION_DAYS` | 30 |
 | `INCIDENT_INTERVAL_MS` | 60000 |
 | `INCIDENT_DETECTOR` | `off` to disable the background detector |
+| `INCIDENT_HEALTHY_CHECKS_TO_RESOLVE` | 3 |
+| `ADMIN_RATE_LIMIT` / `INTERNAL_RATE_LIMIT` | 300 / 3000 requests per minute |
 
 Generate the master key with:
 

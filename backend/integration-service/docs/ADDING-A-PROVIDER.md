@@ -28,8 +28,12 @@ what the provider record maps to a slug.
 
 ## 2. Register the provider
 
-Either through the console — **Providers → Add** — or by adding an entry to
-`src/scripts/seed.ts` and re-running `npm run seed`.
+Add an entry to `src/scripts/seed.ts` and re-run `npm run seed`, or POST it to
+`/admin/integrations/providers`.
+
+> **There is no Add Provider screen in the console yet.** The API and the seed
+> are the two paths today; §52's wizard is deliberately deferred. Adding one is
+> frontend work against an endpoint that already exists and is tested.
 
 ```ts
 {
@@ -46,8 +50,9 @@ Either through the console — **Providers → Add** — or by adding an entry t
 }
 ```
 
-**Declare only the operations the adapter actually implements.** Everything
-else is recorded `supported: false` and the router will never select it. A
+**Declare only the operations the adapter actually implements.** Both paths
+record every other operation in the service as `supported: false`, and the
+router will never select one. A
 capability matrix that overstates a supplier is worse than none, because the
 router would send it traffic it cannot serve — and the failure would land on a
 customer mid-purchase rather than here.
@@ -105,7 +110,11 @@ connection**. It makes a real request. A green result means the supplier
 answered; anything else is classified — `AUTHENTICATION_FAILED` and
 `CONNECTION_FAILED` send you to different places.
 
-Production credentials require the typed phrase `UPDATE PRODUCTION`.
+Writing production credentials requires the typed phrase `UPDATE PRODUCTION`,
+and deleting any environment's credentials requires `DELETE <PROVIDER NAME>`.
+Both are enforced by the server, so a script does not get to skip them. The
+console asks the backend which phrase it will be required to type rather than
+holding its own copy.
 
 ## 6. Route traffic to it
 

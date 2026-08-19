@@ -24,6 +24,14 @@ interface CredentialView {
   providerSlug: string;
   environment: Environment;
   configured: boolean;
+  /**
+   * What the server will demand before accepting a write, or null.
+   *
+   * Asked for rather than hard-coded here: one definition of the phrase, so
+   * the console cannot drift into demanding different words from the ones the
+   * backend checks.
+   */
+  writeConfirmationPhrase: string | null;
   fields: MaskedField[];
   updatedAt?: string;
   updatedBy?: string;
@@ -172,11 +180,11 @@ function CredentialForm({
     setResult(null);
   }, [load]);
 
-  const save = async (reason: string, rotation: boolean) => {
+  const save = async (reason: string, rotation: boolean, confirmation: string) => {
     setBusy("save");
     setDialogError(null);
     try {
-      await api.put(path, { values, reason, rotation });
+      await api.put(path, { values, reason, rotation, confirmation });
       setDialog(null);
       // A credential change invalidates the last test result, so drop it
       // rather than leaving a green tick beside a key nobody has tried.
@@ -189,11 +197,11 @@ function CredentialForm({
     }
   };
 
-  const remove = async (reason: string) => {
+  const remove = async (reason: string, confirmation: string) => {
     setBusy("delete");
     setDialogError(null);
     try {
-      await api.delete(path, { data: { reason } });
+      await api.delete(path, { data: { reason, confirmation } });
       setDialog(null);
       setResult(null);
       await load();
@@ -319,13 +327,13 @@ function CredentialForm({
               ? "These are production credentials — wrong values take the provider off-sale."
               : "Fields left untouched keep their current value."
           }
-          phrase={isProduction ? "UPDATE PRODUCTION" : undefined}
+          phrase={view.writeConfirmationPhrase ?? undefined}
           confirmLabel={dialog === "rotate" ? "Rotate" : "Save"}
           variant={isProduction ? "danger" : "primary"}
           busy={busy === "save"}
           error={dialogError}
           onClose={() => setDialog(null)}
-          onConfirm={(reason) => void save(reason, dialog === "rotate")}
+          onConfirm={(reason, typed) => void save(reason, dialog === "rotate", typed)}
         />
       )}
 
@@ -338,7 +346,7 @@ function CredentialForm({
           busy={busy === "delete"}
           error={dialogError}
           onClose={() => setDialog(null)}
-          onConfirm={(reason) => void remove(reason)}
+          onConfirm={(reason, typed) => void remove(reason, typed)}
         />
       )}
     </>

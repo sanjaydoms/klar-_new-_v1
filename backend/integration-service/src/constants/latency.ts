@@ -2,9 +2,10 @@
  * Latency histogram buckets, in milliseconds.
  *
  * Percentiles (§22) need a distribution, and storing every sample would mean
- * millions of rows a day for numbers nobody reads at that resolution. Eleven
- * counters per minute give a real p95 and p99 to within one bucket width,
- * which is far tighter than any decision made from them.
+ * millions of rows a day for numbers nobody reads at that resolution. Thirteen
+ * counters per minute — twelve boundaries plus the overflow slot — give a real
+ * p95 and p99 to within one bucket width, which is far tighter than any
+ * decision made from them.
  *
  * The boundaries are chosen around what these suppliers actually do: RateGain's
  * bestproperties measures ~10.7s domestic and ~14.2s international, so the

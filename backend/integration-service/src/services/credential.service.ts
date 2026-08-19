@@ -133,7 +133,34 @@ export interface SaveInput {
   reason: string;
   /** True when this is a rotation of existing keys rather than first setup. */
   rotation?: boolean;
+  /** The typed phrase, required for production writes and every delete. */
+  confirmation?: string;
 }
+
+/**
+ * The phrases the server demands before a credential change that can take a
+ * provider off-sale.
+ *
+ * Writing PRODUCTION credentials is confirmed; writing test ones is not. The
+ * asymmetry is the point — a wrong test key costs a sandbox request, a wrong
+ * production key stops KLAR selling. Deleting is confirmed in either
+ * environment, because it also switches the environment off.
+ */
+export const writeConfirmationPhrase = (environment: Environment): string | null =>
+  environment === "production" ? "UPDATE PRODUCTION" : null;
+
+export const deleteConfirmationPhrase = (provider: IProvider): string =>
+  `DELETE ${provider.name.toUpperCase()}`;
+
+const assertConfirmed = (expected: string, given: string | undefined): void => {
+  if ((given ?? "").trim().toUpperCase() !== expected) {
+    throw new ProviderError(
+      `Confirmation phrase required. Type "${expected}" to proceed.`,
+      400,
+      "CONFIRMATION_REQUIRED",
+    );
+  }
+};
 
 /**
  * Write credentials for one environment.
@@ -156,6 +183,12 @@ export const save = async (
   if (!reason) {
     throw new ProviderError("A reason is required.", 400, "REASON_REQUIRED");
   }
+
+  // Enforced HERE, not only in the browser. A confirmation the server does not
+  // check is one a curl skips, which is exactly the case — a script, a stale
+  // tab, a copied command — where production keys get overwritten by accident.
+  const phrase = writeConfirmationPhrase(environment);
+  if (phrase) assertConfirmed(phrase, input.confirmation);
 
   const doc =
     (await ProviderCredential.findOne({ providerSlug: provider.slug, environment })) ??
@@ -231,11 +264,13 @@ export const remove = async (
   slug: string,
   environment: Environment,
   reason: string,
+  confirmation?: string,
 ): Promise<void> => {
   const provider = await load(slug);
   if (!reason?.trim()) {
     throw new ProviderError("A reason is required.", 400, "REASON_REQUIRED");
   }
+  assertConfirmed(deleteConfirmationPhrase(provider), confirmation);
 
   const doc = await ProviderCredential.findOne({
     providerSlug: provider.slug,

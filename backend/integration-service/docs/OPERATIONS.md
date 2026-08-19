@@ -35,8 +35,8 @@ inventory you did not need to lose.
 **Enable provider**, with a reason. No confirmation phrase — recovery is the
 direction that should be fast during an outage.
 
-Open incidents close themselves after three consecutive healthy checks, and say
-they closed automatically. You can also resolve one by hand with a reason.
+Open incidents close themselves after three consecutive healthy checks
+(`INCIDENT_HEALTHY_CHECKS_TO_RESOLVE`), and say they closed automatically. You can also resolve one by hand with a reason.
 
 ---
 
@@ -109,7 +109,7 @@ it keeps the **last known good** snapshot indefinitely and logs once.
 Circuit rows expire after 15 minutes, so a stale one clears itself. If it
 persists, a live process really does have it open — the row names which.
 
-**"Master access is not configured" (503).**
+**"High-risk actions are not configured" (503).**
 `MASTER_EMAILS` is empty. It fails closed on purpose: an empty allowlist locks
 everyone out rather than degrading to a role-only check.
 
