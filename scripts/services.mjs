@@ -79,6 +79,11 @@ export const SERVICES = [
     needs: ['mongo'],
   },
   {
+    dir: 'backend/integration-service', name: 'integration', port: 5022, colour: 'cyan',
+    summary: 'API & Integration Control Center — provider registry, routing, credentials, health',
+    needs: ['mongo'],
+  },
+  {
     dir: 'backend/hotel-engine', name: 'engine', port: 5030, colour: 'gray',
     summary: 'Supplier-agnostic hotel OTA engine (not yet wired to the frontend)',
     // Postgres, not MongoDB — and it refuses to start without it.
