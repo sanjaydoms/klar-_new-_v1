@@ -7,7 +7,7 @@ rather than to customers, and nothing an operator sees belongs in a public
 bundle.
 
 ```bash
-npm run dev -- admin        # from the repository root, port 5009
+npm run dev -- admin integration     # from the repository root
 ```
 
 It talks to two backends and holds no credential of its own. Sign-in posts to
@@ -20,6 +20,19 @@ is a courtesy so an unauthenticated visitor lands somewhere useful.
 |---|---|
 | `VITE_INTEGRATION_URL` | integration-service, default `http://localhost:5022` |
 | `VITE_AUTH_URL` | auth-service, default `http://localhost:5010` |
+
+## Screens
+
+| | |
+|---|---|
+| **Overview** | Is anything wrong right now — provider status beside measured health, operations with no provider, operations one supplier away from having none |
+| **Providers** | Every supplier and what each is currently serving; the detail page carries the capability matrix and the enable/disable controls |
+| **Service Routing** | Which supplier serves each operation, in what order, and whether the next is tried |
+| **Credentials** | Per provider, per environment. Masked, with a real Test Connection |
+| **Health Monitor** | Availability, latency and error rate down to the operation, plus open circuits and the thresholds editor |
+| **API Logs** | Every supplier call, filterable, with the full correlation behind each row |
+| **Incidents** | Raised automatically, with the timeline of what the system did |
+| **Audit Logs** | Every administrative change, with before and after |
 
 ## Running it locally
 
@@ -37,12 +50,25 @@ integration-service verifies. Add that user's email to integration-service's
 `MASTER_EMAILS` or every destructive action will be refused — which is the
 allowlist working, not a bug.
 
-## What is shown and what is not
+## Conventions worth keeping
 
-Sections with no backend behind them yet say so. Request volume, latency and
-error rate read "Not collected" rather than "0": a KPI showing zero because
-nothing was measured is a lie that reads as good news, which is the worst
-direction for an operations screen to be wrong in.
+**Never show a number that was not measured.** A KPI reading `0` because
+nothing was counted is a lie that reads as good news, which is the worst
+direction for an operations screen to be wrong in. `Stat` has an `unavailable`
+state for exactly this, and health badges say "no traffic" or "too little
+traffic" rather than showing a colour.
 
-Status colour is never the only signal — every status carries an icon and a
+**Status is never colour alone.** Every `StatusPill` carries an icon and a
 word, because this information travels by screenshot during an incident.
+
+**Consequences are fetched, not described.** The disable dialog asks the
+backend what would actually happen and lists the real affected operations. A
+hard-coded "traffic will fail over" would be a guess printed as a fact.
+
+**Destructive dialogs demand a typed phrase; recovery does not.** Making every
+confirmation laborious trains people to type through them without reading. The
+backend enforces both independently — this is where it is pleasant, not where
+it is true.
+
+Primitives are hand-written in `src/components/` rather than generated. Five
+components is less code than the dependency and config that would produce them.
