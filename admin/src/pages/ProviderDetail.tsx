@@ -1,6 +1,6 @@
 import { ArrowLeft, Power, PowerOff, Wrench } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Toggle } from "@/components/Fields";
@@ -46,6 +46,8 @@ interface Impact {
  */
 export function ProviderDetail() {
   const { slug = "" } = useParams();
+  const [params] = useSearchParams();
+  const justCreated = params.get("created") === "1";
   const [provider, setProvider] = useState<Provider | null>(null);
   const [routing, setRouting] = useState<RoutingDecision[]>([]);
   const [health, setHealth] = useState<ProviderHealth | null>(null);
@@ -202,6 +204,10 @@ export function ProviderDetail() {
         <div className="mb-5">
           <ErrorNotice message={error} />
         </div>
+      )}
+
+      {justCreated && provider.status === "DISABLED" && (
+        <SetupChecklist provider={provider} />
       )}
 
       {isProduction && (
@@ -488,6 +494,67 @@ export function ProviderDetail() {
         />
       )}
     </>
+  );
+}
+
+/**
+ * What is left to do for a provider that was just registered.
+ *
+ * §52's remaining steps, pointing at the screens that own them rather than
+ * reimplementing them here. Each item states what it is FOR, because the order
+ * matters: routing a provider before its credentials are proved sends real
+ * customer requests at a supplier nobody has successfully called.
+ */
+function SetupChecklist({ provider }: { provider: Provider }) {
+  const hasCredentials = Object.values(provider.environments).some((e) => e.baseUrl);
+
+  return (
+    <Card className="mb-5 border-brand-500/30 bg-brand-500/5">
+      <SectionHeader
+        title={`${provider.name} is registered, and inactive`}
+        description="It will receive no traffic until it is activated. Three things first."
+      />
+      <ol className="divide-y divide-ink-800">
+        <li className="flex items-start gap-3 px-5 py-3">
+          <span className="mt-0.5 text-[12px] font-semibold text-brand-400">1</span>
+          <span className="flex-1 text-[13px]">
+            <Link
+              to={`/credentials?provider=${provider.slug}`}
+              className="font-medium text-brand-400 hover:underline"
+            >
+              Configure its credentials
+            </Link>
+            <span className="mt-0.5 block text-ink-400">
+              {hasCredentials
+                ? "A base URL is set. Check the rest, then test."
+                : "Nothing is configured, so nothing can be called."}
+            </span>
+          </span>
+        </li>
+        <li className="flex items-start gap-3 px-5 py-3">
+          <span className="mt-0.5 text-[12px] font-semibold text-brand-400">2</span>
+          <span className="flex-1 text-[13px]">
+            <span className="font-medium text-ink-50">Test the connection</span>
+            <span className="mt-0.5 block text-ink-400">
+              A real request to the supplier. Do this before routing anything to
+              it — otherwise the first proof it works is a customer's search.
+            </span>
+          </span>
+        </li>
+        <li className="flex items-start gap-3 px-5 py-3">
+          <span className="mt-0.5 text-[12px] font-semibold text-brand-400">3</span>
+          <span className="flex-1 text-[13px]">
+            <Link to="/routing" className="font-medium text-brand-400 hover:underline">
+              Add it to routing
+            </Link>
+            <span className="mt-0.5 block text-ink-400">
+              It can only be offered for the operations it declared. Then enable
+              the provider above.
+            </span>
+          </span>
+        </li>
+      </ol>
+    </Card>
   );
 }
 

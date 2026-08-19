@@ -28,12 +28,15 @@ what the provider record maps to a slug.
 
 ## 2. Register the provider
 
-Add an entry to `src/scripts/seed.ts` and re-run `npm run seed`, or POST it to
-`/admin/integrations/providers`.
+**Providers → Add provider** in the console, or an entry in
+`src/scripts/seed.ts` followed by `npm run seed`.
 
-> **There is no Add Provider screen in the console yet.** The API and the seed
-> are the two paths today; §52's wizard is deliberately deferred. Adding one is
-> frontend work against an endpoint that already exists and is tested.
+The console collects the three things that only exist at creation — identity,
+capabilities, and the credential fields this supplier needs — and then hands
+over to the screens that own the rest. Credentials, Test Connection, routing
+and activation are not rebuilt inside a wizard: they have to work for the other
+ninety-nine percent of a provider's life anyway, and a second implementation of
+each would go stale the first time one of them changed.
 
 ```ts
 {

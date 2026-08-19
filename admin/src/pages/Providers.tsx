@@ -1,8 +1,9 @@
+import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { PageHeader } from "@/components/PageHeader";
-import { Card, EmptyState, ErrorNotice } from "@/components/Primitives";
+import { Button, Card, EmptyState, ErrorNotice } from "@/components/Primitives";
 import { StatusPill } from "@/components/StatusPill";
 import { api, errorMessage } from "@/lib/api";
 import { humanise, relativeTime } from "@/lib/format";
@@ -16,6 +17,7 @@ import type { Provider, RoutingDecision } from "@/lib/types";
  * customer request", which is the gap an admin most often needs to see.
  */
 export function Providers() {
+  const navigate = useNavigate();
   const [providers, setProviders] = useState<Provider[] | null>(null);
   const [routing, setRouting] = useState<RoutingDecision[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +65,12 @@ export function Providers() {
       <PageHeader
         title="Providers"
         description="Every external supplier KLAR buys from, and what each is currently serving."
+        action={
+          <Button variant="primary" onClick={() => navigate("/providers/new")}>
+            <Plus className="size-3.5" />
+            Add provider
+          </Button>
+        }
       />
 
       {error && (
@@ -75,7 +83,7 @@ export function Providers() {
         {all.length === 0 ? (
           <EmptyState
             title="No providers registered"
-            description="Run the seed in integration-service to register TripJack and RateGain."
+            description="Add one above, or run the seed in integration-service to register TripJack and RateGain."
           />
         ) : (
           <div className="overflow-x-auto">

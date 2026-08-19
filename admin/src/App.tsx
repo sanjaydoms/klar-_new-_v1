@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { AppShell } from "@/components/AppShell";
+import { AddProvider } from "@/pages/AddProvider";
 import { ApiLogs } from "@/pages/ApiLogs";
 import { AuditLog } from "@/pages/AuditLog";
 import { Credentials } from "@/pages/Credentials";
@@ -38,6 +39,7 @@ function Gate() {
       <Route element={<AppShell />}>
         <Route index element={<Overview />} />
         <Route path="providers" element={<Providers />} />
+        <Route path="providers/new" element={<AddProvider />} />
         <Route path="providers/:slug" element={<ProviderDetail />} />
         <Route path="routing" element={<Routing />} />
         <Route path="credentials" element={<Credentials />} />

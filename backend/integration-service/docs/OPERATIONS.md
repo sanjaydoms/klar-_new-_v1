@@ -125,6 +125,21 @@ rather than inventing a result.
 
 ---
 
+## Adding a supplier
+
+**Providers → Add provider.** Three steps, then the provider's own page carries
+a checklist of what is left: configure credentials, test the connection, add it
+to routing, activate.
+
+It is registered **inactive** with both environments off, whatever you enter.
+It receives no traffic until somebody activates it, which is deliberate — the
+first proof a supplier works should not be a customer's search.
+
+Adding one still needs an adapter in the calling service. See
+[ADDING-A-PROVIDER.md](ADDING-A-PROVIDER.md).
+
+---
+
 ## Things the system will not let you do
 
 Not bugs:
