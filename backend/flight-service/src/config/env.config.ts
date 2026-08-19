@@ -52,6 +52,13 @@ export const envConfig = {
     REDIS_URL: process.env.REDIS_URL || "",
 
     /**
+     * Admin plane. This service only REPORTS to it — see config/telemetry.ts
+     * for why there is no routing or breaker on the flight path.
+     */
+    INTEGRATION_SERVICE_URL:
+        process.env.INTEGRATION_SERVICE_URL || "http://localhost:5022",
+
+    /**
      * Auth Service
      */
     AUTH_SERVICE: process.env.AUTHENTICATION_SERVICE || "",

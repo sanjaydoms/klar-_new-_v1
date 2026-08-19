@@ -5,17 +5,29 @@
 Two services call suppliers, and they integrate with the control center
 DIFFERENTLY — on purpose.
 
-| | hotel-search-service | hotel-booking-service |
-|---|---|---|
-| Consults routing | yes | **no** |
-| Circuit breaker | yes | **no** |
-| Reports health and logs | yes | yes |
+| | hotel-search | hotel-booking | flight |
+|---|---|---|---|
+| Consults routing | yes | **no** | **no** |
+| Circuit breaker | yes | **no** | **no** |
+| Reports health and logs | yes | yes | yes |
 
-A search fans out and merges, so skipping a supplier costs coverage and saves
-a timeout. A booking is made against a SPECIFIC rate at a SPECIFIC supplier:
-there is no second provider who could serve the same request, so refusing to
-call the one that owns it would abandon a customer mid-purchase rather than
-protect anything. The booking service therefore observes and does not decide.
+Only one of the three decides anything, and that is a property of the domain
+rather than an omission.
+
+A hotel SEARCH fans out to every routed supplier and merges, so skipping one
+costs coverage and saves a timeout — routing and a breaker both earn their
+place.
+
+A hotel BOOKING is made against a specific rate at a specific supplier. There
+is no second provider who could serve the same request, so refusing to call the
+one that owns it would abandon a customer mid-purchase rather than protect
+anything.
+
+FLIGHTS have one supplier. Routing would have exactly one candidate and could
+only ever return the same answer; a breaker could only refuse to sell a flight
+nobody else can sell. That changes the day a second flight aggregator exists —
+and it is the case routing was built for, because two aggregators genuinely can
+both answer a flight search.
 
 ```
 customer request
@@ -30,6 +42,10 @@ hotel-search-service          owns the supplier adapters and makes the calls
 hotel-booking-service         observes only
       │  ├─ utils/observability.ts        the route names the operation; ALS carries it
       │  └─ clients/observe.ts            one axios interceptor per supplier client
+      │
+flight-service                observes only
+      │  ├─ utils/observability.ts        same, labelled at the route MOUNT
+      │  └─ utils/supplierObserver.ts     global axios interceptor, filtered by host
       │
       ▼ (once per 15s, and once per 10s the other way)
 integration-service
