@@ -7,7 +7,11 @@ import path from "path";
 
 import { NationalityModel } from "../models/Nationality.model";
 
-const TJ_STATIC_BASE_URL = "https://api.tripjack.com";
+// Static content lives on the main API host, not the HMS one. Overridable so
+// a test-environment key can point at TripJack's test host (apitest.tripjack.com)
+// instead of production, where a test key is rejected.
+const TJ_STATIC_BASE_URL =
+  process.env.TJ_STATIC_BASE_URL || "https://api.tripjack.com";
 
 const tripJackStaticClient = axios.create({
   baseURL: TJ_STATIC_BASE_URL,
@@ -148,6 +152,17 @@ export async function syncTJHotels() {
       }
 
       const data = res.data;
+
+      // TripJack reports failures as HTTP 200 with an error body. Without this
+      // check an invalid API key read as "0 hotels" and the sync logged
+      // "Sync complete." over an empty database.
+      if (data?.status?.success === false) {
+        const err = data.errors?.[0];
+        throw new Error(
+          `TripJack rejected the request (${err?.errCode || data.status.httpStatus}): ${err?.message || "unknown error"}`,
+        );
+      }
+
       const hotels = data.hotelOpInfos || data.hotels || [];
 
       if (hotels.length === 0) {
