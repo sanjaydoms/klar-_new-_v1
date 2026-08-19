@@ -15,6 +15,7 @@
     "dev": "node scripts/dev.mjs",
     "dev:list": "node scripts/dev.mjs --list",
     "dev:frontend": "npm --prefix ./frontend run dev",
+    "dev:admin": "npm --prefix ./admin run dev",
     "dev:backend": "node scripts/dev.mjs --backend-only",
 
     "dev:auth": "npm --prefix ./backend/auth-service run dev",
