@@ -1,5 +1,6 @@
 import { rateGainProvider } from "../providers/rategain.provider";
 import { tripJackProvider } from "../providers/tripjack.provider";
+import { bookingSupplierRegistry } from "../suppliers";
 import { tripJackAdapter } from "../adapters/tripjack.adapter";
 import { rateGainAdapter } from "../adapters/rategain.adapter";
 import { ValidationEngine, StructuredError } from "./ValidationEngine";
@@ -186,12 +187,15 @@ class CommitService {
       ""
     ).toString();
 
-    const isTripJack =
-      propertyId.startsWith("TJ") ||
-      tjBookingId.startsWith("TJ") ||
-      tjBookingId.startsWith("TG") ||
-      payload.type === "HOTEL" ||
-      (!payload.BookReservation && payload.bookingId);
+    // Single routing decision for the whole service — see suppliers/registry.ts.
+    // These five terms used to live here, and disagreed with the ones in
+    // precheck.service and cancel.service.
+    const supplier = bookingSupplierRegistry.resolve({
+      propertyId,
+      bookingId: tjBookingId,
+      payloadType: payload.type,
+      hasBookReservation: !!payload.BookReservation,
+    });
 
     // Idempotency: a client-supplied key makes a retry (flaky mobile network,
     // double-submit, the 180s TripJack async window outlasting the Redis lock)
@@ -223,7 +227,7 @@ class CommitService {
         lockKey,
         requestId,
         async () => {
-          if (isTripJack) {
+          if (supplier.code === "TJ") {
             return this.#commitTripJack(
               payload,
               agentId,

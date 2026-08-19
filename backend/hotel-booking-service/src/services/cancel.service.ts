@@ -1,5 +1,6 @@
 import { rateGainProvider } from "../providers/rategain.provider";
 import { tripJackProvider } from "../providers/tripjack.provider";
+import { bookingSupplierRegistry } from "../suppliers";
 import { BookingStatus, BookingProvider } from "../models/Booking.model";
 import { hotelBookingRepository } from "../repositories/hotelBooking.repository";
 import { refundService } from "./refund.service";
@@ -235,21 +236,26 @@ class CancelService {
 
     // ─── Step 1: Check if this is a TripJack booking ───
     try {
-      const isTripJack =
-        payload.type === "HOTEL" ||
-        confirmationNumber?.startsWith("TG") ||
-        confirmationNumber?.startsWith("TJ");
+      // Routing decision — see suppliers/registry.ts. The stored provider now
+      // DECIDES rather than being OR'd with the payload signals: the old
+      // `isTripJack || isDbTripJack` sent a RateGain booking to TripJack's
+      // cancel API whenever the client posted `type: "HOTEL"`.
+      const supplier = bookingSupplierRegistry.resolve({
+        confirmationNumber,
+        bookingId,
+        dbProvider: booking?.provider,
+        payloadType: payload.type,
+      });
 
-      let isDbTripJack = false;
       let actualTargetId = confirmationNumber || bookingId;
-
-      if (booking && booking.provider === BookingProvider.TRIPJACK) {
-        isDbTripJack = true;
-        if (booking.confirmationNumber)
-          actualTargetId = booking.confirmationNumber;
+      if (
+        booking?.provider === BookingProvider.TRIPJACK &&
+        booking.confirmationNumber
+      ) {
+        actualTargetId = booking.confirmationNumber;
       }
 
-      if (isTripJack || isDbTripJack) {
+      if (supplier.code === "TJ") {
         console.log(
           `[TripJack] Cancelling TripJack booking: ${actualTargetId}`,
         );
@@ -555,14 +561,15 @@ class CancelService {
       throw new Error("Booking not found");
     }
 
-    // Logic for TripJack
-    const isTripJack =
-      booking.provider === BookingProvider.TRIPJACK ||
-      payload.type === "HOTEL" ||
-      confirmationNumber?.startsWith("TJ") ||
-      confirmationNumber?.startsWith("TG");
+    // Routing decision — see suppliers/registry.ts.
+    const supplier = bookingSupplierRegistry.resolve({
+      confirmationNumber,
+      bookingId,
+      dbProvider: booking.provider,
+      payloadType: payload.type,
+    });
 
-    if (isTripJack) {
+    if (supplier.code === "TJ") {
       // Try fetching latest details from TripJack to get the most accurate policy
       let tjDetails = null;
       try {
