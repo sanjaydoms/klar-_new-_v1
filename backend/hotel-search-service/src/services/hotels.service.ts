@@ -14,6 +14,25 @@ import {
 import { getSuggestions } from "./suggestions.service";
 import { HotelModel } from "../models/Hotel.model";
 import { env } from "../config/env";
+import {
+  refreshRouting,
+  routableCodes,
+  routingFor,
+} from "../config/integration-config";
+import { selectSuppliers } from "../config/supplier-selection";
+import * as breaker from "../config/breaker";
+import {
+  classifyError,
+  providerSlugFor,
+  recordCall,
+} from "../config/telemetry";
+import {
+  currentCorrelationId,
+  deriveBackgroundId,
+  ensureCorrelation,
+  newRequestId,
+  runWithCorrelation,
+} from "../utils/correlation";
 import searchResultCache from "../cache/searchResultCache.service";
 import { LruCache } from "../utils/lruCache";
 import {
@@ -106,6 +125,9 @@ export class HotelsService {
     token?: string | null,
   ) {
     const totalStartTime = Date.now();
+    // Everything this search causes — including the background refreshes it
+    // schedules — is traceable from here (§42).
+    ensureCorrelation();
     // Resolves the agent's rules for B2B / the master's B2C rule for B2C, and
     // refreshes the platform-markup snapshot the adapters read synchronously.
     // The destination's country decides which region's markup this search is
@@ -113,11 +135,13 @@ export class HotelsService {
     // adapters read the platform snapshot synchronously, per rate, and cannot
     // await a config fetch mid-mapping.
     const searchRegion = deriveRegion(searchPayload.countryCode);
-    const markupRules = await resolveMarkupRules(
-      clientType,
-      token ?? null,
-      searchRegion,
-    );
+    // Both of these refresh a global snapshot the synchronous path downstream
+    // reads. Run together: they are independent, and serialising two admin-plane
+    // fetches would put their latencies end to end on every cold search.
+    const [markupRules] = await Promise.all([
+      resolveMarkupRules(clientType, token ?? null, searchRegion),
+      refreshRouting(),
+    ]);
     const nights = calculateNights(searchPayload.checkin, searchPayload.checkout);
     const mode = process.env.HOTEL_PROVIDER_MODE || "UNIFIED";
     console.log(
@@ -311,12 +335,19 @@ export class HotelsService {
   ): void {
     if (backgroundJobs.has(key)) return;
     backgroundJobs.add(key);
+    // Derived at SCHEDULING time, while the requesting scope is still current.
+    // A refresh that outlives the request that triggered it is not part of it —
+    // labelling it so would make one user's search look like it took minutes —
+    // but the link back to what scheduled it stays visible in the id.
+    const backgroundId = deriveBackgroundId();
     setImmediate(() => {
-      job()
-        .catch((err: any) =>
-          console.warn(`[Search] background ${label} failed for ${key}: ${err?.message}`),
-        )
-        .finally(() => backgroundJobs.delete(key));
+      runWithCorrelation(backgroundId, () =>
+        job()
+          .catch((err: any) =>
+            console.warn(`[Search] background ${label} failed for ${key}: ${err?.message}`),
+          )
+          .finally(() => backgroundJobs.delete(key)),
+      );
     });
   }
 
@@ -536,17 +567,50 @@ export class HotelsService {
     const pageResults: UnifiedHotel[] = [];
     const providerStats: Record<string, { count: number; total: number; hasMore: boolean }> = {};
 
-    // Fan out to every supplier enabled for this mode/destination/providers-filter.
+    // Fan out to every supplier the registry, the administrator, the caller's
+    // own filter and the circuit breaker all allow. The policy lives in
+    // config/supplier-selection so it can be tested; this is the wiring.
     const requestedProviders = searchPayload.providers;
     const eligibleSuppliers = supplierRegistry.getModeAndDirectEligible(
       mode,
       searchPayload.destination,
     );
-    const enabledSuppliers = supplierRegistry.getEnabled({
-      mode,
-      destination: searchPayload.destination,
-      requestedCodes: requestedProviders,
+
+    const routed = routableCodes("HOTEL", "SEARCH");
+    const excluded = routed ? (routingFor("HOTEL", "SEARCH")?.excluded ?? []) : [];
+    if (excluded.length) {
+      console.log(
+        `[ROUTING] excluded ${excluded.map((e) => `${e.slug}(${e.reason})`).join(", ")}`,
+      );
+    }
+
+    const selection = selectSuppliers({
+      eligible: eligibleSuppliers.map((s) => s.code),
+      routed,
+      requested: requestedProviders,
+      canAttempt: (code) => breaker.canAttempt(code, "HOTEL", "SEARCH"),
     });
+
+    if (selection.serveNothing) {
+      console.warn(
+        "[ROUTING] no provider is routable for HOTEL/SEARCH — returning no results",
+      );
+      return { hotels: [], providerStats: {} };
+    }
+
+    if (selection.shortCircuited.length) {
+      console.warn(
+        `[BREAKER] ${selection.shortCircuited.join(", ")} circuit open` +
+          (selection.ignoredCircuits
+            ? " — but every supplier is out, so calling them anyway"
+            : " — skipping"),
+      );
+    }
+
+    const byCode = new Map(eligibleSuppliers.map((s) => [s.code, s]));
+    const suppliersToCall = selection.codes
+      .map((code) => byCode.get(code))
+      .filter((s): s is NonNullable<typeof s> => Boolean(s));
 
     if (requestedProviders && requestedProviders.length > 0) {
       eligibleSuppliers
@@ -569,8 +633,34 @@ export class HotelsService {
       _abortSignal: abortController.signal,
     };
 
-    const allTasks = enabledSuppliers.map((supplier) =>
-      supplier
+    const allTasks = suppliersToCall.map((supplier) => {
+      // Timed per supplier rather than from the shared page start: with a
+      // fan-out, `startTime` measures how long the SLOWEST supplier has been
+      // running, which would report every fast supplier as slow.
+      const callStart = Date.now();
+      const environment =
+        routingFor("HOTEL", "SEARCH")?.providers.find((p) => p.code === supplier.code)
+          ?.environment ?? "test";
+      const requestId = newRequestId(supplier.code);
+      const correlationId = currentCorrelationId() ?? undefined;
+      /**
+       * What an operator needs to recognise this call, and nothing more.
+       *
+       * A destination, a page and a room count. No guest names, no contact
+       * details, no tokens — the log is read by more people than the booking
+       * records are, and the reliable way to keep personal data out of it is
+       * never to put any in.
+       */
+      const summary = {
+        destination: searchPayload.destination,
+        checkin: searchPayload.checkin,
+        checkout: searchPayload.checkout,
+        rooms: searchPayload.rooms?.length ?? 0,
+        page: pageNo,
+        clientType,
+      };
+
+      return supplier
         .search(pagePayload, clientType)
         .then((res) => {
           providerStats[supplier.code] = {
@@ -579,14 +669,42 @@ export class HotelsService {
             hasMore: res.hasMore,
           };
           pageResults.push(...res.hotels);
+          const durationMs = Date.now() - callStart;
           console.log(
             `[OK] ${supplier.code} page ${pageNo} finished in ${Date.now() - startTime}ms (${res.hotels.length} hotels)`,
           );
+          breaker.recordSuccess(supplier.code, "HOTEL", "SEARCH");
+          recordCall({
+            providerSlug: providerSlugFor(supplier.code),
+            service: "HOTEL",
+            operation: "SEARCH",
+            environment,
+            outcome: "SUCCESS",
+            durationMs,
+            correlationId,
+            requestId,
+            summary: { ...summary, hotels: res.hotels.length },
+          });
         })
         .catch((err) => {
           console.error(`[ERR] ${supplier.code} page ${pageNo} failed: ${err.message}`);
-        }),
-    );
+          const { outcome, reason } = classifyError(err);
+          breaker.recordFailure(supplier.code, "HOTEL", "SEARCH", reason);
+          recordCall({
+            providerSlug: providerSlugFor(supplier.code),
+            service: "HOTEL",
+            operation: "SEARCH",
+            environment,
+            outcome,
+            reason,
+            durationMs: Date.now() - callStart,
+            correlationId,
+            requestId,
+            httpStatus: err?.response?.status,
+            summary,
+          });
+        });
+    });
 
     // Partial-return policy (MMT-style), but never discard a supplier that is
     // about to deliver just because it crossed the window by a hair:

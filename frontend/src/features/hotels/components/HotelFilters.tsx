@@ -27,7 +27,6 @@ export interface FilterState {
   searchText: string;
   showOnlyAltDeals: boolean;
   providers: string[];
-  userRatings?: number[];
 }
 
 // Represents one price range bucket generated dynamically from actual hotel prices
@@ -241,7 +240,6 @@ const HotelFilters = ({
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedMealPlans, setSelectedMealPlans] = useState<string[]>([]);
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
-  const [selectedUserRatings, setSelectedUserRatings] = useState<number[]>([]);
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [amenitySearch, setAmenitySearch] = useState('');
 
@@ -257,7 +255,6 @@ const HotelFilters = ({
     amenities: [] as string[],
     mealPlans: [] as string[],
     providers: [] as string[],
-    userRatings: [] as number[],
   });
 
   // nights is passed from the parent HotelSearchPage which has accurate date info.
@@ -408,7 +405,7 @@ const HotelFilters = ({
     if (facets && facets.starRatingCounts) return facets.starRatingCounts;
     const counts: Record<number, number> = {};
     hotels.forEach((h) => {
-      const rating = h.starRating || h.rating || 0;
+      const rating = h.starRating || 0;
       const r = Math.round(Number(rating));
       if (r >= 1 && r <= 5) {
         counts[r] = (counts[r] || 0) + 1;
@@ -544,9 +541,6 @@ const HotelFilters = ({
     // Providers sync
     setSelectedProviders(activeFilters.providers || []);
 
-    // User ratings sync
-    setSelectedUserRatings(activeFilters.userRatings || []);
-
     filterStateRef.current = {
       prices: filterStateRef.current.prices,
       stars: activeFilters.starRatings || [],
@@ -554,7 +548,6 @@ const HotelFilters = ({
       amenities: activeFilters.amenities || [],
       mealPlans: activeFilters.mealTypes || [],
       providers: activeFilters.providers || [],
-      userRatings: activeFilters.userRatings || [],
     };
   }, [activeFilters]);
 
@@ -568,7 +561,6 @@ const HotelFilters = ({
     const amenitiesList = filterStateRef.current.amenities;
     const mealPlans = filterStateRef.current.mealPlans;
     const providers = filterStateRef.current.providers;
-    const userRatings = filterStateRef.current.userRatings;
 
     // 1. Calculate price range from selected dynamic buckets
     // Store per-night [min, max] from the bucket boundaries — these are compared
@@ -596,7 +588,6 @@ const HotelFilters = ({
       propertyTypes,
       amenities,
       providers,
-      userRatings,
     });
 
     // We cast to any because onFilterChange might not be typed to accept an updater,
@@ -648,13 +639,6 @@ const HotelFilters = ({
     applyChanges();
   };
 
-  const handleUserRatingToggle = (rating: number) => {
-    const next = toggle(filterStateRef.current.userRatings, rating);
-    filterStateRef.current.userRatings = next;
-    setSelectedUserRatings(next);
-    applyChanges();
-  };
-
   const handleClearAll = () => {
     setSelectedPrices([]);
     setSelectedStars([]);
@@ -662,7 +646,6 @@ const HotelFilters = ({
     setSelectedAmenities([]);
     setSelectedMealPlans([]);
     setSelectedProviders([]);
-    setSelectedUserRatings([]);
     filterStateRef.current = {
       prices: [],
       stars: [],
@@ -670,7 +653,6 @@ const HotelFilters = ({
       amenities: [],
       mealPlans: [],
       providers: [],
-      userRatings: [],
     };
     onClearLocations?.();
 
@@ -683,7 +665,6 @@ const HotelFilters = ({
       searchText: '',
       showOnlyAltDeals: false,
       providers: [],
-      userRatings: [],
     };
     onFilterChange?.(cleared);
   };
@@ -703,9 +684,6 @@ const HotelFilters = ({
     selectedProviders.forEach((p) =>
       chips.push({ label: providerLabel(p), id: p, type: 'provider' }),
     );
-    selectedUserRatings.forEach((r) =>
-      chips.push({ label: `${r}+ Rating`, id: r, type: 'userRating' }),
-    );
     return chips;
   }, [
     selectedLocations,
@@ -715,7 +693,6 @@ const HotelFilters = ({
     selectedAmenities,
     selectedMealPlans,
     selectedProviders,
-    selectedUserRatings,
   ]);
 
   const removeChip = (chip: { label: string; id: string | number; type: string }) => {
@@ -726,7 +703,6 @@ const HotelFilters = ({
     if (chip.type === 'amenity') handleAmenityToggle(String(chip.id));
     if (chip.type === 'meal') handleMealPlanToggle(String(chip.id));
     if (chip.type === 'provider') handleProviderToggle(String(chip.id));
-    if (chip.type === 'userRating') handleUserRatingToggle(Number(chip.id));
   };
 
   const suggestedFilters = [
@@ -1336,62 +1312,6 @@ const HotelFilters = ({
           })}
         </div>
       )}
-
-      {/* ── User Rating ── */}
-      <div className="w-full py-4 border-t border-b border-gray-200 flex flex-col gap-3 mb-10">
-        <h4
-          className="font-bold text-[15px] text-gray-900 mb-1"
-          style={{ fontFamily: 'Inter, sans-serif' }}
-        >
-          User Rating
-        </h4>
-        {[
-          { id: 4.5, label: 'Excellent: 4.5+' },
-          { id: 4.0, label: 'Very Good: 4+' },
-          { id: 3.5, label: 'Good: 3.5+' },
-          { id: 3.0, label: 'Average: 3+' },
-        ].map((opt) => {
-          const checked = selectedUserRatings.includes(opt.id);
-          return (
-            <label
-              key={opt.id}
-              className="flex items-center gap-3 cursor-pointer group"
-              style={{ fontFamily: 'Inter, sans-serif' }}
-            >
-              <span
-                className={`w-4 h-4 rounded-[3px] border flex items-center justify-center shrink-0 transition-all duration-150 ${checked ? 'bg-[#008cff] border-[#008cff]' : 'border-gray-400 bg-white group-hover:border-[#008cff]'}`}
-              >
-                {checked && (
-                  <svg
-                    className="w-2.5 h-2.5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={3}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                )}
-              </span>
-              <input
-                type="checkbox"
-                checked={checked}
-                onChange={() => handleUserRatingToggle(opt.id)}
-                className="sr-only"
-              />
-              <span
-                className={`text-[14px] transition-colors ${checked ? 'text-gray-900 font-medium' : 'text-gray-700'}`}
-              >
-                {opt.label}
-              </span>
-            </label>
-          );
-        })}
-      </div>
 
       {/* Map Modal Overlay */}
       <HotelMapModal

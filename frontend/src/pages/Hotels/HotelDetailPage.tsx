@@ -58,6 +58,7 @@ import {
   formatHotelAddress,
   formatINR,
   NO_HOTEL_IMAGE,
+  resolveRefundability,
 } from '../../utils/hotelUtils';
 import { sortHotelImagesByDimensions } from '../../utils/imageUtils';
 import HotelAutocomplete from '@/features/hotels/components/HotelAutocomplete';
@@ -569,16 +570,17 @@ const RoomCard: React.FC<RoomCardProps> = ({
     const isCombo = optionType === 'CRCM' || optionType === 'CRSM';
     const roomTitle = isCombo ? 'Mixed Rooms / Mixed Meals' : title;
 
-    // Cancellation policy
-    const isFreeCancel = (cancellationPolicies &&
-      cancellationPolicies.length > 0 &&
-      parseFloat(cancellationPolicies[0].amount) === 0) ||
-      isRefundable === true ||
-      (hotelData?.cancellationPolicy && hotelData.cancellationPolicy.toUpperCase().includes('FREE CANCELLATION'));
-
-    let formattedCancelStr = isFreeCancel ? (refundableLabel || '✓ Free Cancellation') : (refundableLabel || 'X Non Refundable');
-    const isRefPolicy = isFreeCancel;
-    const isNonRefPolicy = !isFreeCancel;
+    // Cancellation policy. `isNonRefPolicy` was `!isFreeCancel`, so the badge
+    // condition below was always true and every UNKNOWN rate rendered a hard
+    // "Non Refundable" — the D-0 defect, still live on this screen.
+    const refundability = resolveRefundability({ isRefundable, cancellationPolicies });
+    const isRefPolicy = refundability === 'REFUNDABLE';
+    const isNonRefPolicy = refundability === 'NON_REFUNDABLE';
+    const formattedCancelStr = isRefPolicy
+      ? refundableLabel || '✓ Free Cancellation'
+      : isNonRefPolicy
+        ? refundableLabel || 'X Non Refundable'
+        : '';
 
     // Amenities
     const mealStr =
@@ -761,14 +763,14 @@ const RoomCard: React.FC<RoomCardProps> = ({
       ) ||
       '';
 
-    const isFreeCancel = (cancellationPolicies &&
-      cancellationPolicies.length > 0 &&
-      parseFloat(cancellationPolicies[0].amount) === 0) ||
-      isRefundable === true ||
-      (hotelData?.cancellationPolicy && hotelData.cancellationPolicy.toUpperCase().includes('FREE CANCELLATION'));
-
-    let cancelStr = isFreeCancel ? (refundableLabel || '✓ Free Cancellation') : (refundableLabel || 'Non Refundable');
-    const isRefPolicy = isFreeCancel;
+    const refundability = resolveRefundability({ isRefundable, cancellationPolicies });
+    const isRefPolicy = refundability === 'REFUNDABLE';
+    const isNonRefPolicy = refundability === 'NON_REFUNDABLE';
+    const cancelStr = isRefPolicy
+      ? refundableLabel || '✓ Free Cancellation'
+      : isNonRefPolicy
+        ? refundableLabel || 'Non Refundable'
+        : '';
 
     const otherFeatures = features.filter(
       (f) =>
@@ -975,8 +977,7 @@ const RoomCard: React.FC<RoomCardProps> = ({
                 // when it genuinely was non-refundable. Both adapters share one
                 // convention (isRefundable: true / false / undefined for unknown),
                 // so supplier identity says nothing here that the data doesn't.
-                const isNonRef = !isRefPolicy;
-                if (isRefPolicy || isNonRef) {
+                if (isRefPolicy || isNonRefPolicy) {
                   return (
                     <span
                       className={`text-[11px] font-medium flex items-center gap-1 ${isRefPolicy ? 'text-green-700' : 'text-red-600'}`}
@@ -2315,8 +2316,7 @@ const HotelDetailPage: React.FC = () => {
           id: id,
           name: hotelData.name,
           location: hotelData.city || hotelData.address || hotelData.location || 'Unknown',
-          rating: hotelData.rating || hotelData.starRating || 0,
-          reviews: hotelData.reviewCount || hotelData.reviews || 0,
+          starRating: hotelData.starRating ?? 0,
           price: hotelData.minPrice || hotelData.price || 0,
           image:
             (hotelData.images && hotelData.images[0]) ||
@@ -2452,7 +2452,7 @@ const HotelDetailPage: React.FC = () => {
           const updatedData = {
             ...prev,
             name: detailedInfo.name || detailedInfo.hotelName || prev.name,
-            starRating: detailedInfo.starRating || detailedInfo.rating || prev.starRating || 0,
+            starRating: detailedInfo.starRating || prev.starRating || 0,
             description: detailedInfo.description || '',
             latitude: detailedInfo.latitude || prev.latitude,
             longitude: detailedInfo.longitude || prev.longitude,
@@ -2464,7 +2464,6 @@ const HotelDetailPage: React.FC = () => {
             city: detailedInfo.city || prev.city,
             phoneNumber: detailedInfo.phone || prev.phoneNumber,
             amenities: finalAmenities,
-            reviewScore: detailedInfo.reviewScore || prev.reviewScore || 0,
             rateComments:
               detailedInfo.rateComments || detailedInfo.RateComments || prev.rateComments || '',
             checkInTime:
@@ -3096,7 +3095,7 @@ const HotelDetailPage: React.FC = () => {
               <div className="flex-1">
                 <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2 mb-2">
                   <div className="flex text-[#FFC107] text-xs md:text-sm order-1 md:order-2">
-                    {[...Array(Math.min(hotelData.rating || 5, 5))].map((_, i) => (
+                    {[...Array(Math.min(hotelData.starRating || 0, 5))].map((_, i) => (
                       <FaStar key={i} />
                     ))}
                   </div>
@@ -4336,7 +4335,7 @@ const HotelDetailPage: React.FC = () => {
               checkOut={searchParams?.checkOut}
               rooms={searchParams?.rooms}
               currentHotelId={hotelData?.id}
-              currentStarRating={hotelData?.starRating || hotelData?.rating || 0}
+              currentStarRating={hotelData?.starRating || 0}
               currentPrice={hotelData?.minPrice || hotelData?.price || 0}
             />
           )}

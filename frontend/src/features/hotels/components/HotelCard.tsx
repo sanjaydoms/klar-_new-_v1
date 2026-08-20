@@ -16,16 +16,14 @@ import {
   Camera,
   ThumbsUp,
   Coffee,
-  Wifi,
   Car,
   Utensils,
-  Calendar,
   CreditCard,
   Wind,
   Bell,
   Tv,
 } from 'lucide-react';
-import { formatHotelImageUrl, calculateNights, encodeRoomsToUrl, NO_HOTEL_IMAGE, toggleWishlistHotel, isHotelWishlisted, formatINR } from '@/utils/hotelUtils';
+import { formatHotelImageUrl, calculateNights, encodeRoomsToUrl, NO_HOTEL_IMAGE, toggleWishlistHotel, isHotelWishlisted, resolveRefundability, formatINR } from '@/utils/hotelUtils';
 
 const formatHotelAddress = (address?: string | null): string => {
   if (!address) return '';
@@ -37,10 +35,8 @@ interface HotelCardProps {
   name: string;
   location: string;
   distance: string;
-  rating: number;
-  reviews: number;
-  reviewScore: string;
-  reviewLabel: string;
+  /** Star classification, 1-5. Never a review score — see D-2. */
+  starRating: number;
   price: number; // Total stay price
   basePrice?: number; // Base net price excl. taxes — use for per-night display
   taxAmount?: number; // Taxes on top of base (0 if included)
@@ -72,26 +68,13 @@ interface HotelCardProps {
   onWishlistToggle?: (id: string, isWishlisted: boolean) => void;
 }
 
-const getReviewLabel = (score: string | number): string => {
-  const s = typeof score === 'string' ? parseFloat(score) : score;
-  if (isNaN(s) || s <= 0) return '';
-  if (s >= 9) return 'Excellent';
-  if (s >= 8) return 'Very Good';
-  if (s >= 7) return 'Good';
-  if (s >= 6) return 'Pleasant';
-  return 'Fair';
-};
-
 const MAX_HOTEL_IMAGES = 5;
 const HotelCard: React.FC<HotelCardProps> = ({
   id,
   name,
   location,
   distance,
-  rating,
-  reviews,
-  reviewScore,
-  reviewLabel,
+  starRating,
   price,
   basePrice,
   taxAmount = 0,
@@ -123,10 +106,6 @@ const HotelCard: React.FC<HotelCardProps> = ({
   onWishlistToggle,
 }) => {
   const navigate = useNavigate();
-  const hasReviews = reviews > 0 || (reviewScore && reviewScore !== '0.0' && reviewScore !== '0');
-
-  // Removed duplicate reviewBoxColor declaration
-
   const [isWishlisted, setIsWishlisted] = React.useState(() => isHotelWishlisted(id));
 
   React.useEffect(() => {
@@ -142,7 +121,7 @@ const HotelCard: React.FC<HotelCardProps> = ({
       location,
       city,
       address,
-      rating,
+      starRating,
       image,
       images,
       price,
@@ -153,17 +132,6 @@ const HotelCard: React.FC<HotelCardProps> = ({
     setIsWishlisted(newState);
     onWishlistToggle?.(id, newState);
   };
-
-  // MMT-style review-score box colour, keyed to the same 0–10 bands as getReviewLabel.
-  const reviewScoreNum = parseFloat(reviewScore) || 0;
-  const reviewBoxColor =
-    reviewScoreNum >= 8
-      ? '#16a34a'
-      : reviewScoreNum >= 7
-        ? '#1e40af'
-        : reviewScoreNum >= 5
-          ? '#0891b2'
-          : '#d97706';
 
   // Calculate nights from session storage search params
   const searchParams = React.useMemo(() => {
@@ -269,8 +237,7 @@ const HotelCard: React.FC<HotelCardProps> = ({
         id: hotelData.id,
         name: hotelData.name,
         location: hotelData.city || hotelData.address || hotelData.location || 'Unknown',
-        rating: hotelData.rating || hotelData.starRating || 0,
-        reviews: hotelData.reviewCount || hotelData.reviews || 0,
+        starRating: hotelData.starRating ?? 0,
         price: hotelData.minPrice || hotelData.price || 0,
         image:
           (hotelData.images && hotelData.images[0]) ||
@@ -296,15 +263,12 @@ const HotelCard: React.FC<HotelCardProps> = ({
       location,
       city,
       address,
-      rating,
+      starRating,
       images,
       amenities,
       propertyCode,
       brandCode,
       price,
-      reviewScore,
-      reviewLabel,
-      reviews,
       allotment,
       cancellationPolicy,
       description,
@@ -334,17 +298,14 @@ const HotelCard: React.FC<HotelCardProps> = ({
     });
   };
 
-  // Determine if cancellation is free or non-refundable
-  // RateGain hotels don't provide cancellation policies at search time, so don't show static Non-Refundable
-  const isNonRefundablePolicy =
-    isRefundable === false ||
-    cancellationPolicy?.toUpperCase().includes('NFR') ||
-    cancellationPolicy?.toUpperCase().includes('NON-REFUNDABLE');
-
-  const isRefundablePolicy =
-    isRefundable === true ||
-    (cancellationPolicy?.toUpperCase().includes('REFUNDABLE') && !cancellationPolicy?.toUpperCase().includes('NON') && !isNonRefundablePolicy) ||
-    (cancellationPolicy?.toUpperCase().includes('FREE CANCELLATION') && !isNonRefundablePolicy);
+  // Refundability comes from the data, never from `cancellationPolicy` — that
+  // string is the label we generated for display, and reading it back turns a
+  // piece of copy into a claim. A search card is frequently UNKNOWN (TripJack's
+  // listing carries no cancellation block; RateGain's search carries no rate),
+  // and UNKNOWN renders neither badge.
+  const refundability = resolveRefundability({ isRefundable });
+  const isRefundablePolicy = refundability === 'REFUNDABLE';
+  const isNonRefundablePolicy = refundability === 'NON_REFUNDABLE';
 
   // Combine RateGain Meal Plans & Segments into dynamic UI Tags
   const offerTags: string[] = [...hotelBoards].filter((b) => typeof b === 'string');
@@ -419,14 +380,14 @@ const HotelCard: React.FC<HotelCardProps> = ({
   const displayDescription = React.useMemo(() => {
     if (description && description.trim()) return description;
 
-    const hotelRating = rating && rating > 0 ? `${Math.round(rating)}-star` : 'highly rated';
+    const hotelRating = starRating > 0 ? `${Math.round(starRating)}-star` : 'highly rated';
     const loc = city || address?.split(',')[0] || location || 'this prime location';
     const amens = amenities && amenities.length > 0
       ? ` featuring popular amenities like ${amenities.slice(0, 3).join(', ')}`
       : '';
 
     return `Welcome to ${name || 'our property'}, a ${hotelRating} hotel located in ${loc}.${amens} Perfect for both leisure and business travelers seeking comfort and convenience.`;
-  }, [description, name, rating, city, address, location, amenities]);
+  }, [description, name, starRating, city, address, location, amenities]);
 
   return (
     <div
@@ -546,12 +507,12 @@ const HotelCard: React.FC<HotelCardProps> = ({
           </div>
 
           {/* Stars */}
-          {rating > 0 && (
+          {starRating > 0 && (
             <div className="flex items-center gap-[4.51px] w-[69.86px] h-[15.65px]">
               {Array.from({ length: 5 }).map((_, i) => (
                 <svg
                   key={i}
-                  className={`w-[14px] h-[14px] ${i < Math.round(rating) ? 'text-[#FFC300] fill-current' : 'text-gray-200 fill-current'}`}
+                  className={`w-[14px] h-[14px] ${i < Math.round(starRating) ? 'text-[#FFC300] fill-current' : 'text-gray-200 fill-current'}`}
                   viewBox="0 0 24 24"
                 >
                   <path d="M12 .587l3.668 7.431 8.2 1.191-5.934 5.787 1.4 8.168L12 18.896l-7.334 3.857 1.4-8.168L.132 9.209l8.2-1.191L12 .587z" />
@@ -629,16 +590,17 @@ const HotelCard: React.FC<HotelCardProps> = ({
               </div>
             )}
 
-            <div className="flex items-center gap-[6px] text-[#374151] font-['Inter'] font-medium text-[13.52px] leading-none">
-              <Calendar size={14} className="text-[#374151] shrink-0" />
-              <span>Flexible Booking</span>
-            </div>
-            {rating >= 1 && (
-              <div className="flex items-center gap-[6px] text-[#374151] font-['Inter'] font-medium text-[13.52px] leading-none">
-                <Wifi size={14} className="text-[#374151] shrink-0" />
-                <span>Free Wi Fi</span>
-              </div>
-            )}
+            {/*
+              "Free Wi Fi" was rendered here for any hotel with a star rating,
+              and "Flexible Booking" for every hotel unconditionally — the
+              latter directly above the "✕ Non-Refundable" badge on the same
+              card. Neither came from a supplier. Amenity claims belong to the
+              reported `amenities` list; booking-terms claims belong to the
+              refundability badge above. See UX-CAPABILITY-CONTRACT.md D-5.
+
+              "Secure Payments" stays: it is a statement about KLAR's checkout,
+              not about the property.
+            */}
             <div className="flex items-center gap-[6px] text-[#374151] font-['Inter'] font-medium text-[13.52px] leading-none">
               <CreditCard size={14} className="text-[#374151] shrink-0" />
               <span>Secure Payments</span>
@@ -702,11 +664,15 @@ const HotelCard: React.FC<HotelCardProps> = ({
               <div>
                 <h2 className="text-xl font-bold text-gray-900 leading-snug">{name}</h2>
                 <div className="flex items-center gap-1.5 mt-1 text-xs text-gray-500">
-                  <span className="flex items-center text-yellow-500 font-semibold">
-                    <Star size={13} className="fill-current mr-0.5" />
-                    <span>{rating || 5} Star</span>
-                  </span>
-                  <span>·</span>
+                  {starRating > 0 && (
+                    <>
+                      <span className="flex items-center text-yellow-500 font-semibold">
+                        <Star size={13} className="fill-current mr-0.5" />
+                        <span>{starRating} Star</span>
+                      </span>
+                      <span>·</span>
+                    </>
+                  )}
                   <span className="truncate">{formatHotelAddress(address) || location}</span>
                 </div>
               </div>

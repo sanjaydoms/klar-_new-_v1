@@ -1,3 +1,5 @@
+import { refundableLabelFromType } from '@/features/flights/utils/flightDisplay';
+
 export const extractFlightDetailsFromOnewayReview = (
   data: any,
   tripIndex?: number,
@@ -276,6 +278,28 @@ const extractSegmentData = (segmentInfo: any, data: any, tripInfo?: any) => {
 
       // Refund info
       refundableType: refundableType,
+      refundableLabel: refundableLabelFromType(refundableType),
+
+      // Fields the redesigned itinerary card renders (same shape as
+      // TravellerInfo's extractor — keep the two in step).
+      airlineCode: airlineInfo?.AirlineCode || airlineInfo?.code || '',
+      cabinClass: fareDetails?.CabinClass || fareDetails?.cc || '',
+      fareName: totalPriceList?.[0]?.FareIdentifierType || '',
+      mealIncluded: fareDetails?.MealIncluded === true,
+      aircraft: Array.isArray(segmentInfo?.ac)
+        ? segmentInfo.ac
+        : segmentInfo?.ac
+          ? [segmentInfo.ac]
+          : [],
+      departureISO: departureTime || '',
+      arrivalISO: arrivalTime || '',
+      departureTerminal: departureAirport?.terminal || '',
+      arrivalTerminal: arrivalAirport?.terminal || '',
+      originCityCode:
+        departureAirport?.AirportCode || departureAirport?.cityCode || departureAirport?.code || '',
+      destinationCityCode:
+        arrivalAirport?.AirportCode || arrivalAirport?.cityCode || arrivalAirport?.code || '',
+      originCountry: departureAirport?.country || '',
 
       // Baggage info
       baggage: {

@@ -297,7 +297,6 @@ export const searchHotels = async (
             address,
             city: hotel.city || hotel.destinationName || '',
             country: hotel.country || hotel.countryName || '',
-            rating,
             starRating: rating,
             images: hotel.images || [],
             amenities: hotel.amenities || hotel.hotelAmenities || [],
@@ -330,9 +329,6 @@ export const searchHotels = async (
             propertyCode: hotel.propertyCode || id,
             brandCode: hotel.brandCode || '',
             distance: '',
-            reviews: hotel.reviewCount ?? hotel.reviews ?? 0,
-            reviewScore: hotel.reviewScore ?? hotel.rating ?? hotel.starRating ?? 0,
-            reviewLabel: hotel.reviewLabel || '',
             originalPrice: null,
             discount: null,
             features: [hotel.mealBasis].filter(Boolean),
@@ -452,19 +448,21 @@ export const getCancellationPolicyString = (hotel: any): string | null => {
       return `Free Cancellation from ${formatCancellationDateShort(freePolicy.from)}`;
     } else if (firstPaidPolicy) {
       return `Cancellation charges apply from ${formatCancellationDateShort(firstPaidPolicy.from)}`;
-    } else {
-      return 'Non-Refundable';
     }
+    // Policies were present but no amount parsed. That is unreadable data, not
+    // a non-refundable rate; returning a label here invented the harshest
+    // reading of a payload we failed to understand.
+    return null;
   }
 
   if (hotel.cancellationPolicy === 'FREE' || hotel.cancellationPolicy?.toUpperCase() === 'FREE') {
     return 'Free cancellation';
   }
 
+  // No branch reads the policy STRING to decide refundability. This function
+  // generates that string; sniffing it here would close the loop and let a
+  // supplier's wording decide a contractual fact (D-3).
   const policy = hotel.cancellationPolicy;
-  if (policy && policy.toUpperCase().includes('NON-REFUNDABLE')) {
-    return 'Non-Refundable';
-  }
 
   if (hotel.isRefundable === true || hotel.refundable === true) {
     return 'Free cancellation';

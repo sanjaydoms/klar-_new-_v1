@@ -78,28 +78,35 @@ describe('return flight card fare variants', () => {
     renderCard();
     expect(screen.getByText('PUBLISHED')).toBeTruthy();
     expect(screen.getByText('ECO VALUE')).toBeTruthy();
-    // headline price + the row in the strip
-    expect(screen.getAllByText('₹ 7933').length).toBe(2);
+    // headline price + the row in the strip (both Indian-grouped)
+    expect(screen.getAllByText('₹ 7,933').length).toBe(2);
   });
 
-  it('selecting a pricier fare drives its own flightKey and price', async () => {
+  it('booking a pricier fare from the chooser drives its own flightKey and price', async () => {
     const { onSelect } = renderCard();
 
     fireEvent.click(screen.getByText('ECO VALUE'));
-    expect(screen.getAllByText('₹ 8100').length).toBe(2);
+    expect(screen.getAllByText('₹ 8,100').length).toBe(2);
     expect(screen.getByText('Seats left: 3')).toBeTruthy();
     // refundability and baggage belong to the FARE, not the flight
     expect(screen.getAllByText('Non-Refundable').length).toBe(2); // footer + its strip row
     expect(screen.getByText('40 Kg / 7 Kg')).toBeTruthy();
 
+    // Select now opens the fare chooser; the fare BOOKED there — not the
+    // cheapest — must drive the fare-details call and the selection.
     fireEvent.click(screen.getByRole('button', { name: 'Select' }));
+    const bookButtons = await screen.findAllByRole('button', { name: /BOOK NOW/i });
+    // Fares are listed cheapest-first: [PUBLISHED 7,933, ECO VALUE 8,100].
+    fireEvent.click(bookButtons[1]!);
 
-    await waitFor(() => expect(getReturnFareDetails).toHaveBeenCalled());
-    expect(vi.mocked(getReturnFareDetails).mock.calls[0]![0]).toMatchObject({
-      flightKey: 'k-eco',
-      segment: 'ONWARD',
-    });
-    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ flightId: 'k-eco' }));
+    await waitFor(() =>
+      expect(getReturnFareDetails).toHaveBeenCalledWith(
+        expect.objectContaining({ flightKey: 'k-eco', segment: 'ONWARD' }),
+      ),
+    );
+    await waitFor(() =>
+      expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ flightId: 'k-eco' })),
+    );
   });
 
   it('changing fare after selecting clears the stale selection', () => {

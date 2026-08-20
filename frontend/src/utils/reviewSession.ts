@@ -26,6 +26,11 @@ function unwrap(parsed: any): any {
 export function storeReviewData(response: unknown): void {
   sessionStorage.setItem(CANONICAL_KEY, JSON.stringify(unwrap(response)));
   sessionStorage.removeItem(LEGACY_KEY);
+  // A new Review starts a new supplier fare session — the booking countdown
+  // must restart with it, or an abandoned attempt's leftover timer shortens
+  // (or outlives) the next booking's real session.
+  sessionStorage.removeItem('bookingTimer');
+  sessionStorage.removeItem('timerStartTime');
 }
 
 export function readReviewData(): any | null {

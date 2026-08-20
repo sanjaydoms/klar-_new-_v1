@@ -49,6 +49,7 @@ import {
   formatHotelAddress,
   formatINR,
   NO_HOTEL_IMAGE,
+  resolveRefundability,
 } from '@/utils/hotelUtils';
 import { resolveRatePricing } from '@/features/hotels/utils/ratePricing';
 import { getHotelProducts, flattenFacilities } from '@/features/hotels/services/hotelSearchService';
@@ -1183,7 +1184,7 @@ const HotelReviewBooking = () => {
             hotelData.images?.[0] ||
             (hotelData as any).imageUrl ||
             '',
-          starRating: hotelData.starRating || hotelData.rating || 0,
+          starRating: hotelData.starRating || 0,
           city: hotelData.city || '',
           currency: hotelData.currency || 'INR',
           isHoldBooking: isHoldBooking,
@@ -2203,20 +2204,20 @@ const HotelReviewBooking = () => {
                       </h2>
 
                       {/* Rating */}
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '2.99px',
-                          fontSize: 'clamp(12px, 3.5vw, 14px)',
-                          color: '#4A5E78',
-                        }}
-                      >
-                        <FaStar className="text-yellow-400 text-xs" />
-                        <span style={{ fontWeight: 500 }}>
-                          {hotelData.starRating || hotelData.rating || 5}
-                        </span>
-                      </div>
+                      {(hotelData.starRating ?? 0) > 0 && (
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '2.99px',
+                            fontSize: 'clamp(12px, 3.5vw, 14px)',
+                            color: '#4A5E78',
+                          }}
+                        >
+                          <FaStar className="text-yellow-400 text-xs" />
+                          <span style={{ fontWeight: 500 }}>{hotelData.starRating}</span>
+                        </div>
+                      )}
 
                       {/* Address */}
                       <div
@@ -2433,17 +2434,20 @@ const HotelReviewBooking = () => {
                       {/* Refundability */}
                       <div>
                         {(() => {
-                          const isFreeCancel = (selectedRoom?.cancellationPolicies &&
-                            selectedRoom.cancellationPolicies.length > 0 &&
-                            parseFloat(selectedRoom.cancellationPolicies[0].amount) === 0) ||
-                            selectedRoom?.isRefundable === true ||
-                            selectedRoom?.refundable === true ||
-                            (hotelData?.cancellationPolicy && hotelData.cancellationPolicy.toUpperCase().includes('FREE CANCELLATION'));
-
                           // No supplier exemption — see HotelDetailPage. A RateGain
                           // room used to reach this page, and the payment step, with
                           // the non-refundable warning silently suppressed.
-                          const isNonRef = !isFreeCancel;
+                          //
+                          // `isNonRef` was `!isFreeCancel`, which stated the
+                          // opposite falsehood on the same screen: an UNKNOWN rate
+                          // was declared non-refundable immediately before payment.
+                          const refundability = resolveRefundability({
+                            isRefundable: selectedRoom?.isRefundable,
+                            refundable: selectedRoom?.refundable,
+                            cancellationPolicies: selectedRoom?.cancellationPolicies,
+                          });
+                          const isFreeCancel = refundability === 'REFUNDABLE';
+                          const isNonRef = refundability === 'NON_REFUNDABLE';
 
                           if (isFreeCancel) {
                             return (

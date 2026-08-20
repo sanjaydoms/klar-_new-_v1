@@ -1,0 +1,33 @@
+{
+  "name": "klar-admin",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port=5009",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --port=5009",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "clean": "rm -rf node_modules dist",
+    "pm2:start": "pm2 start npm --name klar-admin -- run preview",
+    "pm2:restart": "npm run build && pm2 restart klar-admin",
+    "deploy": "git pull && npm install && npm run build && pm2 restart klar-admin"
+  },
+  "dependencies": {
+    "axios": "^1.13.5",
+    "lucide-react": "^0.545.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.9.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.16",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.1",
+    "@vitejs/plugin-react": "^5.1.0",
+    "tailwindcss": "^4.1.16",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.12",
+    "@types/node": "^24.0.0"
+  }
+}

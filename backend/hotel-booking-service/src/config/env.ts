@@ -22,6 +22,10 @@ export const env = {
     agencyId: process.env.TRIPJACK_AGENCY_ID!,
   },
 
+  // Admin plane. This service only REPORTS to it — see config/telemetry.ts for
+  // why there is no routing or breaker on the booking path.
+  integrationServiceUrl:
+    process.env.INTEGRATION_SERVICE_URL || "http://localhost:5022",
   authServiceUrl: process.env.AUTH_SERVICE_URL || "http://localhost:5010",
   paymentServiceUrl:
     process.env.PAYMENT_SERVICE_URL || "http://localhost:5014/api/pay",

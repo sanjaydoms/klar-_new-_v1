@@ -1,4 +1,6 @@
 import { Router } from "express";
+
+import { observing } from "../utils/observability";
 import rateLimit from "express-rate-limit";
 import { precheckController } from "../controllers/precheck.controller";
 import { commitController } from "../controllers/commit.controller";
@@ -78,26 +80,34 @@ import {
   commitModification,
 } from "../controllers/amend.controller";
 
+/**
+ * `observing(...)` labels every supplier call the route causes, so the control
+ * center can report health per OPERATION rather than lumping the whole service
+ * together. The label is the operation from the catalogue in
+ * integration-service; a route with no label is measured as nothing at all,
+ * which is preferable to counting it under the wrong one.
+ */
 // RateGain booking flow — optional auth for B2C guest users
-router.post("/precheck", optionalAuthenticateJWT, precheckController);
-router.post("/commit", optionalAuthenticateJWT, commitController);
-router.post("/confirm", optionalAuthenticateJWT, confirmController);
-router.post("/cancel", optionalAuthenticateJWT, cancelController);
+router.post("/precheck", observing("AVAILABILITY"), optionalAuthenticateJWT, precheckController);
+router.post("/commit", observing("BOOKING"), optionalAuthenticateJWT, commitController);
+router.post("/confirm", observing("BOOKING"), optionalAuthenticateJWT, confirmController);
+router.post("/cancel", observing("CANCELLATION"), optionalAuthenticateJWT, cancelController);
 router.get(
   "/cancel/charges",
+  observing("CANCELLATION"),
   optionalAuthenticateJWT,
   getCancelChargesController,
 );
 router.post("/refund/manual/:bookingId", authenticateJWT, processManualRefund);
 router.post("/pricing-summary", authenticateJWT, getPricingSummaryController);
 
-router.get("/amend/policy", authenticateJWT, getModificationPolicy);
-router.post("/amend/price", authenticateJWT, getModificationPricing);
-router.post("/amend/commit", authenticateJWT, commitModification);
+router.get("/amend/policy", observing("MODIFICATION"), authenticateJWT, getModificationPolicy);
+router.post("/amend/price", observing("MODIFICATION"), authenticateJWT, getModificationPricing);
+router.post("/amend/commit", observing("MODIFICATION"), authenticateJWT, commitModification);
 router.get("/special-requests", specialRequestsController);
 
 // New booking management routes
-router.get("/bookings/:id", optionalAuthenticateJWT, getBookingDetails);
+router.get("/bookings/:id", observing("BOOKING_STATUS"), optionalAuthenticateJWT, getBookingDetails);
 
 /**
  * Client Confirmation Template Endpoint
