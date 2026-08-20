@@ -73,11 +73,13 @@ const load = async (url: string) => {
   // Both of these are set AFTER the import, and the URL is written onto the
   // env OBJECT rather than into process.env.
   //
-  // env.ts calls dotenv with `override: true`, so anything this test puts in
-  // process.env beforehand is replaced by whatever the developer's .env holds
-  // — which, now that INTEGRATION_SERVICE_URL lives there, pointed these tests
-  // at a real running service and made them pass or fail depending on whether
-  // one happened to be up.
+  // This used to be load-bearing: env.ts called dotenv with `override: true`,
+  // so anything the test put in process.env beforehand was replaced by
+  // whatever the developer's .env held — which, once INTEGRATION_SERVICE_URL
+  // lived there, pointed these tests at a real running service and made them
+  // pass or fail depending on whether one happened to be up. That override is
+  // gone, so process.env would survive now; writing to the env object is kept
+  // because it depends on no dotenv precedence at all.
   const { env } = await import("./env");
   env.integrationServiceUrl = url;
   process.env.INTERNAL_SERVICE_KEY = "test-key";
