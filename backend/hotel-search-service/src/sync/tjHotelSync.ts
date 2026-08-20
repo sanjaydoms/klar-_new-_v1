@@ -1,13 +1,19 @@
 import axios from "axios";
 import { HotelModel, buildSearchTokens } from "../models/Hotel.model";
-import { tripJackClient } from "../clients/tripjack.client";
+import { tripJackClient, assertTripJackOk } from "../clients/tripjack.client";
 import { env } from "../config/env";
 import fs from "fs/promises";
 import path from "path";
 
 import { NationalityModel } from "../models/Nationality.model";
 
-const TJ_STATIC_BASE_URL = "https://api.tripjack.com";
+// Static content lives on the main API host, not the HMS one — and ONLY there:
+// probing on 2026-08-19 found apitest.tripjack.com returns a Cloudflare 504 for
+// fetch-static-hotels and apitest-hms.tripjack.com a bare 403. The override
+// exists for a future host change, NOT as a test-environment escape hatch: this
+// sync requires a production key regardless of which host it is pointed at.
+const TJ_STATIC_BASE_URL =
+  process.env.TJ_STATIC_BASE_URL || "https://api.tripjack.com";
 
 const tripJackStaticClient = axios.create({
   baseURL: TJ_STATIC_BASE_URL,
@@ -148,6 +154,12 @@ export async function syncTJHotels() {
       }
 
       const data = res.data;
+
+      // Shared with the search path — see assertTripJackOk. This check began
+      // here, as an inline copy; it is the same invariant everywhere, so it
+      // lives in one place rather than drifting between call sites.
+      assertTripJackOk(data, "fetch-static-hotels");
+
       const hotels = data.hotelOpInfos || data.hotels || [];
 
       if (hotels.length === 0) {
@@ -345,6 +357,11 @@ export async function syncTJDeletedHotels(lastUpdateTime: string) {
         lastUpdateTime,
       },
     );
+
+    // Unguarded, a refusal read as "nothing was withdrawn" and we would go on
+    // selling properties TripJack has removed — a correctness failure, not just
+    // a freshness one.
+    assertTripJackOk(res.data, "fetch-static-hotels/deleted");
 
     const hotels = res.data.hotelOpInfos || [];
     if (hotels.length > 0) {

@@ -108,3 +108,24 @@ test("a single non-array entry is accepted", () => {
   ]);
   assert.deepEqual(qualifyImageUrls(null, "TJ"), []);
 });
+
+test("an unregistered supplier's relative paths are dropped, not guessed", () => {
+  // The point of widening `ImageSource` from the "TJ" | "RG" union: a third
+  // supplier compiles, and inherits the drop-don't-guess rule for free rather
+  // than falling into whichever branch happened to be last.
+  assert.equal(qualifyImageUrl("some/hb/photo.jpg", "HB"), "");
+  assert.equal(qualifyImageUrl("photo.png", "HB"), "");
+  // Absolute URLs — the common case — still work for a supplier nobody has
+  // configured a CDN base for.
+  assert.equal(
+    qualifyImageUrl("https://cdn.hotelbeds.test/x.jpg", "HB"),
+    "https://cdn.hotelbeds.test/x.jpg",
+  );
+});
+
+test("a future supplier's hotel ids are not treated as images either", () => {
+  // Guards the widened prefix check. "HB:8891" is an id, not a filename; the
+  // old /^(TJ|RG):/ named only the two codes that existed at the time.
+  assert.equal(qualifyImageUrl("HB:8891", "HB"), "");
+  assert.equal(qualifyImageUrl("EXPE:8891", "EXPE"), "");
+});

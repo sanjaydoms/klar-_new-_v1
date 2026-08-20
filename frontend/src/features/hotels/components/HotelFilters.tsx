@@ -136,6 +136,20 @@ const BOARD_LABELS: Record<string, string> = {
   EP: 'Room Only',
 };
 
+/**
+ * Display names for supplier codes, for the localhost-only supplier panel.
+ *
+ * Presentation only — which suppliers EXIST comes from the backend's registry
+ * via `providerCounts`, never from this map. An unlisted code degrades to the
+ * code itself, so registering a supplier never leaves the filter blank or stale.
+ */
+const PROVIDER_LABELS: Record<string, string> = {
+  TJ: 'TripJack',
+  RG: 'RateGain',
+};
+
+const providerLabel = (code: string) => PROVIDER_LABELS[code] ?? code;
+
 const cleanMealPlanLabel = (label: string) => {
   const raw = (label || '').trim();
   if (!raw) return 'Other';
@@ -370,10 +384,14 @@ const HotelFilters = ({
 
   const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-  // Dynamic Provider counts
+  // Dynamic Provider counts. The backend seeds these from its supplier registry
+  // (facets.service.ts), so the keys ARE the registered supplier codes — which
+  // is what makes the supplier list below data-driven rather than a hardcoded pair.
   const providerCounts = useMemo(() => {
     if (facets && facets.providerCounts) return facets.providerCounts;
-    const counts: Record<string, number> = { TJ: 0, RG: 0 };
+    // No facets (older response, or a cache miss): fall back to whatever the
+    // results themselves report. Shows only suppliers that returned a hotel.
+    const counts: Record<string, number> = {};
     hotels.forEach((h) => {
       if (h.source) {
         counts[h.source] = (counts[h.source] || 0) + 1;
@@ -664,7 +682,7 @@ const HotelFilters = ({
     selectedAmenities.forEach((a) => chips.push({ label: a, id: a, type: 'amenity' }));
     selectedMealPlans.forEach((m) => chips.push({ label: m, id: m, type: 'meal' }));
     selectedProviders.forEach((p) =>
-      chips.push({ label: p === 'TJ' ? 'TripJack' : 'RateGain', id: p, type: 'provider' }),
+      chips.push({ label: providerLabel(p), id: p, type: 'provider' }),
     );
     return chips;
   }, [
@@ -1246,10 +1264,12 @@ const HotelFilters = ({
           >
             Suppliers (Local Only)
           </h4>
-          {[
-            { id: 'TJ', label: 'TripJack (TJ)' },
-            { id: 'RG', label: 'RateGain (RG)' },
-          ].map((opt) => {
+          {/* Suppliers come from the backend registry via providerCounts, so a
+              newly registered supplier appears here with no frontend change. */}
+          {Object.keys(providerCounts)
+            .sort()
+            .map((id) => ({ id, label: `${providerLabel(id)} (${id})` }))
+            .map((opt) => {
             const checked = selectedProviders.includes(opt.id);
             return (
               <label

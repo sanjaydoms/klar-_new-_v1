@@ -1,5 +1,6 @@
 import { rateGainProvider } from "../providers/rategain.provider";
 import { tripJackProvider } from "../providers/tripjack.provider";
+import { bookingSupplierRegistry } from "../suppliers";
 
 class PrecheckService {
   async precheck(payload: any) {
@@ -9,8 +10,18 @@ class PrecheckService {
       payload.BookReservation?.propertyID ||
       "";
 
-    if (propertyId.startsWith("TJ:")) {
-      // TripJack Review flow
+    // Routing lives in suppliers/ — this used to match "TJ:" while commit.service
+    // matched "TJ", so a propertyId without the colon precheck'd against RateGain
+    // and then committed against TripJack.
+    const supplier = bookingSupplierRegistry.resolve({
+      propertyId,
+      bookingId: payload.bookingId,
+      payloadType: payload.type,
+      hasBookReservation: !!payload.BookReservation,
+    });
+
+    if (supplier.code === "TJ") {
+      // TripJack Review flow.
       // Frontend might wrap in BookReservation (RateGain style)
       const tjPayload = payload.BookReservation || payload;
       console.log(

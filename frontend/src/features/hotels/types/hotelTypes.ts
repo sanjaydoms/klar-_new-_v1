@@ -124,7 +124,9 @@ export interface Hotel {
   latitude?: number;
   longitude?: number;
   allotment?: number;
-  source?: 'RG' | 'TJ';
+  /** Supplier registry code from the backend ("RG", "TJ", …). Not a union of
+   *  today's codes — adding a supplier is a backend registration, not a type edit. */
+  source?: string;
   isRefundable?: boolean;
   /** Display-ready label from the backend, e.g. "Free cancellation till 06 Jul".
    *  Undefined when no supplier signal was available at search time. */

@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "node:crypto";
 import { commitService } from "../services/commit.service";
 import { compileTravellerPayload } from "../utils/bookingTransformer";
 import { StructuredError } from "../services/ValidationEngine";
 
 export const commitController = async (req: any, res: Response) => {
-  const requestId = uuidv4();
+  const requestId = randomUUID();
   try {
     const agentId = req.user?.userId || req.user?.id || req.user?._id || null;
     const agentName = req.user?.email || null; // Fallback to email if name isn't in token

@@ -1,8 +1,12 @@
 import { UnifiedSearchRequest, UnifiedHotel } from "../types/unified";
 import { deriveRefundable, platformMarkupAmount, round2 } from "../utils/pricing.util";
 import { resolveForTJ } from "../services/destinationResolver";
-import { tripJackClient } from "../clients/tripjack.client";
-import { v4 as uuidv4 } from "uuid";
+import {
+  tripJackClient,
+  assertTripJackOk,
+  TripJackRejectedError,
+} from "../clients/tripjack.client";
+import { randomUUID } from "node:crypto";
 import { HotelModel } from "../models/Hotel.model";
 import { toTjNationality } from "../utils/nationality";
 import { qualifyImageUrls } from "../utils/imageUrl.util";
@@ -25,7 +29,7 @@ export async function searchTJ(
 
   const hids = await resolveForTJ(req.destination, req._geoCenter);
   if (!hids.length) return { hotels: [], total: 0, hasMore: false };
-  const correlationId = uuidv4();
+  const correlationId = randomUUID();
   const page = req.pageNo || 1;
 
   // Densification: a listing call only returns the hotels among the supplied ids
@@ -90,13 +94,24 @@ export async function searchTJ(
           },
           { timeout: 15000, signal: req._abortSignal ?? undefined },
         )
-        .then((res) => res.data?.hotels || [])
+        .then((res) => {
+          // A refusal arrives as HTTP 200 with an error body and no `hotels`.
+          // Without this it became an empty array and the whole search reported
+          // "no availability" for what is actually a rejected request.
+          assertTripJackOk(res.data, "hotel listing");
+          return res.data?.hotels || [];
+        })
         .catch((err) => {
           // Deliberate cancellation once the partial-return window elapsed —
           // not a supplier fault, so don't log noise or trip the breaker.
           if (err?.code === "ERR_CANCELED" || err?.name === "CanceledError") {
             return [];
           }
+          // A refusal is request-level (bad key, bad agency id, rate limit), so
+          // it will hit every chunk alike. Propagate instead of degrading to []:
+          // searchTJ rethrows, and fetchOnePage records the supplier as FAILED
+          // rather than as having returned zero hotels.
+          if (err instanceof TripJackRejectedError) throw err;
           const status = err.response?.status;
           console.error(
             `[TripJack] Chunk Fetch Error (status ${status}):`,

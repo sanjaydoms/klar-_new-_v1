@@ -23,7 +23,7 @@ import {
   Bell,
   Tv,
 } from 'lucide-react';
-import { formatHotelImageUrl, calculateNights, encodeRoomsToUrl, NO_HOTEL_IMAGE, toggleWishlistHotel, isHotelWishlisted, resolveRefundability } from '@/utils/hotelUtils';
+import { formatHotelImageUrl, calculateNights, encodeRoomsToUrl, NO_HOTEL_IMAGE, toggleWishlistHotel, isHotelWishlisted, resolveRefundability, formatINR } from '@/utils/hotelUtils';
 
 const formatHotelAddress = (address?: string | null): string => {
   if (!address) return '';
@@ -54,7 +54,7 @@ interface HotelCardProps {
   allotment?: number | null;
   cancellationPolicy?: string | null;
   description?: string | null;
-  source?: 'RG' | 'TJ' | undefined;
+  source?: string | undefined;
   isRefundable?: boolean;
   checkInTime?: string | null;
   checkOutTime?: string | null;
@@ -613,17 +613,17 @@ const HotelCard: React.FC<HotelCardProps> = ({
             <div className="flex flex-col items-end text-right w-full">
               {perNightOriginalPrice && perNightTotal && perNightOriginalPrice > perNightTotal && (
                 <span className="text-gray-400 text-[13.52px] line-through font-medium leading-none mb-1">
-                  ₹ {perNightOriginalPrice.toLocaleString('en-IN')}
+                  {formatINR(perNightOriginalPrice)}
                 </span>
               )}
               <span className="text-[27.04px] font-bold text-[#1A1F4D] font-['Inter'] leading-[27.04px]">
-                ₹ {perNightTotal != null ? perNightTotal.toLocaleString('en-IN') : price.toLocaleString('en-IN')}
+                {formatINR(perNightTotal ?? price)}
               </span>
               <span className="text-[11.27px] text-[#707070] font-['Inter'] font-normal leading-[16.9px] mt-[4.51px]">
                 {/* Always all-in, so the wording never changes what the number means;
                     the split is disclosed only when the supplier provides one. */}
                 {perNightTaxAmount != null && perNightTaxAmount > 0
-                  ? `Incl. ₹${perNightTaxAmount.toLocaleString('en-IN')} taxes & fees / Per Night`
+                  ? `Incl. ${formatINR(perNightTaxAmount)} taxes & fees / Per Night`
                   : 'Incl. taxes & fees / Per Night'}
               </span>
             </div>

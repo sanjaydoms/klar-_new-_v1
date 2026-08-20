@@ -38,7 +38,10 @@ import {
 } from '@/features/hotels/services/hotelBookingService';
 import { precheckTJ } from '@/features/hotels/services/tripjackBookingService';
 import { ChildInfo } from '@/features/bookings/types/booking.types';
-import { Country } from 'country-state-city';
+import {
+  COUNTRY_DIAL_CODES,
+  getCountryDialCode,
+} from '@/features/hotels/data/countryDialCodes';
 import {
   formatRateComments,
   calculateNights,
@@ -53,17 +56,15 @@ import { getHotelProducts, flattenFacilities } from '@/features/hotels/services/
 import { initiateRazorpayPayment } from '@/api/razorpay.api';
 import { notifyError } from '@/utils/notify';
 
-// Format a number for display to 2 decimal places
-const formatPrice = (num: number | undefined | null): string => {
-  if (num === null || num === undefined || isNaN(Number(num))) return '0.00';
-  return Number(num).toFixed(2);
-};
-
 /**
- * `country-state-city` returns phonecode inconsistently — bare ("91") for most
- * countries but already prefixed ("+358-18") for some, which produced "++358-18"
- * once the UI added its own plus. Some entries also carry prose
- * ("+1-809 and 1-829"); keep only the first dial code.
+ * Dial codes are stored inconsistently — bare ("91") for most countries but
+ * already prefixed ("+358-18") for some, which produced "++358-18" once the UI
+ * added its own plus. Some entries also carry prose ("+1-809 and 1-829"); keep
+ * only the first dial code.
+ *
+ * The quirks are inherited: COUNTRY_DIAL_CODES is a verbatim extract of the
+ * `country-state-city` dataset, so normalising happens here rather than in the
+ * data, which stays a faithful copy that can be regenerated.
  */
 const formatDialCode = (phonecode?: string) => {
   const raw = (phonecode || '').trim();
@@ -1609,6 +1610,9 @@ const HotelReviewBooking = () => {
                 <select
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  name="honorific-prefix"
+                  autoComplete="honorific-prefix"
+                  aria-label="Title"
                   className="w-full px-3 py-2 text-sm text-gray-900 rounded border border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none bg-white"
                 >
                   <option>Mr.</option>
@@ -1657,7 +1661,7 @@ const HotelReviewBooking = () => {
                     setBookingError(null);
                   }}
                   maxLength={50}
-                  placeholder="Required"
+                  placeholder="As per passport"
                   className={`w-full px-3 py-2 text-sm text-gray-900 rounded border focus:ring-2 outline-none bg-white ${errors.lastName ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-400'}`}
                 />
                 {errors.lastName && (
@@ -1689,6 +1693,9 @@ const HotelReviewBooking = () => {
                     value={panNumber}
                     onChange={(e) => setPanNumber(e.target.value.replace(/\s/g, '').toUpperCase())}
                     onBlur={(e) => setPanNumber(e.target.value.trim().toUpperCase())}
+                    name="pan"
+                    aria-label="Primary guest PAN"
+                    required={dynamicPanRequired}
                     placeholder="10-digit PAN"
                     className={`w-full px-3 py-2 text-sm text-gray-900 rounded border focus:ring-2 outline-none bg-white uppercase ${errors.panNumber ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-400'}`}
                   />
@@ -1706,6 +1713,8 @@ const HotelReviewBooking = () => {
                     onChange={(e) =>
                       setAadharNumber(e.target.value.replace(/\D/g, '').substring(0, 12))
                     }
+                    name="aadhaar"
+                    aria-label="Primary guest Aadhaar"
                     placeholder="12-digit UID"
                     className={`w-full px-3 py-2 text-sm text-gray-900 rounded border focus:ring-2 outline-none bg-white ${errors.aadharNumber ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-400'}`}
                   />
@@ -1729,6 +1738,9 @@ const HotelReviewBooking = () => {
                       setPassportNumber(e.target.value.replace(/\s/g, '').toUpperCase())
                     }
                     onBlur={(e) => setPassportNumber(e.target.value.trim().toUpperCase())}
+                    name="passport"
+                    aria-label="Primary guest passport number"
+                    required={dynamicPassportRequired}
                     placeholder="Passport No."
                     className={`w-full px-3 py-2 text-sm text-gray-900 rounded border focus:ring-2 outline-none bg-white uppercase ${errors.passportNumber ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-400'}`}
                   />
@@ -1756,6 +1768,10 @@ const HotelReviewBooking = () => {
                       type="text"
                       value={postalCode}
                       onChange={(e) => setPostalCode(e.target.value)}
+                      name="postal-code"
+                      autoComplete="postal-code"
+                      aria-label="Postal code"
+                      required
                       placeholder="Zip code"
                       className={`w-full px-3 py-2 text-sm text-gray-900 rounded border focus:ring-2 outline-none bg-white ${errors.postalCode ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-400'}`}
                     />
@@ -1783,6 +1799,9 @@ const HotelReviewBooking = () => {
                       [guestId]: { ...prev[guestId], fN: e.target.value.toUpperCase() },
                     }))
                   }
+                  name={`guest-${guestId}-first-name`}
+                  aria-label={`Guest ${guestId} first name`}
+                  required
                   placeholder="First Name"
                   className={`w-full px-3 py-2 text-sm text-gray-900 rounded border outline-none bg-white uppercase focus:ring-2 ${errors[`extra-${guestId}-fN`] ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:ring-blue-100'}`}
                 />
@@ -1803,6 +1822,9 @@ const HotelReviewBooking = () => {
                       [guestId]: { ...prev[guestId], lN: e.target.value.toUpperCase() },
                     }))
                   }
+                  name={`guest-${guestId}-last-name`}
+                  aria-label={`Guest ${guestId} last name`}
+                  required
                   placeholder="Last Name"
                   className={`w-full px-3 py-2 text-sm text-gray-900 rounded border outline-none bg-white uppercase focus:ring-2 ${errors[`extra-${guestId}-lN`] ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:ring-blue-100'}`}
                 />
@@ -1843,6 +1865,9 @@ const HotelReviewBooking = () => {
                       },
                     }))
                   }
+                  name={`guest-${guestId}-pan`}
+                  aria-label={`Guest ${guestId} PAN`}
+                  required={dynamicPanRequired}
                   placeholder="10-digit PAN"
                   className={`w-full px-3 py-2 text-sm text-gray-900 rounded border outline-none bg-white uppercase focus:ring-2 ${errors[`extra-${guestId}-pan`] ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:ring-blue-100'}`}
                 />
@@ -1880,6 +1905,9 @@ const HotelReviewBooking = () => {
                       },
                     }))
                   }
+                  name={`guest-${guestId}-passport`}
+                  aria-label={`Guest ${guestId} passport number`}
+                  required={dynamicPassportRequired}
                   placeholder="Passport No."
                   className={`w-full px-3 py-2 text-sm text-gray-900 rounded border outline-none bg-white uppercase focus:ring-2 ${errors[`extra-${guestId}-pNum`] ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:ring-blue-100'}`}
                 />
@@ -1909,6 +1937,8 @@ const HotelReviewBooking = () => {
                       [guestId]: { ...prev[guestId], aadhar: (prev[guestId]?.aadhar || '').trim() },
                     }))
                   }
+                  name={`guest-${guestId}-aadhaar`}
+                  aria-label={`Guest ${guestId} Aadhaar`}
                   placeholder="12-digit UID"
                   className={`w-full px-3 py-2 text-sm text-gray-900 rounded border outline-none bg-white focus:ring-2 ${errors[`extra-${guestId}-aadhar`] ? 'border-red-500 focus:ring-red-100' : 'border-gray-200 focus:ring-blue-100'}`}
                 />
@@ -2945,10 +2975,14 @@ const HotelReviewBooking = () => {
                           onChange={(e) => {
                             setProfileCountryCode(e.target.value);
                           }}
+                          name="tel-country-code"
+                          autoComplete="tel-country-code"
+                          aria-label="Country code"
+                          required
                           className={`w-full px-3 py-2 text-sm text-gray-900 rounded border focus:ring-2 outline-none bg-white ${errors.profileCountryCode ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-400'}`}
                         >
                           <option value="">Select</option>
-                          {Country.getAllCountries().map((c) => (
+                          {COUNTRY_DIAL_CODES.map((c) => (
                             <option key={c.isoCode} value={c.isoCode}>
                               {c.isoCode} ({formatDialCode(c.phonecode)})
                             </option>
@@ -2957,7 +2991,7 @@ const HotelReviewBooking = () => {
                       ) : (
                         <div className="px-3 py-2 text-sm text-gray-700 bg-gray-50 rounded border border-gray-100 font-medium">
                           {profileCountryCode
-                            ? `${profileCountryCode} (${formatDialCode(Country.getCountryByCode(profileCountryCode)?.phonecode)})`
+                            ? `${profileCountryCode} (${formatDialCode(getCountryDialCode(profileCountryCode)?.phonecode)})`
                             : 'Not provided'}
                         </div>
                       )}
