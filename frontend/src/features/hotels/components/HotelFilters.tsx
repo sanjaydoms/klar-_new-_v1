@@ -1035,8 +1035,15 @@ const HotelFilters = ({
                   checked={checked}
                   onChange={() => handleStarToggle(star)}
                   className="sr-only"
+                  // The only content of this label is a row of star GLYPHS, so
+                  // without this the checkbox has no accessible name at all —
+                  // a screen reader announces five identical unlabelled
+                  // checkboxes and the filter is unusable. The count has to be
+                  // spoken because the icons carry it visually.
+                  aria-label={`${star} star`}
                 />
                 <span
+                  aria-hidden="true"
                   className={`text-[14px] flex items-center gap-1 transition-colors ${checked ? 'text-gray-900 font-medium' : 'text-gray-700'}`}
                 >
                   {[...Array(star)].map((_, i) => (
