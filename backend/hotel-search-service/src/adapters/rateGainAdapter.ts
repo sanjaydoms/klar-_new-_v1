@@ -235,9 +235,17 @@ export async function searchRG(
             return [];
           })();
 
-          const finalAmenities = bh.amenities && bh.amenities.length > 0
-            ? bh.amenities
-            : getRGFallbackAmenities(bh.name || s.name, rating);
+          // Only what RateGain reported.
+          //
+          // This used to fall back to a list generated from the star rating and
+          // from substrings of the hotel's NAME — five stars meant a spa, and
+          // "beach" in the name meant a pool. Those inventions then fed
+          // `facets.service.ts`, so they became amenity FILTER options: a
+          // customer who filtered for a spa was shown hotels we had guessed had
+          // one. An empty list means "not reported", which is not "not present"
+          // and is certainly not a licence to guess — the same rule
+          // `imageUrl.util.ts` already applies to unresolvable images.
+          const finalAmenities = Array.isArray(bh.amenities) ? bh.amenities : [];
 
           return {
             ...bh,
@@ -257,9 +265,7 @@ export async function searchRG(
         } else {
           return {
             ...bh,
-            amenities: bh.amenities && bh.amenities.length > 0
-              ? bh.amenities
-              : getRGFallbackAmenities(bh.name, bh.starRating || 0),
+            amenities: Array.isArray(bh.amenities) ? bh.amenities : [],
           };
         }
       });
@@ -539,35 +545,3 @@ function mapRGHotel(h: any, clientType: "B2B" | "B2C" = "B2C"): UnifiedHotel {
   };
 }
 
-function getRGFallbackAmenities(name: string, starRating: number): string[] {
-  const amenities: string[] = [];
-  if (starRating >= 5) {
-    amenities.push(
-      "Swimming Pool",
-      "Fitness Center",
-      "Spa",
-      "Restaurant",
-      "Bar",
-    );
-  } else if (starRating >= 4) {
-    amenities.push("Swimming Pool", "Fitness Center", "Restaurant");
-  } else if (starRating >= 3) {
-    amenities.push("Restaurant", "24-hour Front Desk");
-  } else {
-    amenities.push("24-hour Front Desk");
-  }
-
-  const lowerName = (name || "").toLowerCase();
-  if (
-    lowerName.includes("resort") ||
-    lowerName.includes("spa") ||
-    lowerName.includes("beach")
-  ) {
-    if (!amenities.includes("Swimming Pool")) amenities.push("Swimming Pool");
-    if (!amenities.includes("Spa")) amenities.push("Spa");
-  }
-  if (lowerName.includes("parking") || lowerName.includes("airport")) {
-    amenities.push("Free Parking");
-  }
-  return [...new Set(amenities)];
-}

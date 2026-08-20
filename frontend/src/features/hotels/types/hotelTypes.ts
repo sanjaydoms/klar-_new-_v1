@@ -28,7 +28,6 @@ export interface HotelFiltersState {
   searchText?: string;
   showOnlyAltDeals?: boolean;
   providers?: string[];
-  userRatings?: number[];
   selectedLocations?: string[];
 }
 
@@ -89,7 +88,12 @@ export interface Hotel {
   address?: string;
   city?: string;
   country?: string;
-  rating?: number;
+  /**
+   * Star classification, 1-5. There is deliberately no sibling `rating`:
+   * the two were separate fields holding the same scale for different things,
+   * and every `rating || starRating` fallback that grew between them read a
+   * review score as a star count. One field, one meaning.
+   */
   starRating?: number;
   images?: string[];
   amenities?: string[];
@@ -99,9 +103,15 @@ export interface Hotel {
   brandCode?: string;
   // Display properties
   distance?: string;
-  reviews?: number;
-  reviewScore?: number;
-  reviewLabel?: string;
+  /*
+   * No `reviews`, `reviewScore` or `reviewLabel`.
+   *
+   * Neither TripJack nor RateGain returns a guest review score, and no neutral
+   * content source is licensed, so the canonical model has no such field. The
+   * absent field is the point: a nullable one invites a fallback, and the
+   * fallback that existed here read `starRating` and rendered it on a 0-10
+   * review scale. See docs/UX-CAPABILITY-CONTRACT.md Part B and D-2.
+   */
   price?: number; // Total stay price (base + taxes)
   basePrice?: number; // Base net price (room cost without taxes) — use for per-night display
   taxAmount?: number; // Taxes & fees on top of base (0 if taxes included)

@@ -24,10 +24,7 @@ const mapHotelToCardProps = (hotel: Hotel, index: number) => {
         ? `${hotel.address}, ${hotel.city}`
         : hotel.address || hotel.city || 'Location details unavailable',
     distance: hotel.distance || '',
-    rating: hotel.starRating || hotel.rating || 0,
-    reviews: hotel.reviews || 0,
-    reviewScore: hotel.reviewScore?.toString() || '0.0',
-    reviewLabel: hotel.reviewLabel || '',
+    starRating: hotel.starRating || 0,
     price: hotel.price || 0,
     apiPrice: (hotel as any).apiPrice || hotel.price || 0,
     // ── New pricing fields for MMT-style display ────────────────────────

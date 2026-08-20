@@ -310,7 +310,7 @@ const SearchResultsMap = ({
                 />
 
                 {/* Star Rating Badge */}
-                {(activeHotel.starRating || activeHotel.rating) && (
+                {(activeHotel.starRating ?? 0) > 0 && (
                   <div
                     style={{
                       position: 'absolute',
@@ -330,7 +330,7 @@ const SearchResultsMap = ({
                     }}
                   >
                     <span style={{ color: '#fbbf24', fontSize: '11px' }}>★</span>
-                    <span>{activeHotel.starRating || activeHotel.rating}</span>
+                    <span>{activeHotel.starRating}</span>
                   </div>
                 )}
               </div>
@@ -490,7 +490,7 @@ const SearchResultsMap = ({
           >
             {visibleHotels.map((hotel) => {
               const isHighlighted = activeHotel?.id === hotel.id;
-              const stars = hotel.starRating || hotel.rating || 0;
+              const stars = hotel.starRating || 0;
               const hasDiscount = hotel.originalPrice && hotel.originalPrice > (hotel.price || 0);
               const discountPct = hasDiscount
                 ? Math.round(((hotel.originalPrice! - (hotel.price || 0)) / hotel.originalPrice!) * 100)
@@ -814,7 +814,10 @@ const HotelSearchPage = () => {
     searchText: '',
     showOnlyAltDeals: false,
     providers: [],
-    userRatings: [],
+    // Mirrored by resetFilters. The two literals must carry the same keys:
+    // when they diverge, a filter is one shape on first load and another
+    // after "Clear all", and every consumer is written against only one.
+    priceRanges: [],
   });
 
   const location = useLocation();
@@ -835,10 +838,6 @@ const HotelSearchPage = () => {
       searchText: '',
       showOnlyAltDeals: false,
       providers: [],
-      // Must mirror the initial state exactly. `userRatings` and `priceRanges`
-      // were missing, so "Clear all" left them undefined rather than empty —
-      // a different shape from the one every consumer is written against.
-      userRatings: [],
       priceRanges: [],
     });
     setSelectedLocations([]);
@@ -1496,13 +1495,6 @@ const HotelSearchPage = () => {
             if (!hotel.source || !activeFilters.providers.includes(hotel.source)) return false;
           }
 
-          // 9. User Ratings
-          if (activeFilters.userRatings && activeFilters.userRatings.length > 0) {
-            const rating = hotel.rating || hotel.starRating || 0;
-            const minRating = Math.min(...activeFilters.userRatings);
-            if (rating < minRating) return false;
-          }
-
           return true;
         });
     },
@@ -2121,7 +2113,7 @@ const HotelSearchPage = () => {
             name: h.name,
             city: h.city || '',
             address: h.address || '',
-            starRating: h.starRating || h.rating || 0,
+            starRating: h.starRating || 0,
             price: h.price || 0,
             basePrice: (h as any).basePrice ?? h.price ?? 0,
             taxAmount: (h as any).taxAmount || 0,

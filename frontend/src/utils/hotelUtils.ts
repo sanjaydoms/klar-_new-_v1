@@ -458,6 +458,55 @@ export const isHotelWishlisted = (id: string): boolean => {
  * Salcete - Goa;". Split on the delimiter, drop blanks and case-insensitive
  * duplicates, and rejoin as a single readable line.
  */
+/**
+ * Refundability, decided from data alone.
+ *
+ * Three values, because "the supplier did not say" is not "non-refundable".
+ * TripJack's listing call returns no cancellation block at all and RateGain's
+ * search returns no rate, so UNKNOWN is the common case on a search card, not
+ * an edge one — and every caller must be able to render nothing for it.
+ *
+ * The display label is NOT an input. Callers used to re-derive this by
+ * uppercasing the label this codebase had just generated and looking for
+ * "FREE CANCELLATION" inside it, which turns a piece of copy into a
+ * contractual claim: any supplier note containing the word "REFUNDABLE"
+ * manufactured a promise. See docs/UX-CAPABILITY-CONTRACT.md D-3.
+ *
+ * One function so every surface answers this the same way. The card, the detail
+ * page and the review-and-pay screen each had their own version, and they
+ * disagreed: the card required an explicit `false` before saying
+ * "Non-Refundable", while the other two derived it from the mere absence of a
+ * positive and so said it for every UNKNOWN rate — through to the payment step.
+ */
+export type Refundability = 'REFUNDABLE' | 'NON_REFUNDABLE' | 'UNKNOWN';
+
+export const resolveRefundability = (source: {
+  // `| undefined` is explicit because the project runs with
+  // `exactOptionalPropertyTypes`, and every caller passes a value that may be
+  // undefined rather than omitting the key.
+  isRefundable?: boolean | null | undefined;
+  refundable?: boolean | null | undefined;
+  cancellationPolicies?: Array<{ amount?: number | string | null }> | null | undefined;
+}): Refundability => {
+  // An explicit supplier flag wins over anything we could infer.
+  const flag = source.isRefundable ?? source.refundable;
+  if (flag === true) return 'REFUNDABLE';
+  if (flag === false) return 'NON_REFUNDABLE';
+
+  const policies = source.cancellationPolicies;
+  if (Array.isArray(policies) && policies.length > 0) {
+    const amounts = policies
+      .map((p) => Number(p?.amount))
+      .filter((n) => Number.isFinite(n));
+    // Policies whose amounts we cannot read tell us nothing. Reading them as a
+    // charge is how an unparseable payload became a hard "Non-Refundable".
+    if (amounts.length === 0) return 'UNKNOWN';
+    return amounts.some((a) => a === 0) ? 'REFUNDABLE' : 'NON_REFUNDABLE';
+  }
+
+  return 'UNKNOWN';
+};
+
 export const formatHotelAddress = (address?: string | null): string => {
   if (!address) return '';
   const seen = new Set<string>();

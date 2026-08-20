@@ -12,16 +12,13 @@ const mapWishlistToCardProps = (hotel: any) => {
     location: hotel.location || 'Location details unavailable',
     city: hotel.city || null,
     address: hotel.address || null,
-    rating: hotel.rating || 0,
+    starRating: hotel.starRating || 0,
     price: hotel.price || 0,
     basePrice: hotel.basePrice || hotel.price || 0,
     image: hotel.image || '',
     images: hotel.images || [],
     source: hotel.source,
     distance: '',
-    reviews: 0,
-    reviewScore: '0.0',
-    reviewLabel: '',
   };
 };
 

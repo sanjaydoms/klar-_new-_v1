@@ -89,7 +89,7 @@ export const SimilarHotels: React.FC<SimilarHotelsProps> = ({
           let score = 0;
 
           // Star rating similarity (max +100)
-          const starDiff = Math.abs((hotel.starRating || hotel.rating || 0) - currentStarRating);
+          const starDiff = Math.abs((hotel.starRating || 0) - currentStarRating);
           score += Math.max(0, 100 - starDiff * 30);
 
           // Price similarity (max +100)
@@ -267,7 +267,7 @@ export const SimilarHotels: React.FC<SimilarHotelsProps> = ({
                       : '') || NO_HOTEL_IMAGE;
 
                   const locationText = formatHotelAddress(hotel.address) || hotel.city || city;
-                  const rating = hotel.starRating || hotel.rating || 0;
+                  const rating = hotel.starRating || 0;
                   const totalPrice = hotel.price || hotel.minPrice || 0;
                   const perNightPrice = Math.round(totalPrice / nights);
 

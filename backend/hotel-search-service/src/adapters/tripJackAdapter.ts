@@ -231,38 +231,6 @@ export async function searchTJ(
   }
 }
 
-function getTJFallbackAmenities(name: string, starRating: number): string[] {
-  const amenities: string[] = [];
-  if (starRating >= 5) {
-    amenities.push(
-      "Swimming Pool",
-      "Fitness Center",
-      "Spa",
-      "Restaurant",
-      "Bar",
-    );
-  } else if (starRating >= 4) {
-    amenities.push("Swimming Pool", "Fitness Center", "Restaurant");
-  } else if (starRating >= 3) {
-    amenities.push("Restaurant", "24-hour Front Desk");
-  } else {
-    amenities.push("24-hour Front Desk");
-  }
-
-  const lowerName = (name || "").toLowerCase();
-  if (
-    lowerName.includes("resort") ||
-    lowerName.includes("spa") ||
-    lowerName.includes("beach")
-  ) {
-    if (!amenities.includes("Swimming Pool")) amenities.push("Swimming Pool");
-    if (!amenities.includes("Spa")) amenities.push("Spa");
-  }
-  if (lowerName.includes("parking") || lowerName.includes("airport")) {
-    amenities.push("Free Parking");
-  }
-  return [...new Set(amenities)];
-}
 
 function mapTJHotel(h: any, correlationId: string): UnifiedHotel {
   const opt = h.options?.[0];
