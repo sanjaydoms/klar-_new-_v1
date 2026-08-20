@@ -17,6 +17,18 @@ export const FRONTEND = {
   isFrontend: true,
 };
 
+/**
+ * The Super Admin console. A separate app from the B2C site on purpose: it
+ * ships to a handful of staff, not to customers, and nothing an operator sees
+ * belongs in a public bundle.
+ */
+export const ADMIN = {
+  dir: 'admin', name: 'admin', port: 5009, colour: 'blue',
+  summary: 'Super Admin console — Integration Control Center (Vite + React)',
+  needs: [],
+  isFrontend: true,
+};
+
 export const SERVICES = [
   {
     dir: 'backend/auth-service', name: 'auth', port: 5010, colour: 'cyan',
@@ -79,6 +91,11 @@ export const SERVICES = [
     needs: ['mongo'],
   },
   {
+    dir: 'backend/integration-service', name: 'integration', port: 5022, colour: 'cyan',
+    summary: 'API & Integration Control Center — provider registry, routing, credentials, health',
+    needs: ['mongo'],
+  },
+  {
     dir: 'backend/hotel-engine', name: 'engine', port: 5030, colour: 'gray',
     summary: 'Supplier-agnostic hotel OTA engine (not yet wired to the frontend)',
     // Postgres, not MongoDB — and it refuses to start without it.
@@ -89,8 +106,8 @@ export const SERVICES = [
   },
 ];
 
-/** Everything `npm run dev` and `npm run doctor` know about, frontend included. */
-export const ALL = [FRONTEND, ...SERVICES];
+/** Everything `npm run dev` and `npm run doctor` know about, frontends included. */
+export const ALL = [FRONTEND, ADMIN, ...SERVICES];
 
 export const byName = (name) =>
   ALL.find((s) => s.name === name || s.dir === name || s.dir === `backend/${name}`);

@@ -5,6 +5,7 @@
  * at GET /__ledger; POST /__reset clears it (always reset before asserting).
  */
 const http = require('http');
+const crypto = require('crypto');
 
 const ledger = [];
 const note = (entry) => {
@@ -41,6 +42,38 @@ const readBody = (req) =>
     });
   });
 
+/**
+ * A signed HS256 token, so the stub can stand in for auth-service when a
+ * service actually VERIFIES the JWT rather than calling back to validate it.
+ *
+ * integration-service verifies signatures locally, so a made-up string will not
+ * do. Hand-rolled rather than pulling in jsonwebtoken: these stubs deliberately
+ * have no dependencies, and signing HS256 is three lines of crypto.
+ *
+ * The secret must match the consuming service's JWT_SECRET. Override with
+ * STUB_JWT_SECRET when it is not the default.
+ */
+const STUB_JWT_SECRET = process.env.STUB_JWT_SECRET || 'local-dev-jwt-secret';
+const STUB_USER = {
+  userId: 'local-master',
+  email: process.env.STUB_MASTER_EMAIL || 'master@klar.local',
+  clientType: 'B2B',
+  roles: 'MASTER',
+};
+
+const b64url = (obj) =>
+  Buffer.from(JSON.stringify(obj)).toString('base64url');
+
+const signToken = (payload) => {
+  const head = b64url({ alg: 'HS256', typ: 'JWT' });
+  const body = b64url({ ...payload, iat: Math.floor(Date.now() / 1000) });
+  const sig = crypto
+    .createHmac('sha256', STUB_JWT_SECRET)
+    .update(`${head}.${body}`)
+    .digest('base64url');
+  return `${head}.${body}.${sig}`;
+};
+
 // ---- auth-service :5910 ----
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
@@ -55,6 +88,31 @@ http.createServer(async (req, res) => {
     return json(res, 200, { success: true, data: { balance: 10_000_000, currency: 'INR', canUseWallet: true } }, req);
   }
   if (p === '/__reset') { ledger.length = 0; return json(res, 200, { reset: true }, req); }
+
+  /**
+   * Sign-in for the Super Admin console.
+   *
+   * Accepts any credentials and always returns the same MASTER user: the point
+   * is to exercise a console that needs a session, not to model accounts. The
+   * cookie is NOT httpOnly here so it can be inspected while debugging — the
+   * real auth-service sets httpOnly, and nothing depends on the difference.
+   */
+  if (p === '/user/auth/login') {
+    note({ op: 'stub-login', email: body.email });
+    res.setHeader('Set-Cookie', `token=${signToken(STUB_USER)}; Path=/; SameSite=Lax`);
+    return json(res, 200, { success: true, message: 'Login successful', data: { user: STUB_USER } }, req);
+  }
+
+  if (p === '/user/auth/logout') {
+    res.setHeader('Set-Cookie', 'token=; Path=/; Max-Age=0; SameSite=Lax');
+    return json(res, 200, { success: true }, req);
+  }
+
+  if (p === '/user/auth/me') {
+    const hasCookie = /(?:^|;\s*)token=[^;]+/.test(req.headers.cookie || '');
+    if (!hasCookie) return json(res, 401, { success: false, message: 'Not signed in' }, req);
+    return json(res, 200, { success: true, data: { user: STUB_USER } }, req);
+  }
 
   if (p === '/user/auth/validate-token')
     return json(res, 200, {

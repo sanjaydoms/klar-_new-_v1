@@ -104,10 +104,21 @@ resolves this to before fixing the default.**
 
 | Service | Behaviour |
 |---|---|
-| hotel-search-service | loads `.env.local` then `.env`, with `override: true` — `.env` wins |
+| hotel-search-service | loads `.env.local` then `.env` |
 | insurance-service | loads `.env.local` then `.env` |
 | cabs-service | loads `.env` by absolute path from `__dirname`, so it works regardless of cwd |
 | all others | plain `dotenv.config()`, relative to the process cwd |
 
 `npm run dev` runs each service with its own directory as cwd, so the plain case
 works.
+
+Where two files list the same key, the FIRST one to set it wins, so `.env.local`
+overrides `.env`. A variable already exported in the real environment beats both,
+because dotenv never replaces a key that is already present.
+
+hotel-search-service used to pass `override: true` here, which reversed all of
+that: dotenv walked the array overwriting as it went, so `.env` beat `.env.local`
+and a plain `.env` silently beat a variable exported by the shell, Docker or PM2.
+Do not add it back — a dotfile outranking an explicitly set environment variable
+is the kind of thing that is only ever discovered from a deployment behaving
+nothing like the box it was tested on.

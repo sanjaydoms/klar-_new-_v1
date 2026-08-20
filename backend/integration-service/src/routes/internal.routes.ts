@@ -1,0 +1,81 @@
+import { Router } from "express";
+
+import * as credentials from "../controllers/credential.controller";
+import * as health from "../controllers/health.controller";
+import { internalServiceAuth } from "../middlewares/internalService.middleware";
+import { currentThresholds } from "../models/HealthThresholds.model";
+import { resolve, resolveAll } from "../services/router.service";
+
+/**
+ * The routing surface KLAR's own services consult.
+ *
+ * Read-only and deliberately small. A service asks who serves an operation and
+ * gets slugs back; it never asks this service to make a supplier call for it.
+ * The supplier adapters stay where they already live.
+ */
+const router = Router();
+
+router.use(internalServiceAuth);
+
+/**
+ * The whole routing table in one response.
+ *
+ * The shape the clients actually poll: one request on a timer beats one per
+ * operation, and a client holding a complete snapshot can answer synchronously
+ * on the hot path instead of awaiting a lookup per search.
+ */
+router.get("/routing", async (_req, res) => {
+  try {
+    // The breaker configuration rides along with the routing snapshot the
+    // clients already poll. The breaker runs in THEIR process — it has to, a
+    // breaker that needs a network hop to decide whether to make a network
+    // call has already failed — but its numbers stay admin-owned.
+    const [data, thresholds] = await Promise.all([resolveAll(), currentThresholds()]);
+    res.json({
+      success: true,
+      data,
+      breaker: {
+        enabled: thresholds.breakerEnabled,
+        failureThreshold: thresholds.breakerFailureThreshold,
+        cooldownSeconds: thresholds.breakerCooldownSeconds,
+        probeSuccesses: thresholds.breakerProbeSuccesses,
+      },
+    });
+  } catch (err: any) {
+    console.error("[internal] resolveAll failed:", err?.message ?? err);
+    res.status(500).json({ success: false, message: "Failed to resolve routing." });
+  }
+});
+
+/** One operation, for callers that want a fresh read rather than a snapshot. */
+router.get("/routing/:service/:operation", async (req, res) => {
+  try {
+    const decision = await resolve(
+      String(req.params.service).toUpperCase(),
+      String(req.params.operation).toUpperCase(),
+    );
+    res.json({ success: true, data: decision });
+  } catch (err: any) {
+    console.error("[internal] resolve failed:", err?.message ?? err);
+    res.status(500).json({ success: false, message: "Failed to resolve routing." });
+  }
+});
+
+/**
+ * Decrypted supplier credentials for a KLAR service.
+ *
+ * The only route in the system that returns a plaintext secret, and it is
+ * server-to-server behind the shared key. Deliberately narrow: one provider,
+ * one environment, per call.
+ */
+router.get("/credentials/:slug/:environment", credentials.forService);
+
+/**
+ * Telemetry from the services that actually call suppliers.
+ *
+ * They batch and send fire-and-forget, so this answers fast and swallows bad
+ * rows rather than returning an error a caller might retry.
+ */
+router.post("/telemetry", health.ingest);
+
+export default router;

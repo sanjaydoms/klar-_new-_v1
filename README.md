@@ -61,7 +61,7 @@ deployment. They talk to each other over HTTP, never by importing each other's c
 | npm | ≥ 9 | Ships with Node 20. |
 | MongoDB | 6 or 7 | Listening on `127.0.0.1:27017`. |
 | Redis | 6 or 7 | Listening on `127.0.0.1:6379`. |
-| PostgreSQL | 15+ | **Only** for `hotel-engine`, which is excluded from `npm run dev`. Not needed for the twelve live services. |
+| PostgreSQL | 15+ | **Only** for `hotel-engine`, which is excluded from `npm run dev`. Not needed for the thirteen live services. |
 
 MongoDB and Redis must be running locally *before* you start the services.
 
@@ -176,7 +176,7 @@ npm run doctor       # report what is still missing, without starting anything
 `npm run doctor` is the first thing to run when something will not start. It
 checks the Node version, that MongoDB and Redis are reachable, that dependencies
 are installed, that each `.env` exists, which keys are missing or blank, and
-whether any port is already occupied — and prints one list instead of thirteen
+whether any port is already occupied — and prints one list instead of fourteen
 stack traces.
 
 Secrets that must be filled in before the corresponding feature works:
@@ -278,6 +278,7 @@ For the backend, `npm run typecheck` is the check that must pass.
 | Port | Service | Mounts at |
 |---|---|---|
 | 5008 | **frontend** — B2C web application | |
+| 5009 | **admin** — Super Admin console | |
 | 5010 | auth-service | `/user` |
 | 5011 | flight-service | `/api/flight` |
 | 5012 | hotel-search-service | `/api/search` |
@@ -290,6 +291,7 @@ For the backend, `npm run typecheck` is the check that must pass.
 | 5019 | charter-service | `/api/charter` |
 | 5020 | tour-package-service | `/api/tours` |
 | 5021 | passport-service | `/api/passport` |
+| 5022 | integration-service | `/admin/integrations`, `/internal` |
 | 5030 | hotel-engine | not yet wired to any frontend |
 | 5910 / 5914 / 5915 | backend/local-dev stubs for auth / payment / email | |
 
@@ -304,6 +306,7 @@ and email-service (5000). See
 
 ```
 KLAR/
+├── admin/                       Super Admin console (Vite + React), :5009
 ├── frontend/                    B2C web application (Vite + React), :5008
 │   ├── src/
 │   │   ├── pages/               one directory per route
@@ -329,6 +332,7 @@ KLAR/
 │   ├── tour-package-service/    tours and holiday packages
 │   ├── payment-service/         Razorpay + Cashfree
 │   ├── email-service/           transactional mail via BullMQ
+│   ├── integration-service/     API & Integration Control Center
 │   └── local-dev/               stub servers and sample payloads
 │
 ├── docs/architecture/           how the system fits together
@@ -383,6 +387,14 @@ service  →  providers/  →  suppliers/<name>/  →  clients/  →  supplier H
 
 Adding a provider means adding a directory under `suppliers/` and registering it
 with the provider layer. No business logic, controller or route should change.
+
+Which supplier serves which operation is **configuration, not code**:
+`backend/integration-service` holds the routing, credentials, health and audit
+trail, and `admin/` is the console that drives it. An authorised administrator
+can take a failing supplier out of rotation without a deploy. See
+[backend/integration-service/docs/ADDING-A-PROVIDER.md](backend/integration-service/docs/ADDING-A-PROVIDER.md)
+for the full checklist, and
+[docs/OPERATIONS.md](backend/integration-service/docs/OPERATIONS.md) for the runbook.
 
 ---
 

@@ -12,7 +12,11 @@ Two halves, one repository:
 - **`frontend/`** — the B2C customer web application. Vite + React + TypeScript,
   Tailwind, dev server on `:5008`. UI work lives here: pages, components,
   styling, anything a user sees.
-- **`backend/`** — thirteen independent Express + TypeScript microservices.
+- **`admin/`** — the Super Admin console, on `:5009`. A separate app from
+  `frontend/` on purpose: it ships to staff, and nothing an operator sees
+  belongs in a customer bundle. Supplier health, routing, credentials,
+  incidents.
+- **`backend/`** — fourteen independent Express + TypeScript microservices.
   Business logic, persistence, supplier integrations, payments.
 
 If a task says "change the hotel card", it is in `frontend/`. If it says "fix

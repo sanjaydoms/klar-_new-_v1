@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-dotenv.config({ path: [".env.local", ".env"], override: true });
+dotenv.config({ path: [".env.local", ".env"] });
 
 export const env = {
   port: process.env.PORT || 5012,
@@ -86,6 +86,10 @@ export const env = {
   },
 
   authServiceUrl: process.env.AUTH_SERVICE_URL || "http://localhost:5010",
+  // Admin plane. Consulted for provider routing; a search never blocks on it
+  // (see config/integration-config.ts for the degradation ladder).
+  integrationServiceUrl:
+    process.env.INTEGRATION_SERVICE_URL || "http://localhost:5022",
 };
 if (!env.rateGain.baseUrl) {
   console.error("❌ RATEGAIN_BASE_URL is not set. Service will not work.");

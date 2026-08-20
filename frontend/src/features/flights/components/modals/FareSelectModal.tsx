@@ -264,9 +264,12 @@ export default function FareSelectModal({
           </span>
           <div>
             <p className="text-sm font-semibold text-primary sm:text-base">
-              {dep.city} <span className="text-gray-500">({dep.airportCode})</span>
+              {/* Return/multicity Flights carry the city under `airport`. */}
+              {dep.city || dep.airport}{' '}
+              <span className="text-gray-500">({dep.airportCode})</span>
               <span className="mx-2 text-gray-400">→</span>
-              {arr.city} <span className="text-gray-500">({arr.airportCode})</span>
+              {arr.city || arr.airport}{' '}
+              <span className="text-gray-500">({arr.airportCode})</span>
             </p>
             <p className="mt-0.5 text-xs text-gray-500 sm:text-sm">
               {[airlineName, headerDate, paxText].filter(Boolean).join('  ·  ')}

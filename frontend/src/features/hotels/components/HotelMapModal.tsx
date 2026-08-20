@@ -381,13 +381,13 @@ const HotelMapModal: React.FC<HotelMapModalProps> = ({ hotels, isOpen, onClose }
                             ₹{hotel.price.toLocaleString()}
                           </div>
                         )}
-                        <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-white
-                                        px-2 py-0.5 rounded-md flex items-center gap-1">
-                          <Star size={10} className="fill-amber-400 text-amber-400" />
-                          <span className="text-[10px] font-bold">
-                            {hotel.starRating || hotel.rating || 'New'}
-                          </span>
-                        </div>
+                        {(hotel.starRating ?? 0) > 0 && (
+                          <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-white
+                                          px-2 py-0.5 rounded-md flex items-center gap-1">
+                            <Star size={10} className="fill-amber-400 text-amber-400" />
+                            <span className="text-[10px] font-bold">{hotel.starRating}</span>
+                          </div>
+                        )}
                       </div>
                       <div className="p-4">
                         <h4
@@ -464,7 +464,7 @@ const HotelMapModal: React.FC<HotelMapModalProps> = ({ hotels, isOpen, onClose }
               >
                 {visibleHotels.map((hotel) => {
                   const isHighlighted = activeHotelId === hotel.id;
-                  const stars = hotel.starRating || hotel.rating || 0;
+                  const stars = hotel.starRating || 0;
                   const hasDiscount = hotel.originalPrice && hotel.originalPrice > (hotel.price || 0);
                   const discountPct = hasDiscount
                     ? Math.round(((hotel.originalPrice! - (hotel.price || 0)) / hotel.originalPrice!) * 100)

@@ -6,6 +6,8 @@ import {
   formatHotelImageUrl,
   formatBedConfig,
   computeRoomDisplayPricing,
+  resolveRefundability,
+  type Refundability,
 } from '../../../utils/hotelUtils';
 import { getItemWithTTL } from '../../../utils/localStorageWithTTL';
 import { useAuth } from '../../authentication/hooks/useAuth';
@@ -122,26 +124,35 @@ const CancellationPopover: React.FC<{
 };
 
 /** Derive a stable, human-readable refundable label + boolean for one rate option. */
+/**
+ * The label is display copy; it is never an input to the decision.
+ *
+ * This previously read `!/non[-\s]?refundable/i.test(refundableLabel)`, so any
+ * supplier wording without that exact phrase — "Cancellation charges apply from
+ * 5 Sep", say — was declared FREE CANCELLATION. And an empty policy array fell
+ * through `.some(...)` to "Non-Refundable", asserting the opposite from equally
+ * absent evidence. Both directions invented from copy; both now go through the
+ * one resolver, which can answer UNKNOWN.
+ */
 const deriveRefundable = (
   option: any,
-): { label: string; isRefundable: boolean } => {
-  if (option.refundableLabel) {
-    return {
-      label: option.refundableLabel,
-      isRefundable: !/non[-\s]?refundable/i.test(option.refundableLabel),
-    };
-  }
-  if (typeof option.isRefundable === 'boolean') {
-    return {
-      label: option.isRefundable ? 'Free Cancellation' : 'Non-Refundable',
-      isRefundable: option.isRefundable,
-    };
-  }
-  const policies = option.cancellationPolicies || [];
-  const refundable = policies.some((p: any) => p.isRefundable || parseFloat(p.amount) === 0);
+): { label: string | null; refundability: Refundability } => {
+  const refundability = resolveRefundability({
+    isRefundable: option.isRefundable,
+    refundable: option.refundable,
+    // A per-policy `isRefundable` flag means the same as a zero charge.
+    cancellationPolicies: (option.cancellationPolicies || []).map((p: any) =>
+      p?.isRefundable === true ? { amount: 0 } : p,
+    ),
+  });
+
+  if (refundability === 'UNKNOWN') return { label: null, refundability };
+
   return {
-    label: refundable ? 'Free Cancellation' : 'Non-Refundable',
-    isRefundable: refundable,
+    label:
+      option.refundableLabel ||
+      (refundability === 'REFUNDABLE' ? 'Free Cancellation' : 'Non-Refundable'),
+    refundability,
   };
 };
 
@@ -183,7 +194,9 @@ const RoomOptionRow: React.FC<RoomOptionRowProps> = ({
     () => computeRoomDisplayPricing(option, nights),
     [option, nights],
   );
-  const { label: cancelLabel, isRefundable } = deriveRefundable(option);
+  const { label: cancelLabel, refundability } = deriveRefundable(option);
+  const isRefundable = refundability === 'REFUNDABLE';
+  const refundabilityKnown = refundability !== 'UNKNOWN';
   const isTJ = !!hotelData?.id?.startsWith?.('TJ:');
 
   const boardRaw =
@@ -196,7 +209,11 @@ const RoomOptionRow: React.FC<RoomOptionRowProps> = ({
   // MMT-style headline: lead with the room offer, e.g. "Room With Free
   // Cancellation | Bed And Breakfast" — all derived from real supplier fields.
   const headline = (() => {
-    const parts: string[] = [isRefundable ? 'Room With Free Cancellation' : 'Non-Refundable Room'];
+    const parts: string[] = [];
+    // Nothing is claimed about cancellation when the supplier did not say.
+    if (refundabilityKnown) {
+      parts.push(isRefundable ? 'Room With Free Cancellation' : 'Non-Refundable Room');
+    }
     const b = board.toLowerCase();
     if (boardRaw && b !== 'room only' && b !== 'board not specified') parts.push(board);
     return parts.join(' | ');
@@ -279,23 +296,25 @@ const RoomOptionRow: React.FC<RoomOptionRowProps> = ({
         </h4>
 
         {/* Cancellation — prominent, with date. Hover shows the policy popover. */}
-        <span
-          ref={cxlRef}
-          onMouseEnter={() => cxlRef.current && setCxlRect(cxlRef.current.getBoundingClientRect())}
-          onMouseLeave={() => setCxlRect(null)}
-          className={`inline-flex w-fit items-center gap-2 text-[14px] font-semibold cursor-help border-b border-dashed border-gray-300 ${
-            isRefundable ? 'text-[#0B8A6B]' : 'text-[#D64545]'
-          }`}
-          style={{ fontFamily: 'Inter, sans-serif' }}
-        >
-          {isRefundable ? (
-            <CheckCircle2 size={17} className="shrink-0" />
-          ) : (
-            <XCircle size={17} className="shrink-0" />
-          )}
-          {cancelLabel}
-        </span>
-        {cxlRect && (
+        {refundabilityKnown && (
+          <span
+            ref={cxlRef}
+            onMouseEnter={() => cxlRef.current && setCxlRect(cxlRef.current.getBoundingClientRect())}
+            onMouseLeave={() => setCxlRect(null)}
+            className={`inline-flex w-fit items-center gap-2 text-[14px] font-semibold cursor-help border-b border-dashed border-gray-300 ${
+              isRefundable ? 'text-[#0B8A6B]' : 'text-[#D64545]'
+            }`}
+            style={{ fontFamily: 'Inter, sans-serif' }}
+          >
+            {isRefundable ? (
+              <CheckCircle2 size={17} className="shrink-0" />
+            ) : (
+              <XCircle size={17} className="shrink-0" />
+            )}
+            {cancelLabel}
+          </span>
+        )}
+        {refundabilityKnown && cxlRect && (
           <CancellationPopover
             rect={cxlRect}
             isRefundable={isRefundable}

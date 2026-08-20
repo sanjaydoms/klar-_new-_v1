@@ -8,7 +8,7 @@
  * tokens, and resumes from where it stopped.
  */
 import dotenv from "dotenv";
-dotenv.config({ path: [".env.local", ".env"], override: true });
+dotenv.config({ path: [".env.local", ".env"] });
 
 import mongoose from "mongoose";
 import { connectDB } from "../src/config/db";

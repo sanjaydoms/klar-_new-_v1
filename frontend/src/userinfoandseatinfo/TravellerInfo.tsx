@@ -15,6 +15,7 @@ import MainNavbar from '@/components/layout/Navbar/MainNavbar';
 import { notifyError } from '@/utils/notify';
 import { flightSearchRoute, normalizeTripType, storedTripType } from '@/utils/tripType';
 import { readReviewData } from '@/utils/reviewSession';
+import { cabinBaggageOf, refundableLabelFromType } from '@/features/flights/utils/flightDisplay';
 
 
 interface TravellerInfoProps {
@@ -65,8 +66,21 @@ interface FlightSegment {
   duration: string;
   stops: number;
   airline: string;
+  airlineCode?: string;
   flightNumber: string;
   refundableType?: number;
+  refundableLabel?: string;
+  cabinClass?: string;
+  fareName?: string;
+  mealIncluded?: boolean;
+  aircraft?: string[];
+  departureISO?: string;
+  arrivalISO?: string;
+  departureTerminal?: string;
+  arrivalTerminal?: string;
+  originCityCode?: string;
+  destinationCityCode?: string;
+  originCountry?: string;
   baggage: {
     checkIn: string;
     cabin: string;
@@ -100,6 +114,9 @@ export default function TravellerInfo({ onContinue }: TravellerInfoProps) {
   const [isDataRestored, setIsDataRestored] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [priceDetails, setPriceDetails] = useState<any>(null);
+  // The supplier's `conditions` block from the Review response: what the Book
+  // request must carry (passport, DOB per pax type, GST) and the session length.
+  const [conditions, setConditions] = useState<any>(null);
 
   const [gstInfo, setGstInfo] = useState<GSTInfo>({
     gstNumber: '',
@@ -148,11 +165,13 @@ export default function TravellerInfo({ onContinue }: TravellerInfoProps) {
         dob = date.toISOString().split('T')[0] || '';
       }
 
+      // Letter suffix, not a digit: the backend (rightly) rejects digits in names.
+      const suffix = String.fromCharCode(65 + (index % 26));
       return {
         ...traveler,
         title: traveler.type === 'ADULT' ? 'Mr' : 'Master',
-        firstName: `${baseName}${index + 1}`,
-        lastName: `${lastName}${index + 1}`,
+        firstName: `${baseName}${suffix}`,
+        lastName: `${lastName}${suffix}`,
         dateOfBirth: dob,
         passportNumber: `PASS${String(1000 + index).padStart(4, '0')}`,
         passportNationality: 'IN',
@@ -183,6 +202,28 @@ export default function TravellerInfo({ onContinue }: TravellerInfoProps) {
   };
 
   const isDevelopment = import.meta.env.VITE_ENVIRONMENT === 'development';
+
+  /**
+   * Booking requirements as the supplier stated them at Review. When the
+   * conditions block is absent (old sessions), keep the stricter historical
+   * behaviour rather than guessing leniency.
+   */
+  const passportRequired = conditions?.ipa === true;
+  const dobRequiredFor = (type: 'ADULT' | 'CHILD' | 'INFANT'): boolean => {
+    const dob = conditions?.dob;
+    if (!dob) return true;
+    return type === 'ADULT' ? !!dob.adobr : type === 'CHILD' ? !!dob.cdobr : !!dob.idobr;
+  };
+  const nameLimits = {
+    first: conditions?.anlm?.fN || 32,
+    last: conditions?.anlm?.lN || 32,
+  };
+  const gstApplicable = conditions?.gst?.gstappl !== false;
+  const gstMandatory = conditions?.gst?.igm === true;
+
+  useEffect(() => {
+    if (gstMandatory) setShowGST(true);
+  }, [gstMandatory]);
 
   const getDateRangeForType = (type: 'ADULT' | 'CHILD' | 'INFANT'): DateRange => {
     const today = new Date();
@@ -380,6 +421,37 @@ export default function TravellerInfo({ onContinue }: TravellerInfoProps) {
       const childCount = paxInfo?.ChildFare || 0;
       const infantCount = paxInfo?.INFANT || 0;
 
+      // One fare per pax type SUMMED ACROSS TRIPS: on return/multicity each
+      // trip prices its own fare, and showing only trip 1's beside the
+      // combined total made the breakdown disagree with the amount charged.
+      const TAX_KEYS = [
+        'AirlineGSTComponent',
+        'FuelSurcharge',
+        'OtherTaxes',
+        'ManagementFee',
+        'ManagementFeeTax',
+      ] as const;
+      const summedFare = (type: 'AdultFare' | 'ChildFare' | 'INFANT') => {
+        let found = false;
+        const fc = { BaseFare: 0, TotalFare: 0 };
+        const taxes: Record<string, number> = {};
+        (mappedData.TripInformation || []).forEach((trip: any) => {
+          const fare = trip?.TotalPriceList?.[0]?.FareDetails?.[type];
+          if (!fare) return;
+          found = true;
+          fc.BaseFare += fare.FareComponents?.BaseFare || 0;
+          fc.TotalFare += fare.FareComponents?.TotalFare || 0;
+          TAX_KEYS.forEach((k) => {
+            taxes[k] =
+              (taxes[k] || 0) +
+              (fare.AdditionalFareComponents?.TotalAdditionalFare?.[k] || 0);
+          });
+        });
+        return found
+          ? { FareComponents: fc, AdditionalFareComponents: { TotalAdditionalFare: taxes } }
+          : undefined;
+      };
+
       const priceDetails = {
         baseFare: baseFare,
         airlineGSTComponent: airlineGSTComponent,
@@ -390,9 +462,9 @@ export default function TravellerInfo({ onContinue }: TravellerInfoProps) {
         totalFare: totalFare,
         addOnsTotal: 0,
         totalAmount: totalFare,
-        adultFare: mappedData.TripInformation?.[0]?.TotalPriceList?.[0]?.FareDetails?.AdultFare,
-        childFare: mappedData.TripInformation?.[0]?.TotalPriceList?.[0]?.FareDetails?.ChildFare,
-        infantFare: mappedData.TripInformation?.[0]?.TotalPriceList?.[0]?.FareDetails?.INFANT,
+        adultFare: summedFare('AdultFare'),
+        childFare: summedFare('ChildFare'),
+        infantFare: summedFare('INFANT'),
 
         adultCount: adultCount,
         childCount: childCount,
@@ -502,11 +574,29 @@ export default function TravellerInfo({ onContinue }: TravellerInfoProps) {
         duration: formattedDuration,
         stops: segmentInfo.NumberOfStops || 0,
         airline: flightDetailsData?.AirlineInfo?.AirlineName || '',
+        airlineCode: flightDetailsData?.AirlineInfo?.AirlineCode || '',
         flightNumber: flightDetailsData?.FlightNumber || '',
         refundableType: refundableType,
+        refundableLabel: refundableLabelFromType(refundableType),
+        cabinClass: fareDetails?.CabinClass || '',
+        fareName: totalPriceList?.[0]?.FareIdentifierType || '',
+        mealIncluded: fareDetails?.MealIncluded === true,
+        aircraft: Array.isArray(segmentInfo.ac)
+          ? segmentInfo.ac
+          : segmentInfo.ac
+            ? [segmentInfo.ac]
+            : [],
+        departureISO: departureTime || '',
+        arrivalISO: arrivalTime || '',
+        departureTerminal: departureAirport?.terminal || '',
+        arrivalTerminal: arrivalAirport?.terminal || '',
+        originCityCode: departureAirport?.AirportCode || departureAirport?.cityCode || '',
+        destinationCityCode: arrivalAirport?.AirportCode || arrivalAirport?.cityCode || '',
+        originCountry: departureAirport?.country || '',
         baggage: {
           checkIn: checkInBaggage || '',
-          cabin: baggage.ClassCode || '',
+          // CabinBaggage is the corrected name; ClassCode is the legacy alias.
+          cabin: cabinBaggageOf(baggage),
         },
         passengerCount: (paxInfo?.AdultFare || 0) + (paxInfo?.ChildFare || 0) + (paxInfo?.INFANT || 0),
         adultCount: paxInfo?.AdultFare || 0,
@@ -605,6 +695,8 @@ export default function TravellerInfo({ onContinue }: TravellerInfoProps) {
         const mappedData = parsedData?.data?.mappedData || parsedData?.mappedData || parsedData;
         const tripInfoArray = mappedData?.TripInformation || [];
 
+        setConditions(parsedData?.conditions ?? mappedData?.conditions ?? null);
+
         const searchType = normalizeTripType(mappedData?.searchQuery?.searchType || tripTypeFromStorage);
 
         let allSegments: FlightSegment[] = [];
@@ -702,8 +794,13 @@ export default function TravellerInfo({ onContinue }: TravellerInfoProps) {
         setTimeLeft(remainingTime);
       }
     } else {
-      setTimeLeft(15 * 60);
-      sessionStorage.setItem('bookingTimer', (15 * 60).toString());
+      // The supplier states the fare-session length in conditions.st (840s on
+      // live UAT); the old hardcoded 15 min outlived the session by a minute.
+      const review = readReviewData();
+      const st = review?.conditions?.st ?? review?.mappedData?.conditions?.st;
+      const sessionSeconds = typeof st === 'number' && st > 0 ? st : 15 * 60;
+      setTimeLeft(sessionSeconds);
+      sessionStorage.setItem('bookingTimer', sessionSeconds.toString());
       sessionStorage.setItem('timerStartTime', Date.now().toString());
     }
   }, [navigate]);
@@ -862,14 +959,17 @@ export default function TravellerInfo({ onContinue }: TravellerInfoProps) {
       }
 
       if (!traveler.dateOfBirth) {
-        newErrors[`dob_${index}`] = 'Date of birth is required';
-        hasErrors = true;
+        if (dobRequiredFor(traveler.type)) {
+          newErrors[`dob_${index}`] = 'Date of birth is required';
+          hasErrors = true;
+        }
       } else if (!isDateValidForType(traveler.dateOfBirth, traveler.type)) {
         newErrors[`dob_${index}`] = `Invalid date of birth for ${traveler.type.toLowerCase()}`;
         hasErrors = true;
       }
 
       const hasAnyPassportField =
+        passportRequired ||
         traveler.passportNumber || traveler.passportIssueDate || traveler.passportExpiryDate;
 
       if (hasAnyPassportField) {
@@ -1015,7 +1115,7 @@ export default function TravellerInfo({ onContinue }: TravellerInfoProps) {
           paxType: traveler.type,
           firstName: traveler.firstName.trim(),
           lastName: traveler.lastName.trim(),
-          dob: traveler.dateOfBirth,
+          ...(traveler.dateOfBirth && { dob: traveler.dateOfBirth }),
           ...(hasPassportData && {
             passportNumber: traveler.passportNumber?.toUpperCase(),
             passportNationality: traveler.passportNationality || 'IN',
@@ -1233,6 +1333,9 @@ export default function TravellerInfo({ onContinue }: TravellerInfoProps) {
                       validateNameInput={validateNameInput}
                       nameErrors={nameErrors}
                       setNameErrors={setNameErrors}
+                      passportRequired={passportRequired}
+                      dobRequired={dobRequiredFor(travelers[currentTravelerIndex]!.type)}
+                      nameLimits={nameLimits}
                     />
                   ) : (
                     <div className="text-center py-8 text-gray-500">No travelers found</div>
@@ -1284,14 +1387,16 @@ export default function TravellerInfo({ onContinue }: TravellerInfoProps) {
                   setNameErrors={setNameErrors}
                 />
 
-                <GSTInfoForm
-                  showGST={showGST}
-                  setShowGST={setShowGST}
-                  gstInfo={gstInfo}
-                  setGstInfo={setGstInfo}
-                  nameErrors={nameErrors}
-                  setNameErrors={setNameErrors}
-                />
+                {gstApplicable && (
+                  <GSTInfoForm
+                    showGST={showGST}
+                    setShowGST={setShowGST}
+                    gstInfo={gstInfo}
+                    setGstInfo={setGstInfo}
+                    nameErrors={nameErrors}
+                    setNameErrors={setNameErrors}
+                  />
+                )}
 
                 <EmergencyContactForm
                   emergencyContact={emergencyContact}
