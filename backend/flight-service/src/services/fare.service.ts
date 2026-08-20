@@ -94,7 +94,17 @@ class FareService {
                 const onwardKey = onwardSegments.map((seg: any) => seg?.id).join("-");
                 const returnKey = returnSegments.map((seg: any) => seg?.id).join("-");
 
-                return onwardKey === flightKey || returnKey === flightKey;
+                // The search response's per-direction flightKeys carry a fare
+                // fingerprint (segKey#hash) that the raw segment joins above do
+                // not — strip it so the keys the frontend actually holds match.
+                const bareKey = flightKey.split("#")[0];
+
+                return (
+                    onwardKey === flightKey ||
+                    returnKey === flightKey ||
+                    onwardKey === bareKey ||
+                    returnKey === bareKey
+                );
             });
 
             if (!selectedCombo) {
@@ -209,15 +219,27 @@ class FareService {
             let selectedLeg = null;
             let selectedCombo = null;
 
-            for (const combo of combos) {
-                const legs = this.extractLegsFromCombo(combo);
-                const leg = legs.find(leg =>
-                    leg.legIndex === legIndex && leg.flightKey === flightKey
-                );
+            // Two mismatches made this branch unreachable in practice:
+            // extractLegsFromCombo splits legs on isRs, which multicity COMBO
+            // segments never set (so every combo collapsed into one "leg 0"
+            // keyed by ALL segment ids), and the search response's leg
+            // flightKeys carry a fare fingerprint (segKey#hash) the raw joins
+            // here never matched. Match the combo directly instead: by trip
+            // key, or by the bare leg key being the combo's segment join or a
+            // leg-aligned prefix of it. A COMBO prices the whole itinerary in
+            // one fare, so combo-level fares are what the caller needs.
+            const bareKey = flightKey.split("#")[0];
 
-                if (leg) {
-                    selectedLeg = leg;
+            for (const combo of combos) {
+                const allSegKey = (combo.sI || []).map((seg: any) => seg?.id).join("-");
+                if (
+                    BaseFlightNormalizer.matchesTripKey(combo, flightKey) ||
+                    allSegKey === bareKey ||
+                    allSegKey.startsWith(bareKey + "-") ||
+                    allSegKey.endsWith("-" + bareKey)
+                ) {
                     selectedCombo = combo;
+                    selectedLeg = { legIndex, flightKey: bareKey };
                     break;
                 }
             }
@@ -226,14 +248,13 @@ class FareService {
                 throw new Error(`Flight not found for leg ${legIndex}`);
             }
 
-            // Extract fares for the specific leg
-            const fares = this.extractFaresForLeg(selectedCombo, legIndex);
+            const fares = BaseFlightNormalizer.extractFaresForCombo(selectedCombo);
 
-            if (!fares) {
+            if (!fares || fares.length === 0) {
                 throw new Error("Fare extraction failed");
             }
 
-            return TripjackFieldMapper.map(fares);
+            return TripjackFieldMapper.map(fares[0]);
         }
 
         // Domestic structure (your existing code)

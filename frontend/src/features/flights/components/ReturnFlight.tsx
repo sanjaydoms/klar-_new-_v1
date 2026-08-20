@@ -246,6 +246,8 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
   const [isLoadingMoreReturn, setIsLoadingMoreReturn] = useState(false);
   const [departureFareRuleData, setDepartureFareRuleData] = useState<any>(null);
   const [returnFareRuleData, setReturnFareRuleData] = useState<any>(null);
+  const [refundableTypes, setRefundableTypes] = useState<string[]>([]);
+  const [fareTypes, setFareTypes] = useState<string[]>([]);
   const [airlineStats, setAirlineStats] = useState<
     { airline: string; airlineCode: string; flights: number }[]
   >([]);
@@ -434,6 +436,12 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
 
         if (response.data?.airlineStats) {
           setAirlineStats(response.data.airlineStats);
+        }
+        if (response.data?.refundableTypes) {
+          setRefundableTypes(response.data.refundableTypes);
+        }
+        if (response.data?.fareTypes) {
+          setFareTypes(response.data.fareTypes);
         }
 
         if (response && response.success !== false) {
@@ -972,6 +980,8 @@ export default function ReturnFlight({ searchParams, onBack, onBookNow }: Return
                   onError={(errorMsg) => notifyError(errorMsg, 'Filter Error')}
                   flightType="return"
                   availableAirlines={airlineStats}
+                  availableRefundable={refundableTypes}
+                  availableFareTypes={fareTypes}
                 />
               </div>
             </div>

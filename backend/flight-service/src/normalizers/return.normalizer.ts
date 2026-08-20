@@ -18,6 +18,7 @@ export class ReturnNormalizer {
             return {
                 onward,
                 return: returnFlights,
+                ...this.buildLabelFacets([...onward, ...returnFlights]),
                 airlineStats: this.buildAirlineStats([
                     ...onward,
                     ...returnFlights
@@ -62,13 +63,17 @@ export class ReturnNormalizer {
 
             return {
                 roundTrips,
+                ...this.buildLabelFacets(allFlights),
                 airlineStats: this.buildAirlineStats(allFlights)
             };
         }
 
         return {
             onward: [],
-            return: []
+            return: [],
+            refundableTypes: [],
+            fareTypes: [],
+            airlineStats: []
         };
     }
 
@@ -420,6 +425,23 @@ export class ReturnNormalizer {
         }
 
         return flightData;
+    }
+
+
+    /**
+     * Facet lists for the filter panel, from the UNFILTERED set — same rule as
+     * buildAirlineStats: options taken from the filtered set collapse the panel
+     * the moment a filter is applied.
+     */
+    private static buildLabelFacets(flights: any[]) {
+        return {
+            refundableTypes: Array.from(
+                new Set(flights.map((f: any) => f?.refundable).filter(Boolean))
+            ).sort(),
+            fareTypes: Array.from(
+                new Set(flights.map((f: any) => f?.fareIdentifier).filter(Boolean))
+            ).sort()
+        };
     }
 
     private static buildAirlineStats(flights: any[]) {

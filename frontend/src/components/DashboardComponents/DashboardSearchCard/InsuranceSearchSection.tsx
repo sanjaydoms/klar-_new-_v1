@@ -836,8 +836,7 @@ const InsuranceSearchSection: React.FC = () => {
           <button
             onClick={handleSearch}
             disabled={isSubmitting}
-            className="text-white font-semibold flex items-center justify-center gap-2 px-8 sm:px-10 h-12 rounded-2xl shadow-lg transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed text-sm select-none hover:bg-[#4E0404] active:scale-[0.98] min-w-[160px]"
-            style={{ backgroundColor: '#620404' }}
+            className="bg-[var(--color-brand-red)] text-white font-semibold flex items-center justify-center gap-2 px-8 sm:px-10 h-12 rounded-2xl shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed text-sm select-none hover:bg-[var(--color-brand-red)]/90 active:scale-[0.98] min-w-[160px]"
           >
             {isSubmitting ? (
               <>
@@ -1165,7 +1164,7 @@ const TravellerSelector: React.FC<{
             <button
               type="button"
               onClick={() => setShowDropdown(false)}
-              className="w-full sm:w-auto bg-blue-600 text-white px-8 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-md"
+              className="w-full sm:w-auto bg-[var(--color-brand-red)] text-white px-8 py-2.5 rounded-xl font-bold text-sm hover:bg-[var(--color-brand-red)]/90 transition-all shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)]"
             >
               Done
             </button>

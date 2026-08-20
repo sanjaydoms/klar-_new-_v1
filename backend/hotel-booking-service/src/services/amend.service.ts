@@ -1,7 +1,15 @@
 import { hotelBookingRepository } from "../repositories/hotelBooking.repository";
 import { tripJackProvider } from "../providers/tripjack.provider";
+import { bookingSupplierRegistry } from "../suppliers";
 
 class AmendService {
+  #supplierCode(booking: any): string {
+    return bookingSupplierRegistry.resolve({
+      confirmationNumber: booking.confirmationNumber,
+      dbProvider: booking.provider,
+    }).code;
+  }
+
   async getModificationPolicy(confirmationNumber: string) {
     if (!confirmationNumber)
       throw { status: 400, message: "ConfirmationNumber is required" };
@@ -39,7 +47,8 @@ class AmendService {
     });
     if (!booking) throw { status: 404, message: "Booking not found" };
 
-    if (booking.provider === "tripjack") {
+    // Routing decision — see suppliers/registry.ts.
+    if (this.#supplierCode(booking) === "TJ") {
       const tjPayload = {
         bookingId: booking.confirmationNumber,
         checkIn, // YYYY-MM-DD
@@ -66,7 +75,8 @@ class AmendService {
     });
     if (!booking) throw { status: 404, message: "Booking not found" };
 
-    if (booking.provider === "tripjack") {
+    // Routing decision — see suppliers/registry.ts.
+    if (this.#supplierCode(booking) === "TJ") {
       // Actual TJ Amend Commit
       return await tripJackProvider.amend({
         bookingId: confirmationNumber,

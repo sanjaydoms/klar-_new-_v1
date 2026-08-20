@@ -248,6 +248,8 @@ export default function MultiCityFlight({ onBack, onBookNow }: MultiCityFlightPr
     useState<InternationalItinerary | null>(null);
   const [isInternationalFlight, setIsInternationalFlight] = useState(false);
 
+  const [refundableTypes, setRefundableTypes] = useState<string[]>([]);
+  const [fareTypes, setFareTypes] = useState<string[]>([]);
   const [airlineStats, setAirlineStats] = useState<
     { airline: string; airlineCode: string; flights: number }[]
   >([]);
@@ -493,6 +495,12 @@ export default function MultiCityFlight({ onBack, onBookNow }: MultiCityFlightPr
         const response = await searchMultiCityFlights(payload.searchQuery);
         sessionStorage.setItem('multiCitySessionId', response.data.sessionId);
 
+        if (response.data?.refundableTypes) {
+          setRefundableTypes(response.data.refundableTypes);
+        }
+        if (response.data?.fareTypes) {
+          setFareTypes(response.data.fareTypes);
+        }
         if (response.data?.airlineStats) {
           const stats = response.data.airlineStats.map((stat: any) => ({
             airline: stat.airline,
@@ -812,46 +820,19 @@ export default function MultiCityFlight({ onBack, onBookNow }: MultiCityFlightPr
     setCurrentPage(1);
   };
 
-  const handleSelectFlight = async (flight: FlightOption) => {
+  // No fetch here: the segment-detail route it used to call never existed, so it
+  // always 404'd and the modal fell back to the search result anyway. Everything
+  // rendered is already present on `flight` — same conclusion the one-way and
+  // return flows reached (see ReturnFlight/flightDetailsView.ts).
+  const handleSelectFlight = (flight: FlightOption) => {
     setModalFlight(flight);
     setShowFareOptionsModal(true);
-
-    if (flight.searchId && searchPayload) {
-      try {
-        const { getFlightSegmentDetails } = await import('../../../api/flights.api');
-        const { mapSegmentResponseToFlight } = await import('../utils/flightMapper');
-
-        const detailedData = await getFlightSegmentDetails(flight.searchId, searchPayload);
-
-        if (detailedData) {
-          const detailedFlight = mapSegmentResponseToFlight(detailedData);
-          setModalFlight((prev: any) => (prev ? { ...prev, ...detailedFlight } : detailedFlight));
-        }
-      } catch (err) {
-        console.error('MultiCityFlight: Failed to fetch fare details', err);
-      }
-    }
   };
 
-  const handleViewDetails = async (flight: FlightOption) => {
+  // See handleSelectFlight above — same dead segment-detail route, same fallback.
+  const handleViewDetails = (flight: FlightOption) => {
     setModalFlight(flight);
     setShowFlightDetailsModal(true);
-
-    if (flight.searchId && searchPayload) {
-      try {
-        const { getFlightSegmentDetails } = await import('../../../api/flights.api');
-        const { mapSegmentResponseToFlight } = await import('../utils/flightMapper');
-
-        const detailedData = await getFlightSegmentDetails(flight.searchId, searchPayload);
-
-        if (detailedData) {
-          const detailedFlight = mapSegmentResponseToFlight(detailedData);
-          setModalFlight(detailedFlight);
-        }
-      } catch (err) {
-        console.error('MultiCityFlight: Failed to fetch details', err);
-      }
-    }
   };
 
   const getAllSelectedFareIds = useCallback(() => {
@@ -1359,6 +1340,8 @@ export default function MultiCityFlight({ onBack, onBookNow }: MultiCityFlightPr
                   }}
                   flightType="multicity"
                   availableAirlines={airlineStats}
+                  availableRefundable={refundableTypes}
+                  availableFareTypes={fareTypes}
                 />
               </div>
             </div>

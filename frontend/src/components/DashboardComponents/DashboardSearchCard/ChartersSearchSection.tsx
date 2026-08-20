@@ -404,7 +404,7 @@ const ChartersSearchSection = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#4D0000] hover:bg-[#330000] text-white font-semibold px-8 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+            className="bg-[var(--color-brand-red)] hover:bg-[var(--color-brand-red)]/90 text-white font-semibold px-8 py-3.5 rounded-xl shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>

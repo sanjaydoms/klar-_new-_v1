@@ -58,6 +58,7 @@ class SearchService {
 
                     let normalized = normalizedResult.flights;
                     const airlineStats = normalizedResult.airlineStats;
+                    const { refundableTypes, fareTypes } = normalizedResult as any;
 
                     if (filters && filters.length > 0) {
                         const validation = FlightFilter.validateFilters(filters);
@@ -75,7 +76,7 @@ class SearchService {
                         remainingTtl
                     );
 
-                    const response: any = { sessionId, flights: normalized, airlineStats, fromCache: true };
+                    const response: any = { sessionId, flights: normalized, airlineStats, refundableTypes, fareTypes, fromCache: true };
                     if (includeStats) {
                         response.stats = FlightFilter.getFilterStats(normalizedResult.flights, normalized);
                     }
@@ -157,6 +158,7 @@ class SearchService {
 
             let normalized = normalizedResult.flights;
             const airlineStats = normalizedResult.airlineStats;
+            const { refundableTypes, fareTypes } = normalizedResult as any;
 
             if (filters && filters.length > 0) {
                 const validation = FlightFilter.validateFilters(filters);
@@ -195,7 +197,9 @@ class SearchService {
             const response: any = {
                 sessionId,
                 flights: normalized,
-                airlineStats
+                airlineStats,
+                refundableTypes,
+                fareTypes
             };
 
             if (stats) {
@@ -435,6 +439,7 @@ class SearchService {
             const normalizedResult = ReturnNormalizer.transform(rawResponse);
 
             const airlineStats = normalizedResult.airlineStats;
+            const { refundableTypes, fareTypes } = normalizedResult as any;
 
             let normalized: any;
 
@@ -595,7 +600,9 @@ class SearchService {
             const response: any = {
                 sessionId,
                 flights: normalized,
-                airlineStats
+                airlineStats,
+                refundableTypes,
+                fareTypes
             };
 
             if (stats) {
@@ -782,6 +789,7 @@ class SearchService {
             let normalized = normalizedResult.flights;
 
             const airlineStats = normalizedResult.airlineStats;
+            const { refundableTypes, fareTypes } = normalizedResult as any;
 
             const isDomestic = normalized.length > 0 && 'flights' in normalized[0];
             const isInternational = normalized.length > 0 && 'legs' in normalized[0];
@@ -1027,7 +1035,9 @@ class SearchService {
             const response: any = {
                 sessionId,
                 flights: normalized,
-                airlineStats
+                airlineStats,
+                refundableTypes,
+                fareTypes
             };
 
             if (stats) {

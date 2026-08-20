@@ -5,6 +5,7 @@ import FareVariantRows from '../FareVariantRows';
 import FlightCardRoute from '../FlightCardRoute';
 import FlightCardFooter from '../FlightCardFooter';
 import { getReturnFareDetails } from '@/api/flightService.api';
+import FareSelectModal, { mapDetailedFare, getPaxText } from '../modals/FareSelectModal';
 import { notifyError } from '@/utils/notify';
 import { Button } from '@/components/ui/button';
 
@@ -104,6 +105,11 @@ export default function FlightCard({
   isReturnFlightSearch = false,
 }: FlightCardProps) {
   const [showFareDetailsPopup, setShowFareDetailsPopup] = useState(false);
+  const [showFareSelect, setShowFareSelect] = useState(false);
+  // The fare picked in the chooser; ReturnFareDetailsCard auto-continues with it.
+  const [pendingFareId, setPendingFareId] = useState<string | null>(null);
+  const [fullFares, setFullFares] = useState<any[] | null>(null);
+  const [isLoadingFares, setIsLoadingFares] = useState(false);
   const [flightDetailsData, setFlightDetailsData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   // Fare groups of this physical flight; the chosen one drives price, the
@@ -151,50 +157,102 @@ export default function FlightCard({
   const cheapestFare = getCheapestFare();
   const cabinClass = getCabinClass();
 
-  const handleSelectClick = async () => {
+  const fareKeyOf = (fare: any) => fare.segmentId || fare.flightId || fare.flightKey;
+
+  /** The pre-chooser booking path, now parameterised on the chosen fare. */
+  const proceedWithFare = async (fare: any) => {
+    setPendingFareId(fare?.fareId ?? null);
+    setIsLoading(true);
+    try {
+      const sessionId = sessionStorage.getItem('returnFlightSessionId');
+      const flightKey = fareKeyOf(fare);
+
+      if (!sessionId || !flightKey) {
+        notifyError('Flight information missing');
+        onDeselect();
+        return;
+      }
+
+      const segment = type === 'return' ? 'RETURN' : 'ONWARD';
+
+      const fareDetailsResponse = await getReturnFareDetails({
+        sessionId,
+        flightKey,
+        segment,
+      });
+
+      if (fareDetailsResponse?.success !== false && fareDetailsResponse?.data) {
+        setFlightDetailsData({
+          data: fareDetailsResponse.data,
+        });
+        setShowFareDetailsPopup(true);
+        onSelect(fare);
+      } else {
+        notifyError(
+          fareDetailsResponse?.message || 'Unable to load fare details. Please try again.',
+        );
+        onDeselect();
+      }
+    } catch {
+      notifyError('Flight not found, search another.');
+      onDeselect();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * The search keeps only the cheapest fare of each supplier entry, so the
+   * chooser opens on the variants instantly and upgrades to the complete
+   * per-entry fare lists from the fare endpoint (same pattern as one-way).
+   */
+  const openFareSelect = async () => {
+    setShowFareSelect(true);
+    if (fullFares) return;
+
+    const sessionId = sessionStorage.getItem('returnFlightSessionId');
+    if (!sessionId) return;
+
+    setIsLoadingFares(true);
+    try {
+      const segment = type === 'return' ? 'RETURN' : 'ONWARD';
+      const keyed = fares
+        .map((f: any) => ({ base: f, key: fareKeyOf(f) }))
+        .filter((x: any) => x.key);
+      const uniq = [...new Map(keyed.map((x: any) => [x.key, x])).values()] as any[];
+      const results = await Promise.all(
+        uniq.map((x: any) =>
+          getReturnFareDetails({ sessionId, flightKey: x.key, segment }).catch(() => null),
+        ),
+      );
+      const merged: any[] = [];
+      const seen = new Set<string>();
+      results.forEach((res: any, i) => {
+        const data = res?.data || res;
+        (data?.fares || []).forEach((raw: any) => {
+          const mapped = mapDetailedFare(raw, uniq[i].key, uniq[i].base);
+          if (mapped && mapped.price != null && !seen.has(mapped.fareId)) {
+            seen.add(mapped.fareId);
+            merged.push(mapped);
+          }
+        });
+      });
+      if (merged.length >= fares.length) {
+        merged.sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
+        setFullFares(merged);
+      }
+    } finally {
+      setIsLoadingFares(false);
+    }
+  };
+
+  const handleSelectClick = () => {
     if (isSelected) {
       onDeselect();
       setShowFareDetailsPopup(false);
       setFlightDetailsData(null);
     } else {
-      setIsLoading(true);
-
-      try {
-        const sessionId = sessionStorage.getItem('returnFlightSessionId');
-        const flightKey = activeFare.segmentId || activeFare.flightId || activeFare.flightKey;
-
-        if (!sessionId || !flightKey) {
-          notifyError('Flight information missing');
-          onDeselect();
-          return;
-        }
-
-        const segment = type === 'return' ? 'RETURN' : 'ONWARD';
-
-        const fareDetailsResponse = await getReturnFareDetails({
-          sessionId,
-          flightKey,
-          segment,
-        });
-
-        if (fareDetailsResponse?.success !== false && fareDetailsResponse?.data) {
-          setFlightDetailsData({
-            data: fareDetailsResponse.data,
-          });
-          setShowFareDetailsPopup(true);
-          onSelect(activeFare);
-        } else {
-          notifyError(
-            fareDetailsResponse?.message || 'Unable to load fare details. Please try again.',
-          );
-          onDeselect();
-        }
-      } catch {
-        notifyError('Flight not found, search another.');
-        onDeselect();
-      } finally {
-        setIsLoading(false);
-      }
+      openFareSelect();
     }
   };
 
@@ -298,8 +356,23 @@ export default function FlightCard({
         </div>
       </div>
 
+      <FareSelectModal
+        isOpen={showFareSelect}
+        onClose={() => setShowFareSelect(false)}
+        flight={flight}
+        fares={fullFares ?? fares}
+        paxText={getPaxText()}
+        isLoading={isLoading}
+        isLoadingFares={isLoadingFares}
+        onBookFare={(fare) => {
+          setShowFareSelect(false);
+          proceedWithFare(fare);
+        }}
+      />
+
       {showFareDetailsPopup && flightDetailsData && isReturnFlightSearch && (
         <ReturnFareDetailsCard
+          initialFareId={pendingFareId ?? undefined}
           fare={flightDetailsData}
           onClose={handleClosePopup}
           onConfirm={handleConfirmFare}

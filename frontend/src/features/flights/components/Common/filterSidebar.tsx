@@ -11,6 +11,8 @@ import {
 import { PriceRangeSection } from '../FilterSidebar/PriceRangeSection';
 import { StopsSection } from '../FilterSidebar/StopsSection';
 import { AirlinesSection } from '../FilterSidebar/AirlinesSection';
+import { RefundableSection } from '../FilterSidebar/RefundableSection';
+import { FareTypeSection } from '../FilterSidebar/FareTypeSection';
 import { FilterActions } from '../FilterSidebar/FilterActions';
 import { FlightFilterSidebarProps } from '@/types/filterSidebar.types';
 import { useFilters } from '@/hooks/useFilterSidebar.hook';
@@ -25,6 +27,8 @@ export default function FlightFilterSidebar({
   onError,
   flightType = 'oneway',
   availableAirlines = [],
+  availableRefundable = [],
+  availableFareTypes = [],
 }: FlightFilterSidebarProps) {
   const filterBarRef = useRef<HTMLDivElement>(null);
   const [isApplying, setIsApplying] = useState(false);
@@ -36,6 +40,8 @@ export default function FlightFilterSidebar({
     arrivalTime: true,
     airlines: true,
     departureTime: true,
+    refundable: true,
+    fareType: true,
   });
 
   const {
@@ -46,11 +52,15 @@ export default function FlightFilterSidebar({
     maxPrice,
     selectedArrivalTimes,
     selectedAirlines,
+    selectedRefundable,
+    selectedFareTypes,
     hasChanges: hookHasChanges,
     setMinPrice,
     setMaxPrice,
     handleStopChange,
     handleAirlineChange,
+    handleRefundableChange,
+    handleFareTypeChange,
     resetFilters,
   } = useFilters();
 
@@ -170,6 +180,14 @@ export default function FlightFilterSidebar({
 
         if (selectedAirlines.length > 0) {
           filters.airlines = selectedAirlines;
+        }
+
+        if (selectedRefundable.length > 0) {
+          filters.refundable = selectedRefundable;
+        }
+
+        if (selectedFareTypes.length > 0) {
+          filters.fareTypes = selectedFareTypes;
         }
 
         // Departure time filter
@@ -377,6 +395,22 @@ export default function FlightFilterSidebar({
           selectedAirlines={selectedAirlines}
           availableAirlines={availableAirlines}
           onAirlineChange={handleAirlineChange}
+        />
+
+        <RefundableSection
+          isOpen={openSections.refundable}
+          onToggle={() => toggleSection('refundable')}
+          selectedRefundable={selectedRefundable}
+          availableRefundable={availableRefundable}
+          onRefundableChange={handleRefundableChange}
+        />
+
+        <FareTypeSection
+          isOpen={openSections.fareType}
+          onToggle={() => toggleSection('fareType')}
+          selectedFareTypes={selectedFareTypes}
+          availableFareTypes={availableFareTypes}
+          onFareTypeChange={handleFareTypeChange}
         />
       </div>
     </div>

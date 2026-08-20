@@ -39,6 +39,9 @@ for (const svc of SERVICES) {
     cwd: path.join(ROOT, svc.dir),
     stdio: 'inherit',
     env: process.env,
+    // On Windows npm is npm.cmd, and since Node 20.12 spawn refuses to run a
+    // .cmd without a shell. Without this every service "fails" with exit null.
+    shell: process.platform === 'win32',
   });
   results.push([svc.dir, r.status === 0 ? 'pass' : 'FAIL', r.status === 0 ? '' : `exit ${r.status}`]);
 }

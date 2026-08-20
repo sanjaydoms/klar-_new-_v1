@@ -136,6 +136,17 @@ export default function HotelSearchSection() {
   const mmtLabelClass =
     'text-[11px] sm:text-[12px] font-bold text-gray-500 tracking-wider mb-1 uppercase flex items-center gap-1';
 
+  /** "19 Aug '26" — the OTA card's date format. */
+  const formatCardDate = (d?: string) => {
+    const dt = new Date(d ?? '');
+    if (isNaN(dt.getTime())) return 'Select';
+    return dt.getDate() + ' ' + dt.toLocaleString('en-US', { month: 'short' }) + " '" + dt.getFullYear().toString().slice(-2);
+  };
+  const weekdayOf = (d?: string) => {
+    const dt = new Date(d ?? '');
+    return isNaN(dt.getTime()) ? '\u00A0' : dt.toLocaleString('en-US', { weekday: 'long' });
+  };
+
   return (
     <div className="flex-1 flex flex-col justify-between">
       {/* MOBILE VIEW */}
@@ -223,7 +234,7 @@ export default function HotelSearchSection() {
           <button
             onClick={handleHotelSearch}
             disabled={searching}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold flex items-center gap-2 px-8 py-3.5 rounded-xl shadow-lg whitespace-nowrap"
+            className="bg-[var(--color-brand-red)] hover:bg-[var(--color-brand-red)]/90 text-white font-bold flex items-center gap-2 px-8 py-3.5 rounded-xl shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] whitespace-nowrap"
           >
             {searching ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -235,102 +246,103 @@ export default function HotelSearchSection() {
         </div>
       </div>
 
-      {/* DESKTOP VIEW */}
+      {/* DESKTOP VIEW — the OTA search card: icon badges, dotted
+          underlines, dividers, maroon search button. */}
       <div className="hidden lg:flex flex-col w-full h-full justify-center mt-2">
-        <div
-          className="w-full mx-auto relative flex items-center justify-between px-6"
-          style={{
-            maxWidth: '964.55px',
-            height: '131.21px',
-            borderRadius: '14.29px',
-            background: '#FEF6F6',
-            border: '0.71px solid #D4AF37',
-            boxShadow: '0px 3.49px 5.24px -0.87px #0000001A',
-          }}
-        >
+        {/* Fields sit directly on the white search card, spanning its full
+            width — no inner panel of their own. */}
+        <div className="flex w-full items-center gap-5 py-3">
           {/* Location */}
-          <div className="flex flex-col justify-between h-[62px] pb-0.5" style={{ width: '237.32px', borderBottom: '0.67px solid #DDDDDD' }}>
-            <div className="text-[10.02px] text-[#4D4D4D] font-[Playfair_Display] leading-[13.45px] whitespace-nowrap">Select City, Location or Hotel Name</div>
-            <div className="relative w-full">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-[#F6EBDC]">
+              <MapPin className="h-5 w-5 text-[#8A5A16]" />
+            </span>
+            <div className="min-w-0 flex-1 border-b border-dotted border-gray-300 pb-1.5">
+              <div className="whitespace-nowrap text-[11px] leading-tight text-gray-500">
+                Select City, Location or Hotel Name
+              </div>
               <HotelAutocomplete
                 value={hotelLocation}
                 onChange={handleAutocompleteChange}
                 placeholder="City, Property or Location"
-                className="w-full bg-transparent text-[16.14px] font-bold text-[#262626] font-arial focus:outline-none border-0 p-0 h-auto"
+                className="h-auto w-full border-0 bg-transparent p-0 text-[17px] font-bold text-primary focus:outline-none"
               />
-            </div>
-            <div className="text-[11px] text-gray-500 leading-none truncate">
-              {hotelSubtitle || ' '}
+              <div className="truncate text-[11px] leading-tight text-gray-500">
+                {hotelSubtitle || '\u00A0'}
+              </div>
             </div>
           </div>
 
-          {/* Check-In with Calendar Wrapper */}
+          <span className="h-14 w-px flex-shrink-0 bg-[#E9DFCF]" />
+
+          {/* Check-in (anchors the range picker; the hidden button lets
+              check-out open the same picker on its second step) */}
           <HotelDateRangePicker
             checkIn={checkIn}
             checkOut={checkOut}
             onSelect={handleDateSelect}
             isMobile={false}
-            wrapperClassName="!w-[102.46px] flex-shrink-0"
+            wrapperClassName="!w-auto flex-shrink-0"
             renderTrigger={(openCheckIn, openCheckOut) => (
               <>
-                {/* Hidden button for Check-Out to trigger the same picker */}
-                <button className="hidden hotel-date-picker-trigger-checkout" onClick={openCheckOut} />
-
-                {/* Check-In (Serves as anchor) */}
+                <button
+                  className="hidden hotel-date-picker-trigger-checkout"
+                  onClick={openCheckOut}
+                />
                 <div
-                  className="flex flex-col justify-between h-[62px] pb-0.5 cursor-pointer"
-                  style={{ width: '102.46px', borderBottom: '0.67px solid #DDDDDD' }}
+                  className="flex flex-shrink-0 cursor-pointer items-center gap-3"
                   onClick={openCheckIn}
                 >
-                  <div className="text-[10.08px] text-[#4D4D4D] font-[Playfair_Display] leading-[13.45px]">Check-in Date</div>
-                  <div className="text-[16.14px] font-bold text-[#262626] font-arial bg-transparent whitespace-nowrap">
-                    {checkIn ? (
-                      <>
-                        <span className="text-[18px]">{new Date(checkIn).getDate()}</span>{' '}
-                        {new Date(checkIn).toLocaleString('en-US', { month: 'short' })}{"' "}{new Date(checkIn).getFullYear().toString().slice(-2)}
-                      </>
-                    ) : (
-                      "Select"
-                    )}
-                  </div>
-                  <div className="text-[11px] text-gray-500 leading-none">
-                    {checkIn ? new Date(checkIn).toLocaleString('default', { weekday: 'long' }) : ' '}
+                  <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-[#F6EBDC]">
+                    <Calendar className="h-5 w-5 text-[#8A5A16]" />
+                  </span>
+                  <div className="border-b border-dotted border-gray-300 pb-1.5">
+                    <div className="text-[11px] leading-tight text-gray-500">Check-in Date</div>
+                    <div className="whitespace-nowrap text-[17px] font-bold text-primary">
+                      {formatCardDate(checkIn)}
+                    </div>
+                    <div className="text-[11px] leading-tight text-gray-500">
+                      {weekdayOf(checkIn)}
+                    </div>
                   </div>
                 </div>
               </>
             )}
           />
 
-          {/* Check-Out */}
+          <span className="h-14 w-px flex-shrink-0 bg-[#E9DFCF]" />
+
+          {/* Check-out */}
           <div
-            className="flex flex-col justify-between h-[62px] pb-0.5 cursor-pointer flex-shrink-0"
-            style={{ width: '102.46px', borderBottom: '0.67px solid #DDDDDD' }}
+            className="flex flex-shrink-0 cursor-pointer items-center gap-3"
             onClick={() => {
-              const picker = document.querySelector('.hotel-date-picker-trigger-checkout') as HTMLElement;
+              const picker = document.querySelector(
+                '.hotel-date-picker-trigger-checkout',
+              ) as HTMLElement;
               if (picker) picker.click();
             }}
           >
-            <div className="text-[10.08px] text-[#4D4D4D] font-[Playfair_Display] leading-[13.45px]">Check-out Date</div>
-            <div className="text-[16.14px] font-bold text-[#262626] font-arial bg-transparent whitespace-nowrap">
-              {checkOut ? (
-                <>
-                  <span className="text-[18px]">{new Date(checkOut).getDate()}</span>{' '}
-                  {new Date(checkOut).toLocaleString('en-US', { month: 'short' })}{"' "}{new Date(checkOut).getFullYear().toString().slice(-2)}
-                </>
-              ) : (
-                "Select"
-              )}
-            </div>
-            <div className="text-[11px] text-gray-500 leading-none">
-              {checkOut ? new Date(checkOut).toLocaleString('default', { weekday: 'long' }) : ' '}
+            <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-[#F6EBDC]">
+              <Calendar className="h-5 w-5 text-[#8A5A16]" />
+            </span>
+            <div className="border-b border-dotted border-gray-300 pb-1.5">
+              <div className="text-[11px] leading-tight text-gray-500">Check-out Date</div>
+              <div className="whitespace-nowrap text-[17px] font-bold text-primary">
+                {formatCardDate(checkOut)}
+              </div>
+              <div className="text-[11px] leading-tight text-gray-500">{weekdayOf(checkOut)}</div>
             </div>
           </div>
 
+          <span className="h-14 w-px flex-shrink-0 bg-[#E9DFCF]" />
+
           {/* Rooms & Guests */}
-          <div className="flex flex-col justify-between h-[62px] pb-0.5 relative" style={{ width: '157.46px', borderBottom: '0.67px solid #DDDDDD' }}>
-            <div className="text-[10.08px] text-[#4D4D4D] font-[Playfair_Display] leading-[13.45px]">Room & Guest</div>
+          <div className="flex flex-shrink-0 items-center gap-3">
+            <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-[#F6EBDC]">
+              <Users className="h-5 w-5 text-[#8A5A16]" />
+            </span>
             <div
-              className="bg-transparent relative w-full cursor-pointer"
+              className="cursor-pointer border-b border-dotted border-gray-300 pb-1.5"
               onClick={(e) => {
                 const btn = e.currentTarget.querySelector('button');
                 if (btn && e.target !== btn && !btn.contains(e.target as Node)) {
@@ -338,37 +350,32 @@ export default function HotelSearchSection() {
                 }
               }}
             >
-              <div className="pointer-events-auto w-full">
+              <div className="text-[11px] leading-tight text-gray-500">Rooms &amp; Guests</div>
+              <div className="pointer-events-auto">
                 <RoomGuestSelector
                   rooms={rooms}
                   onChange={setRooms}
-                  className="w-full text-[16.14px] font-bold text-[#262626] font-arial bg-transparent focus:outline-none cursor-pointer p-0 border-0 flex items-center"
+                  className="flex w-full cursor-pointer items-center border-0 bg-transparent p-0 text-[17px] font-bold text-primary focus:outline-none"
                 />
               </div>
-            </div>
-            <div className="text-[11px] text-gray-500 leading-none">
-              {rooms.reduce((acc, room) => acc + room.Adults, 0)} Adults
+              <div className="text-[11px] leading-tight text-gray-500">
+                {rooms.reduce((acc, room) => acc + room.Adults, 0)} Adults
+              </div>
             </div>
           </div>
 
-          {/* Search Button */}
+          {/* Search */}
           <button
             onClick={handleHotelSearch}
             disabled={searching}
-            className="text-white font-bold flex items-center justify-center transition-all duration-200 hover:opacity-90 disabled:opacity-70 disabled:cursor-not-allowed"
-            style={{
-              width: '133.94px',
-              height: '38.99px',
-              borderRadius: '6.98px',
-              background: 'linear-gradient(90deg, #431718 0%, #4B1B1C 44.23%, #5B2525 91.83%)',
-              boxShadow: '0px 1.75px 3.49px -1.75px rgba(0,0,0,0.1)',
-              fontSize: '14px'
-            }}
+            className="flex h-[52px] flex-shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--color-brand-red)] px-8 text-[15px] font-semibold text-white shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] transition-all duration-200 hover:bg-[var(--color-brand-red)]/90 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {searching ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            ) : null}
-            {searching ? 'Searching' : 'Search'}
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Search className="h-4 w-4" />
+            )}
+            {searching ? 'Searching…' : 'Search'}
           </button>
         </div>
       </div>

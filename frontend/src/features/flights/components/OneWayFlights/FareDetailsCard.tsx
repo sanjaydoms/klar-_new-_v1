@@ -1,5 +1,5 @@
 import { X, AlertCircle } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getFareRule } from '../../../../api/flightService.api';
 import { cabinBaggageOf, refundableLabelFromType } from '@/features/flights/utils/flightDisplay';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +10,8 @@ interface FareDetailsCardProps {
   fare: any;
   onClose: () => void;
   onConfirm: (selectedFareId: string) => void;
+  /** Auto-continue with this fare (already chosen in the fare chooser). */
+  initialFareId?: string | undefined;
   onError?: (errorMessage: string) => void;
   flightType?: 'departure' | 'return';
   flowType?: 'SEARCH' | 'REVIEW' | 'BOOKING_DETAIL';
@@ -57,6 +59,7 @@ const getCabinDescription = (cabinClass: string): string => {
 export default function FareDetailsCard({
   fare,
   onClose,
+  initialFareId,
   onConfirm,
   onError,
   flightType,
@@ -68,6 +71,30 @@ export default function FareDetailsCard({
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('');
   const navigate = useNavigate();
+
+  /**
+   * The fare chooser already picked a fare, so continue straight into its
+   * selection flow instead of listing every fare again. On any failure this
+   * card is already open with its full list and error banner as the fallback.
+   */
+  const autoSelectedRef = useRef(false);
+  useEffect(() => {
+    if (!initialFareId || autoSelectedRef.current) return;
+    const list = fare?.data?.fares || [];
+    // Fall back to the first fare so the legacy list is never needed as a UI.
+    const match = list.find((f: any) => f?.fareId === initialFareId) || list[0];
+    if (match) {
+      autoSelectedRef.current = true;
+      handleFareSelect(match.fareId, match);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFareId, fare]);
+
+  // Headless failure ends the flow quietly — the legacy list must never show.
+  useEffect(() => {
+    if (initialFareId && errorBanner) onClose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [errorBanner]);
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-IN', {
@@ -347,6 +374,19 @@ export default function FareDetailsCard({
       </div>
     );
   };
+
+  if (initialFareId) {
+    // Headless: the chooser already picked a fare — this card only runs the
+    // fare-rule fetch and navigation. The legacy fare list never mounts.
+    return (
+      <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
+        <div className="flex items-center gap-3 rounded-2xl bg-white px-6 py-4 shadow-xl">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <span className="text-sm font-medium text-primary">Preparing your fare…</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>

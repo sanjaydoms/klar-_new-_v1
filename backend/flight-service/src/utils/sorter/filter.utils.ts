@@ -68,6 +68,10 @@ export class FlightFilter {
                 return this.filterByArrivalTimeRange(flight, filter.start, filter.end);
             case 'durationRange':
                 return this.filterByDurationRange(flight, filter.min, filter.max);
+            case 'refundable':
+                return this.filterByRefundable(flight, filter.values);
+            case 'fareType':
+                return this.filterByFareType(flight, filter.values);
             default:
                 return true;
         }
@@ -194,6 +198,57 @@ export class FlightFilter {
     }
 
     /**
+     * Match a supplier-supplied label against the selected values.
+     *
+     * Compared case- and whitespace-insensitively because these strings arrive
+     * from the supplier untouched and are not stable in case — the same search
+     * returns "15 Kg", "15 kg" and "15 KG" for baggage, so a fare type or
+     * refundable label is no safer to compare with ===.
+     *
+     * Follows the same two rules as the time and duration filters: an empty
+     * criterion keeps everything, and a flight whose own label is missing is
+     * excluded, because it cannot be shown to be what the customer asked for.
+     */
+    private static matchesLabel(
+        actual: string | undefined,
+        selected: string[],
+        field: string,
+        flight: FlightSegment
+    ): boolean {
+        if (!selected || selected.length === 0) return true;
+
+        const normalise = (v: string) => v.trim().toLowerCase().replace(/\s+/g, ' ');
+
+        if (actual === undefined || actual === null || actual.trim() === '') {
+            console.warn(
+                `[FlightFilter] missing ${field} on flight ${flight.flightKey}; excluded from the ${field} filter`
+            );
+            return false;
+        }
+
+        return selected.map(normalise).includes(normalise(actual));
+    }
+
+    /**
+     * Filter by refundability ('Refundable' | 'Non-Refundable' | 'Unknown').
+     *
+     * 'Unknown' is a real value the transformer emits when the supplier omits
+     * rT, so it is selectable rather than silently treated as non-refundable —
+     * telling a customer a fare is non-refundable when the supplier never said
+     * so is the more expensive mistake.
+     */
+    private static filterByRefundable(flight: FlightSegment, values: string[]): boolean {
+        return this.matchesLabel(flight.refundable, values, 'refundable', flight);
+    }
+
+    /**
+     * Filter by fare type (the supplier's fareIdentifier).
+     */
+    private static filterByFareType(flight: FlightSegment, values: string[]): boolean {
+        return this.matchesLabel(flight.fareIdentifier, values, 'fareType', flight);
+    }
+
+    /**
      * Get filter statistics from flights.
      *
      * `allFlights` is the UNFILTERED result set and drives every option list and
@@ -207,6 +262,8 @@ export class FlightFilter {
         const stats: FilterStats = {
             availableAirlines: [],
             availableCabinClasses: [],
+            availableRefundableTypes: [],
+            availableFareTypes: [],
             priceRange: { min: Infinity, max: -Infinity },
             stopsRange: { min: Infinity, max: -Infinity },
             durationRange: { min: Infinity, max: -Infinity },
@@ -216,6 +273,8 @@ export class FlightFilter {
 
         const airlines = new Set<string>();
         const cabinClasses = new Set<string>();
+        const refundableTypes = new Set<string>();
+        const fareTypes = new Set<string>();
 
         allFlights.forEach(flight => {
             // Collect airlines
@@ -223,6 +282,12 @@ export class FlightFilter {
 
             // Collect cabin classes
             cabinClasses.add(flight.cabinClass);
+
+            // Collect refundability and fare type. Only labels that are actually
+            // present become options: offering a value no flight carries gives the
+            // customer a filter that can only ever return nothing.
+            if (flight.refundable) refundableTypes.add(flight.refundable);
+            if (flight.fareIdentifier) fareTypes.add(flight.fareIdentifier);
 
             // Update price range
             stats.priceRange.min = Math.min(stats.priceRange.min, flight.price);
@@ -245,6 +310,8 @@ export class FlightFilter {
 
         stats.availableAirlines = Array.from(airlines).sort();
         stats.availableCabinClasses = Array.from(cabinClasses).sort();
+        stats.availableRefundableTypes = Array.from(refundableTypes).sort();
+        stats.availableFareTypes = Array.from(fareTypes).sort();
 
         // Reset any range nothing contributed to, so Infinity never leaves this
         // function. That is no flights at all — and now also the case where no
@@ -299,6 +366,18 @@ export class FlightFilter {
                 case 'cabinClass':
                     if (!filter.values || filter.values.length === 0) {
                         errors.push('Cabin class filter must have at least one value');
+                    }
+                    break;
+
+                case 'refundable':
+                    if (!filter.values || filter.values.length === 0) {
+                        errors.push('Refundable filter must have at least one value');
+                    }
+                    break;
+
+                case 'fareType':
+                    if (!filter.values || filter.values.length === 0) {
+                        errors.push('Fare type filter must have at least one value');
                     }
                     break;
             }

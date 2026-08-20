@@ -1,5 +1,29 @@
 import { HotelSupplierAdapter } from "./types";
 
+/**
+ * HOTEL_PROVIDER_MODE accepts the documented values ("both", "tripjack",
+ * "rategain") as well as the internal ones ("UNIFIED", "TJ_ONLY", "RG_ONLY").
+ * Before this mapping, a documented value matched nothing and silently
+ * disabled EVERY supplier — all searches returned 0 hotels.
+ */
+const MODE_ALIASES: Record<string, string> = {
+  both: "UNIFIED",
+  unified: "UNIFIED",
+  tripjack: "TJ_ONLY",
+  rategain: "RG_ONLY",
+};
+
+function normalizeProviderMode(mode: string): string {
+  const normalized = MODE_ALIASES[mode?.toLowerCase()] ?? mode;
+  if (normalized !== "UNIFIED" && !/^[A-Z0-9]+_ONLY$/.test(normalized)) {
+    console.warn(
+      `[Suppliers] Unknown HOTEL_PROVIDER_MODE "${mode}" — treating as UNIFIED.`,
+    );
+    return "UNIFIED";
+  }
+  return normalized;
+}
+
 class SupplierRegistry {
   private suppliers: HotelSupplierAdapter[] = [];
 
@@ -25,6 +49,7 @@ class SupplierRegistry {
    * excluded specifically by the `providers` filter (vs. by mode/direct-search).
    */
   getModeAndDirectEligible(mode: string, destination: string): HotelSupplierAdapter[] {
+    mode = normalizeProviderMode(mode);
     const direct = this.isDirectSearch(destination);
     return this.suppliers.filter((s) => {
       const modeAllows = mode === "UNIFIED" || mode === `${s.code}_ONLY`;

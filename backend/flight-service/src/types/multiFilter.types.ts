@@ -91,6 +91,9 @@ export interface MultiCityFlight {
     duration: string;
     stops: number;
     price: number;
+    /** Same supplier-normalised labels the one-way results carry. */
+    refundable?: string;
+    fareIdentifier?: string;
 }
 
 export interface MultiCityLeg {

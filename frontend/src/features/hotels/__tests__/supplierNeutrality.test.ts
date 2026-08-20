@@ -82,3 +82,30 @@ describe('the TripJack precheck service exposes only what is used', () => {
     expect(service).not.toMatch(/BookReservation/);
   });
 });
+
+describe('which suppliers exist comes from the backend, not the frontend', () => {
+  const src = code('features/hotels/components/HotelFilters.tsx');
+
+  it('does not hardcode the supplier list', () => {
+    // The filter used to be a literal two-item array plus a
+    // `p === 'TJ' ? 'TripJack' : 'RateGain'` ternary, so a third supplier would
+    // return hotels the panel could neither list nor label — and the ternary
+    // would confidently call it "RateGain".
+    expect(src).not.toMatch(/id:\s*['"]TJ['"]/);
+    expect(src).not.toMatch(/id:\s*['"]RG['"]/);
+    expect(src).not.toMatch(/===\s*['"]TJ['"]\s*\?/);
+  });
+
+  it('derives the supplier list from the registry-backed facet counts', () => {
+    // Guards the lazy "fix" of deleting the panel instead of un-hardcoding it.
+    // providerCounts is seeded backend-side from supplierRegistry.all()
+    // (hotel-search-service facets.service.ts).
+    expect(src).toMatch(/Object\.keys\(providerCounts\)/);
+  });
+
+  it('degrades an unknown supplier code to the code itself', () => {
+    // A label map is fine — it is presentation. Falling back to the raw code is
+    // what stops a newly registered supplier rendering blank or mislabelled.
+    expect(src).toMatch(/PROVIDER_LABELS\[code\]\s*\?\?\s*code/);
+  });
+});

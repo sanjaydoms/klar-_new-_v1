@@ -1,5 +1,5 @@
 import { X, Clock, Plane, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getFareRule } from '../../../../api/flightService.api';
 import { cabinBaggageOf, refundableLabelFromType } from '@/features/flights/utils/flightDisplay';
 import ReturnFareRuleCard from './ReturnFareRuleCard';
@@ -10,6 +10,8 @@ interface ReturnFareDetailsCardProps {
   fare: any;
   onClose: () => void;
   onConfirm: (selectedFareId: string, selectedFareDetails: any) => void;
+  /** Auto-continue with this fare (already chosen in the fare chooser). */
+  initialFareId?: string | undefined;
   flightType?: 'departure' | 'return';
 }
 
@@ -57,6 +59,7 @@ const getCabinDescription = (cabinClass: string): string => {
 export default function ReturnFareDetailsCard({
   fare,
   onClose,
+  initialFareId,
   onConfirm,
   flightType,
 }: ReturnFareDetailsCardProps) {
@@ -156,6 +159,25 @@ export default function ReturnFareDetailsCard({
       />
     </svg>
   );
+
+  /** See FareDetailsCard: the chooser's pick continues without re-asking. */
+  const autoSelectedRef = useRef(false);
+  useEffect(() => {
+    if (!initialFareId || autoSelectedRef.current) return;
+    const list = fare?.data?.fares || [];
+    const match = list.find((f: any) => f?.fareId === initialFareId) || list[0];
+    if (match) {
+      autoSelectedRef.current = true;
+      handleFareSelect(match);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFareId, fare]);
+
+  // Headless failure ends the flow quietly — the legacy list must never show.
+  useEffect(() => {
+    if (initialFareId && errorBanner) onClose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [errorBanner]);
 
   const handleFareSelect = async (fareOption: any) => {
     setSelectedFareId(fareOption.fareId);
@@ -379,6 +401,15 @@ export default function ReturnFareDetailsCard({
 
   return (
     <>
+      {initialFareId && !showFareRuleCard && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
+          <div className="flex items-center gap-3 rounded-2xl bg-white px-6 py-4 shadow-xl">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <span className="text-sm font-medium text-primary">Preparing your fare…</span>
+          </div>
+        </div>
+      )}
+      {!initialFareId && (
       <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="flex max-h-[90vh] w-full max-w-5xl flex-col gap-0 overflow-y-auto rounded-2xl p-0 scrollbar-hide sm:max-w-5xl" showCloseButton={false}>
           {/* ── Header ───────────────────────────────────────────── */}
@@ -505,6 +536,7 @@ export default function ReturnFareDetailsCard({
           </div>
         </DialogContent>
       </Dialog>
+      )}
 
       {/* Fare Rule Card Modal */}
       {showFareRuleCard && fareRuleData && (

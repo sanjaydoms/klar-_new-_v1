@@ -200,6 +200,8 @@ export default function OneWayFlight({ onBack, onBookNow }: OneWayFlightProps) {
     totalFlights: 0,
     routeCount: 0,
     airlineStats: [],
+    refundableTypes: [],
+    fareTypes: [],
   });
 
   const [flights, setFlights] = useState<FlightData[]>([]);
@@ -438,6 +440,8 @@ export default function OneWayFlight({ onBack, onBookNow }: OneWayFlightProps) {
           totalFlights: response.data.totalCount || flightsData.length,
           routeCount: response.data.routeCount || 1,
           airlineStats: response.data.airlineStats || [],
+          refundableTypes: response.data.refundableTypes || [],
+          fareTypes: response.data.fareTypes || [],
         });
       } else {
         const errorMessage =
@@ -834,6 +838,8 @@ export default function OneWayFlight({ onBack, onBookNow }: OneWayFlightProps) {
                     onError={(errorMsg) => notifyError(errorMsg, 'Filter Error')}
                     flightType="oneway"
                     availableAirlines={searchMetadata.airlineStats || []}
+                    availableRefundable={searchMetadata.refundableTypes || []}
+                    availableFareTypes={searchMetadata.fareTypes || []}
                   />
                 </div>
               )}

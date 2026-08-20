@@ -46,10 +46,14 @@ console.log('Starting:');
 for (const s of selected) console.log(`  ${s.name.padEnd(14)} http://localhost:${s.port}`);
 console.log('');
 
-const concurrently = path.join(ROOT, 'node_modules', '.bin', 'concurrently');
+// Run concurrently's entry point with the current node rather than the
+// node_modules/.bin shim: on Windows that shim is a .cmd, which spawn will not
+// execute, and the extensionless one is a POSIX shell script.
+const concurrently = path.join(ROOT, 'node_modules', 'concurrently', 'dist', 'bin', 'concurrently.js');
 const child = spawn(
-  concurrently,
+  process.execPath,
   [
+    concurrently,
     // Keep every service alive independently.
     '--kill-others-on-fail=false',
     '--handle-input',                 // ctrl-c reaches the children

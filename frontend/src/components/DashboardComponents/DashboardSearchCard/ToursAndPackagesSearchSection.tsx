@@ -164,7 +164,7 @@ export default function ToursAndPackagesSearchSection({
         <div className="mt-8 sm:mt-10 flex justify-center">
           <button
             onClick={handleSearch}
-            className="bg-[#7A0C0C] hover:bg-[#600808] text-white font-semibold flex items-center justify-center gap-2 px-8 sm:px-10 h-12 sm:h-13 rounded-xl shadow-md transition-all duration-200 active:scale-[0.98] text-sm sm:text-base select-none cursor-pointer min-w-[200px]"
+            className="bg-[var(--color-brand-red)] hover:bg-[var(--color-brand-red)]/90 text-white font-semibold flex items-center justify-center gap-2 px-8 sm:px-10 h-12 sm:h-13 rounded-xl shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] transition-all duration-200 active:scale-[0.98] text-sm sm:text-base select-none cursor-pointer min-w-[200px]"
           >
             <Search className="w-4 h-4 text-white opacity-95" />
             <span>Continue Send Query</span>

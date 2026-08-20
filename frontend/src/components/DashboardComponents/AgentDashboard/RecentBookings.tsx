@@ -1,6 +1,5 @@
 // components/RecentBookings.tsx
 import React, { useEffect, useState } from 'react';
-import { bookingService } from '../../../api/flights.api';
 import { Plane, Building2, FileText } from 'lucide-react';
 
 const RecentBookings: React.FC = () => {
@@ -8,19 +7,6 @@ const RecentBookings: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // const fetchRecent = async () => {
-    //     try {
-    //         const res = await bookingService.getRecentBookings(4);
-    //         setBookings(res?.data || []);
-    //     } catch (err) {
-    //         console.error(err);
-    //         setBookings([]);
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
-
-    // fetchRecent();
     console.log('recent booking');
   }, []);
 

@@ -346,7 +346,7 @@ const CruiseSearchSection = () => {
             <div className="flex justify-center pt-2">
               <button
                 type="submit"
-                className="bg-[#7A1626] cursor-pointer hover:bg-[#611220] transition-colors duration-200 text-white text-sm font-semibold px-8 py-3 rounded-full"
+                className="bg-[var(--color-brand-red)] cursor-pointer hover:bg-[var(--color-brand-red)]/90 shadow-[0_14px_30px_-12px_rgba(224,36,47,0.8)] transition-colors duration-200 text-white text-sm font-semibold px-8 py-3 rounded-full"
               >
                 Enquiry Now
               </button>

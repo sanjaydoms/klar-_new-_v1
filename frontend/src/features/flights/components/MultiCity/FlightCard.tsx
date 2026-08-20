@@ -3,6 +3,7 @@ import { FlightOption } from '../../types/types.multiCityFlight';
 import MultiFlightDetailsModal from './MultiFlightDetailsModalProps';
 import MultiFareDetailsCard from './MultiFareDetailsCard';
 import { getMultiCityFareDetails } from '@/api/flightService.api';
+import FareSelectModal, { mapDetailedFare, getPaxText } from '../modals/FareSelectModal';
 import { Button } from '@/components/ui/button';
 import FareVariantRows from '../FareVariantRows';
 import FlightCardRoute from '../FlightCardRoute';
@@ -88,6 +89,11 @@ export default function FlightCard({
   const [showFlightDetailsModal, setShowFlightDetailsModal] = useState(false);
   const [selectedFlightDetails, setSelectedFlightDetails] = useState<any>(null);
   const [showFareDetailsModal, setShowFareDetailsModal] = useState(false);
+  const [showFareSelect, setShowFareSelect] = useState(false);
+  // The fare picked in the chooser; MultiFareDetailsCard auto-continues with it.
+  const [pendingFareId, setPendingFareId] = useState<string | null>(null);
+  const [fullFares, setFullFares] = useState<any[] | null>(null);
+  const [isLoadingFares, setIsLoadingFares] = useState(false);
   const [selectedFareDetails, setSelectedFareDetails] = useState<any>(null);
   const [selectedSegmentId, setSelectedSegmentId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
@@ -110,13 +116,12 @@ export default function FlightCard({
     stopCities: flight.stopCities || [],
   };
 
-  const handleSelectClick = async () => {
-    if (isSelected) {
-      onSelect(activeFare);
-      return;
-    }
+  const fareKeyOf = (fare: any) => fare?.segmentId?.split(',')[0] ?? '';
 
-    const segmentId = activeFare.segmentId;
+  /** The pre-chooser booking path, now parameterised on the chosen fare. */
+  const proceedWithFare = async (fare: any) => {
+    setPendingFareId(fare?.fareId ?? null);
+    const segmentId = fare.segmentId;
     if (!segmentId) {
       console.error('No segment ID available for this flight');
       return;
@@ -132,7 +137,7 @@ export default function FlightCard({
         return;
       }
 
-      const filterSegmentId = activeFare.segmentId?.split(',')[0] ?? '';
+      const filterSegmentId = fareKeyOf(fare);
       if (!filterSegmentId) {
         console.error('Segment ID not found');
         return;
@@ -144,15 +149,70 @@ export default function FlightCard({
         flightKey: filterSegmentId,
       });
 
-      console.log('Multi-city fare details:', JSON.stringify(fareDetails, null, 2));
       setSelectedFareDetails(fareDetails);
       setShowFareDetailsModal(true);
-      onSelect(activeFare);
+      onSelect(fare);
     } catch (error) {
       console.error('Failed to fetch fare details:', error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  /**
+   * The search keeps only the cheapest fare of each supplier entry, so the
+   * chooser opens on the variants instantly and upgrades to the complete
+   * per-entry fare lists from the fare endpoint (same pattern as one-way).
+   */
+  const openFareSelect = async () => {
+    setShowFareSelect(true);
+    if (fullFares) return;
+
+    const sessionId = sessionStorage.getItem('multiCitySessionId');
+    if (!sessionId) return;
+
+    setIsLoadingFares(true);
+    try {
+      const keyed = fares
+        .map((f: any) => ({ base: f, key: fareKeyOf(f) }))
+        .filter((x: any) => x.key);
+      const uniq = [...new Map(keyed.map((x: any) => [x.key, x])).values()] as any[];
+      const results = await Promise.all(
+        uniq.map((x: any) =>
+          getMultiCityFareDetails({
+            sessionId: String(sessionId),
+            legIndex: [legIndex ?? flight.legIndex ?? 0],
+            flightKey: x.key,
+          }).catch(() => null),
+        ),
+      );
+      const merged: any[] = [];
+      const seen = new Set<string>();
+      results.forEach((res: any, i) => {
+        const data = res?.data || res;
+        (data?.fares || []).forEach((raw: any) => {
+          const mapped = mapDetailedFare(raw, uniq[i].key, uniq[i].base);
+          if (mapped && mapped.price != null && !seen.has(mapped.fareId)) {
+            seen.add(mapped.fareId);
+            merged.push(mapped);
+          }
+        });
+      });
+      if (merged.length >= fares.length) {
+        merged.sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
+        setFullFares(merged);
+      }
+    } finally {
+      setIsLoadingFares(false);
+    }
+  };
+
+  const handleSelectClick = () => {
+    if (isSelected) {
+      onSelect(activeFare);
+      return;
+    }
+    openFareSelect();
   };
 
   return (
@@ -221,8 +281,23 @@ export default function FlightCard({
         />
       )}
 
+      <FareSelectModal
+        isOpen={showFareSelect}
+        onClose={() => setShowFareSelect(false)}
+        flight={flight}
+        fares={fullFares ?? fares}
+        paxText={getPaxText()}
+        isLoading={isLoading}
+        isLoadingFares={isLoadingFares}
+        onBookFare={(fare) => {
+          setShowFareSelect(false);
+          proceedWithFare(fare);
+        }}
+      />
+
       {showFareDetailsModal && selectedFareDetails && (
         <MultiFareDetailsCard
+          initialFareId={pendingFareId ?? undefined}
           isOpen={showFareDetailsModal}
           onClose={() => {
             setShowFareDetailsModal(false);
