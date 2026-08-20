@@ -79,23 +79,34 @@ describe('return flight card fare variants', () => {
     expect(screen.getByText('PUBLISHED')).toBeTruthy();
     expect(screen.getByText('ECO VALUE')).toBeTruthy();
     // headline price + the row in the strip
-    expect(screen.getAllByText('₹ 7933').length).toBe(2);
+    expect(screen.getAllByText('₹ 7,933').length).toBe(2);
   });
 
-  it('selecting a pricier fare drives its own flightKey and price', async () => {
-    const { onSelect } = renderCard();
+  it('picking a pricier fare in the strip re-prices the card', () => {
+    renderCard();
 
     fireEvent.click(screen.getByText('ECO VALUE'));
-    expect(screen.getAllByText('₹ 8100').length).toBe(2);
+    expect(screen.getAllByText('₹ 8,100').length).toBe(2);
     expect(screen.getByText('Seats left: 3')).toBeTruthy();
     // refundability and baggage belong to the FARE, not the flight
     expect(screen.getAllByText('Non-Refundable').length).toBe(2); // footer + its strip row
     expect(screen.getByText('40 Kg / 7 Kg')).toBeTruthy();
+  });
 
+  it('booking a pricier fare in the chooser drives its own flightKey', async () => {
+    const { onSelect } = renderCard();
+
+    // Select no longer books the strip's fare outright — it opens the fare
+    // chooser, and the fare booked THERE has to drive the fare-details call
+    // and the selection handed back, or review prices a fare nobody chose.
     fireEvent.click(screen.getByRole('button', { name: 'Select' }));
+    const bookButtons = await screen.findAllByRole('button', { name: /BOOK NOW/i });
+    // One class group here, sorted cheapest first: [PUBLISHED, ECO VALUE].
+    fireEvent.click(bookButtons[1]!);
 
-    await waitFor(() => expect(getReturnFareDetails).toHaveBeenCalled());
-    expect(vi.mocked(getReturnFareDetails).mock.calls[0]![0]).toMatchObject({
+    await waitFor(() => expect(onSelect).toHaveBeenCalled());
+    const calls = vi.mocked(getReturnFareDetails).mock.calls;
+    expect(calls[calls.length - 1]![0]).toMatchObject({
       flightKey: 'k-eco',
       segment: 'ONWARD',
     });

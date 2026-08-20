@@ -73,12 +73,6 @@ import InteractiveHotelMap, {
 } from '../../features/hotels/components/InteractiveHotelMap';
 
 
-// Format a number for display to 2 decimal places
-const formatPrice = (num: number | undefined | null): string => {
-  if (num === null || num === undefined || isNaN(Number(num))) return '0.00';
-  return Number(num).toFixed(2);
-};
-
 const safeGetImageUrl = (img: any): string => {
   if (!img) return '';
   if (typeof img === 'string') return img;

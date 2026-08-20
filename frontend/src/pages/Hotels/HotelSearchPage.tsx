@@ -893,7 +893,11 @@ const HotelSearchPage = () => {
     }
 
     // ── Explore Mode: instant browse from the local catalogue, no dates ──────
-    if (exploreParam && city) {
+    // Also the landing path for date-less deep links (`?city=Goa`): before,
+    // those fell through every branch and rendered "Selected Location" with
+    // 0 properties. Browsing the city beats a dead page; the date pickers are
+    // right there to upgrade it to a live search.
+    if (city && (exploreParam || !checkin || !checkout)) {
       setIsExploreMode(true);
       const exploreKey = `explore-${city}-${destCode}-${propertyTypeParam || ''}`;
       if (exploreKey !== lastSearchKeyRef.current) {
