@@ -283,6 +283,13 @@ export async function syncTJHotels() {
     console.log(
       `[Sync] Success! Finished syncing. Total hotels in DB: ${totalCount}`,
     );
+
+    // Prune AFTER the upserts, not before: the walk re-inserts whatever the
+    // master still lists, so deleting first would just resurrect withdrawn
+    // properties. Placed inside syncTJHotels rather than in the cron script so
+    // the boot sync and the admin route prune too — a caller that upserts
+    // without pruning is the bug this is fixing.
+    await syncTJDeletedHotels();
   } catch (error: any) {
     // A crash mid-walk is exactly when the token earns its keep.
     console.error(`[Sync] CRITICAL FAILURE:`, error.message);
@@ -344,17 +351,67 @@ export async function syncTJNationalities() {
 }
 
 /**
- * Sync Deleted Hotels from TripJack v3
+ * How far back the withdrawal feed is asked to look, when no explicit time is
+ * given.
+ *
+ * A rolling window rather than a persisted "last run at" timestamp, on purpose.
+ * Deleting an already-deleted hotel is a no-op, so overlapping windows cost
+ * nothing and a skipped run heals itself on the next one. Persisted state would
+ * buy precision and, the first time the file was lost or a container was
+ * replaced, silently skip every withdrawal before that point — the same class of
+ * bug the resume token already caused for the main walk.
  */
-export async function syncTJDeletedHotels(lastUpdateTime: string) {
-  console.log(
-    `[Sync] Syncing TripJack Deleted Hotels since ${lastUpdateTime}...`,
-  );
+const DELETED_LOOKBACK_DAYS = Number(
+  process.env.TJ_DELETED_LOOKBACK_DAYS || 30,
+);
+
+/**
+ * Ceiling on how much of the catalogue one withdrawal feed may remove.
+ *
+ * Withdrawals are a trickle — a handful of properties a month against ~1.5M.
+ * A response asking us to delete a tenth of the database does not mean TripJack
+ * withdrew a tenth of its inventory; it means we have misread the response, and
+ * deleteMany does not come back. The run refuses and says so rather than
+ * emptying the only catalogue search has.
+ */
+const MAX_DELETE_RATIO = Number(process.env.TJ_MAX_DELETE_RATIO || 0.1);
+
+/**
+ * True when a withdrawal batch is too large to be believable and must not be
+ * applied. Exported for the test that pins this, since the cost of getting it
+ * wrong is an unrecoverable catalogue.
+ */
+export function isImplausibleDeletion(
+  deleteCount: number,
+  dbCount: number,
+  ratio: number = MAX_DELETE_RATIO,
+): boolean {
+  // An empty or unknown catalogue has no baseline to judge against, and there is
+  // nothing to protect: let it through rather than blocking the first real sync.
+  if (dbCount <= 0) return false;
+  return deleteCount > dbCount * ratio;
+}
+
+/**
+ * Remove hotels TripJack has withdrawn.
+ *
+ * Runs at the end of a completed syncTJHotels walk, so every caller — the boot
+ * sync, the admin route and scripts/syncHotels.ts — prunes as well as upserts.
+ * Without it the catalogue only ever grows and we keep selling properties the
+ * supplier no longer has, which under a single-supplier setup is a correctness
+ * failure rather than a staleness one.
+ */
+export async function syncTJDeletedHotels(lastUpdateTime?: string) {
+  const since =
+    lastUpdateTime ??
+    new Date(Date.now() - DELETED_LOOKBACK_DAYS * DAY_MS).toISOString();
+
+  console.log(`[Sync] Syncing TripJack Deleted Hotels since ${since}...`);
   try {
     const res = await tripJackStaticClient.post(
       "/hms/v3/fetch-static-hotels/deleted",
       {
-        lastUpdateTime,
+        lastUpdateTime: since,
       },
     );
 
@@ -364,12 +421,42 @@ export async function syncTJDeletedHotels(lastUpdateTime: string) {
     assertTripJackOk(res.data, "fetch-static-hotels/deleted");
 
     const hotels = res.data.hotelOpInfos || [];
-    if (hotels.length > 0) {
-      const ids = hotels.map((h: any) => h.tjHotelId);
-      await HotelModel.deleteMany({ tjHotelId: { $in: ids } });
-      console.log(`✅ [Sync] Removed ${ids.length} deleted hotels from DB.`);
+    if (hotels.length === 0) {
+      console.log("[Sync] No hotels withdrawn in this window.");
+      return;
     }
+
+    const ids = hotels.map((h: any) => h.tjHotelId).filter(Boolean);
+    if (ids.length === 0) {
+      // A non-empty response we could not read an id out of. Deleting nothing is
+      // right; saying nothing is not, because it means the shape has moved.
+      console.error(
+        `[Sync] Withdrawal feed returned ${hotels.length} entries with no tjHotelId — ` +
+          `response shape may have changed. Nothing deleted.`,
+      );
+      return;
+    }
+
+    const dbCount = await HotelModel.estimatedDocumentCount();
+    if (isImplausibleDeletion(ids.length, dbCount)) {
+      console.error(
+        `[Sync] REFUSING to delete ${ids.length} of ${dbCount} hotels ` +
+          `(> ${(MAX_DELETE_RATIO * 100).toFixed(0)}% of the catalogue). This is far more than a ` +
+          `normal withdrawal batch and reads as a misinterpreted response. ` +
+          `Verify against TripJack, then raise TJ_MAX_DELETE_RATIO to proceed deliberately.`,
+      );
+      return;
+    }
+
+    const result = await HotelModel.deleteMany({ tjHotelId: { $in: ids } });
+    console.log(
+      `✅ [Sync] Withdrawal feed listed ${ids.length}; removed ${result.deletedCount} from DB ` +
+        `(the rest were already absent).`,
+    );
   } catch (err: any) {
+    // Deliberately swallowed: a withdrawal-feed outage must not fail a walk that
+    // just upserted the whole catalogue. It is logged loudly because skipping it
+    // silently is what left withdrawn hotels on sale in the first place.
     if (err.response) {
       console.error(
         "[Sync] Failed to sync deleted hotels:",
