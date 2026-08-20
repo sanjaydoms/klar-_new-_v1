@@ -6,7 +6,7 @@ import {
   assertTripJackOk,
   TripJackRejectedError,
 } from "../clients/tripjack.client";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "node:crypto";
 import { HotelModel } from "../models/Hotel.model";
 import { toTjNationality } from "../utils/nationality";
 import { qualifyImageUrls } from "../utils/imageUrl.util";
@@ -29,7 +29,7 @@ export async function searchTJ(
 
   const hids = await resolveForTJ(req.destination, req._geoCenter);
   if (!hids.length) return { hotels: [], total: 0, hasMore: false };
-  const correlationId = uuidv4();
+  const correlationId = randomUUID();
   const page = req.pageNo || 1;
 
   // Densification: a listing call only returns the hotels among the supplied ids

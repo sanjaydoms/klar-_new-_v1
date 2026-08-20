@@ -1,5 +1,5 @@
 import { tripJackClient, assertTripJackOk } from "../clients/tripjack.client";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "node:crypto";
 import { HotelModel } from "../models/Hotel.model";
 import {
   buildPublicPricing,
@@ -74,7 +74,7 @@ export class TripJackApiProvider {
       .replace("TJ:", "")
       .replace("RG:", "")
       .trim();
-    const correlationId = payload.correlationId || uuidv4();
+    const correlationId = payload.correlationId || randomUUID();
 
     if (!rawId) {
       console.error(
