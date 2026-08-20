@@ -2,7 +2,7 @@ import dns from "node:dns/promises";
 dns.setServers(["1.1.1.1", "1.0.0.1"]);
 
 import dotenv from "dotenv";
-dotenv.config({ path: [".env.local", ".env"], override: true });
+dotenv.config({ path: [".env.local", ".env"] });
 
 import app from "./app";
 import { connectDB } from "./config/db";

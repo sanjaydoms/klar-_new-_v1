@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-dotenv.config({ path: [".env.local", ".env"], override: true });
+dotenv.config({ path: [".env.local", ".env"] });
 
 export const env = {
   port: process.env.PORT || 5012,
