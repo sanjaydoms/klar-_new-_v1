@@ -13,7 +13,9 @@
     "test:watch": "vitest",
     "check": "npm run typecheck && npm run test",
     "start": "node dist/main.js",
-    "build": "tsc --project tsconfig.build.json"
+    "build": "tsc --project tsconfig.build.json && npm run build:assets",
+    "//build:assets": "tsc emits .ts only, so the migration SQL never reached dist and RUN_MIGRATIONS=true died on ENOENT. migrate.ts resolves them via import.meta.url, so they must sit BESIDE the compiled migrate.js, not at a path of their own. fs.cpSync keeps this dependency-free and works on every platform.",
+    "build:assets": "node -e \"require('fs').cpSync('src/infrastructure/db/migrations','dist/infrastructure/db/migrations',{recursive:true})\""
   },
   "//dependencies": "pg and ioredis are dependencies of the DEPLOYABLE only. The engine and its test suite build and run without either; src/main.ts imports each dynamically and fails loudly at boot if REDIS_URL/DATABASE_URL is set but the driver is missing.",
   "optionalDependencies": {
